@@ -48,14 +48,17 @@ If an original jurisdiction disappears or changes owner during recovery, the mod
 
 Include your CK3 version, mod list, collector aptitude, tax decrees and the affected taxpayer when reporting a problem.
 
-- Report an issue on GitHub: the project's repository has not been assigned yet.
+- [Report an issue on GitHub](https://github.com/G4VV4KH/-CK3-Tax-Collection-Automation/issues)
 - Email: g4vv4kh@gmail.com
 
 ### [Want to support my work? Donate on Ko-fi 💛](https://ko-fi.com/g4vv4kh)
 
 ## Find this mod elsewhere
 
-Steam Workshop, Paradox Mods, Nexus Mods and GitHub publication pages are pending.
+- [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3815381275)
+- [Paradox Mods](https://mods.paradoxplaza.com/mods/162345/Any)
+- [Nexus Mods](https://www.nexusmods.com/crusaderkings3/mods/410)
+- [GitHub](https://github.com/G4VV4KH/-CK3-Tax-Collection-Automation)
 
 ## My other mods
 

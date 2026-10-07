@@ -55,10 +55,10 @@ Include your CK3 version, mod list, collector aptitude, tax decrees and the affe
 
 ## Find this mod elsewhere
 
+- [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3815381275)
+- [Paradox Mods](https://mods.paradoxplaza.com/mods/162345/Any)
 - [Nexus Mods](https://www.nexusmods.com/crusaderkings3/mods/410)
 - [GitHub](https://github.com/G4VV4KH/-CK3-Tax-Collection-Automation)
-
-Other publication pages are pending.
 
 ## My other mods
 
