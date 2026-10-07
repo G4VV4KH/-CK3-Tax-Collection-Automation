@@ -69,6 +69,8 @@ Include your CK3 version, mod list, collector aptitude, tax decrees and the affe
 - [Court Automation](https://steamcommunity.com/sharedfiles/filedetails/?id=3814028714) — automate court positions and recruit courtiers or knights.
 - [Nomad Autorefill](https://steamcommunity.com/sharedfiles/filedetails/?id=3814793283) — automatically reinforce nomadic Men-at-Arms using herd or gold.
 
+These mods are optional.
+
 ## Credits
 
 Cover artwork was generated with AI. The supplied tax-panel icon served as a visual reference. The interface adapts CK3's native GUI files. Mod code, text and translations are being developed with AI assistance.
