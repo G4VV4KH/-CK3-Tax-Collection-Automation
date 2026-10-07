@@ -1,0 +1,52 @@
+﻿# Swap planning only: root = owner; scope:taxpayer = proposed participant.
+# Obligation subject modifiers can change collector/vizier aptitude and thereby
+# the income of other taxpayers. Keep those characters outside the swap pool.
+tca_swap_taxpayer_eligible_trigger = {
+	exists = scope:taxpayer
+	scope:taxpayer = {
+		is_alive = yes
+		liege = root
+		is_tax_collector = no
+		exists = assigned_tax_slot
+		trigger_if = {
+			limit = { root = { exists = diarch } }
+			NOT = { this = root.diarch }
+		}
+	}
+}
+
+# Root = owner; scope:collector = the target jurisdiction's current collector.
+# can_assign_to_tax_slot includes capacity and rejects full slots. For planning
+# only, mirror the installed 1.20 vanilla obligation rules without that capacity
+# check. Unknown obligations fail closed. The native CanSelectTaxSlot remains
+# mandatory before every actual assignment, once a vacancy exists.
+tca_swap_taxpayer_eligible_for_slot_trigger = {
+	tca_swap_taxpayer_eligible_trigger = yes
+	exists = scope:collector
+	scope:collector = {
+		is_alive = yes
+		is_tax_collector_of = root
+		exists = tax_slot
+		tax_slot = {
+			has_tax_collector = yes
+			OR = {
+				is_active_obligation = default_tax_collector
+				is_active_obligation = strict_taxation_tax_collector
+				is_active_obligation = iqta_special_rights_tax_collector
+				is_active_obligation = ghazi_special_rights_tax_collector
+				is_active_obligation = muqata_special_rights_tax_collector
+				is_active_obligation = jizya_special_rights_tax_collector
+				is_active_obligation = deqhan_special_rights_tax_collector
+				is_active_obligation = maguh_special_rights_tax_collector
+			}
+			trigger_if = {
+				limit = { is_active_obligation = jizya_special_rights_tax_collector }
+				scope:taxpayer.religion != root.religion
+			}
+			trigger_if = {
+				limit = { is_active_obligation = ghazi_special_rights_tax_collector }
+				scope:taxpayer.faith = root.faith
+			}
+		}
+	}
+}

@@ -1,0 +1,45 @@
+﻿# Character scope. Only the human ruler who opted in can queue work.
+tca_available_trigger = {
+	is_ai = no
+	is_alive = yes
+	government_has_flag = government_is_clan
+	any_tax_slot = { always = yes }
+}
+
+tca_enabled_trigger = {
+	tca_available_trigger = yes
+	has_variable = tca_enabled
+}
+
+# The native appointment list remains the authority for eligibility. This is
+# an additional execution guard, not a replacement for IsSelectable in the UI.
+# Root = employer; scope:candidate = candidate supplied by the native list.
+tca_candidate_can_be_considered_trigger = {
+	tca_enabled_trigger = yes
+	exists = scope:candidate
+	scope:candidate = {
+		is_alive = yes
+		is_tax_collector = no
+	}
+}
+
+# Root = owner; scope:taxpayer = an engine-listed taxpayer. Moving an already
+# assigned collector or vizier between obligations can change their opinion,
+# then collector aptitude and the income of unrelated taxpayers. Keep those
+# existing assignments stable; an unassigned taxpayer can still be placed.
+tca_taxpayer_can_be_considered_trigger = {
+	tca_enabled_trigger = yes
+	exists = scope:taxpayer
+	scope:taxpayer = {
+		is_alive = yes
+		liege = root
+		trigger_if = {
+			limit = { exists = assigned_tax_slot }
+			is_tax_collector = no
+			trigger_if = {
+				limit = { root = { exists = diarch } }
+				NOT = { this = root.diarch }
+			}
+		}
+	}
+}

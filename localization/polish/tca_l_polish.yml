@@ -1,0 +1,5 @@
+﻿l_polish:
+ tca_automation_label:0 "Automatyzuj pobór podatków"
+ tca_automation_tooltip:0 "Obsadza wolne stanowiska poborców podatkowych i zastępuje urzędującego poborcę tylko kandydatem o wyższych kwalifikacjach. Przydziela podatników do dostępnej jurysdykcji, której obecny dekret podatkowy przynosi więcej złota.\n\nPanel podatków może pozostać otwarty. Sprawdza po włączeniu i raz w miesiącu; inne otwarte okna mogą opóźnić sprawdzenie. Podczas sprawdzania ręczne zarządzanie podatkami jest niedostępne, ale pole automatyzacji pozostaje aktywne. Zamienia również podatników między pełnymi jurysdykcjami, jeśli zwiększa to ich łączny dochód w złocie. Gra na krótko pauzuje podczas zamiany. Wyłączenie zatrzymuje nowe kontrole; przerwana zamiana jest najpierw cofana."
+ tca_automation_recovery_warning:0 "Zamiana została zatrzymana z powodu zmiany warunków jurysdykcji. Sprawdź przydziały i ponownie włącz automatyzację, aby ponowić przywracanie."
+ tca_confirmation_title_template:0 "Zastąp: [GetVariableSystem.Get('tca_confirmation_incumbent_name')]"

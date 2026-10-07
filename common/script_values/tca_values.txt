@@ -1,0 +1,5 @@
+﻿# Use the vanilla raw aptitude calculation, including vizier and cultural
+# bonuses. tax_collector_aptitude itself returns the 0-4 tier, not this score.
+tca_candidate_aptitude_value = {
+	value = tax_collector_aptitude_score
+}

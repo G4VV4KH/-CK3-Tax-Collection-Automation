@@ -1,0 +1,30 @@
+﻿# The policy is saved on the player character; the native UI bridge only runs
+# for that player and leaves pending work queued while other windows are open.
+tca_toggle_automation = {
+    scope = character
+    is_shown = { tca_available_trigger = yes }
+    is_valid = { tca_available_trigger = yes }
+    effect = {
+        if = {
+            limit = { tca_available_trigger = yes }
+            if = {
+                limit = { has_variable = tca_enabled }
+                tca_stop_effect = yes
+            }
+            else = {
+                set_variable = { name = tca_enabled value = yes }
+                # Retry only when the journal's original jurisdictions still
+                # belong to this ruler; otherwise retain the visible warning.
+                if = {
+                    limit = { has_variable = tca_swap_tx_pending NOT = { tca_swap_tx_owner_trigger = yes } }
+                    set_variable = { name = tca_swap_tx_blocked value = yes }
+                    remove_variable = tca_enabled
+                }
+                else = {
+                    remove_variable = tca_swap_tx_blocked
+                    tca_refresh_effect = yes
+                }
+            }
+        }
+    }
+}

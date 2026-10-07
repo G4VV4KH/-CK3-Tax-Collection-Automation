@@ -1,0 +1,401 @@
+﻿# Root = local player. All mutations are variable/list bookkeeping only.
+
+tca_swap_native_plan_s = { scope = character is_valid = {
+ tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } exists = scope:collector exists = var:tca_swap_slot_s
+ scope:collector = { is_tax_collector_of = root tax_slot = root.var:tca_swap_slot_s }
+} }
+
+tca_swap_native_tx_s = { scope = character is_valid = {
+ tca_swap_tx_owner_trigger = yes exists = scope:collector
+ scope:collector = { is_tax_collector_of = root tax_slot = root.var:tca_swap_tx_s }
+} }
+
+tca_swap_native_plan_t = { scope = character is_valid = {
+ tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } exists = scope:collector exists = var:tca_swap_slot_t
+ scope:collector = { is_tax_collector_of = root tax_slot = root.var:tca_swap_slot_t }
+} }
+
+tca_swap_native_tx_t = { scope = character is_valid = {
+ tca_swap_tx_owner_trigger = yes exists = scope:collector
+ scope:collector = { is_tax_collector_of = root tax_slot = root.var:tca_swap_tx_t }
+} }
+
+tca_swap_begin_scan = {
+ scope = character
+ is_valid = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } }
+ effect = { if = { limit = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } }
+  tca_swap_begin_scan_effect = yes
+ } }
+}
+
+tca_swap_begin_pair = {
+ scope = character
+ is_valid = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } }
+ effect = { if = { limit = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } }
+  tca_swap_begin_scan_effect = yes
+ } }
+}
+
+tca_swap_next_pair = {
+ scope = character
+ is_valid = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } has_variable = tca_swap_i NOT = { has_variable = tca_swap_scan_complete } }
+ effect = { if = { limit = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } has_variable = tca_swap_i NOT = { has_variable = tca_swap_scan_complete } }
+  tca_swap_next_pair_effect = yes
+ } }
+}
+
+tca_swap_begin_payer_s = {
+ scope = character
+ is_valid = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } tca_swap_taxpayer_eligible_trigger = yes scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_s } }
+ effect = { if = { limit = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } tca_swap_taxpayer_eligible_trigger = yes scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_s } }
+
+  set_variable = { name = tca_swap_scan_payer value = scope:taxpayer }
+  set_variable = { name = tca_swap_scan_side value = 1 }
+  remove_variable = tca_swap_scan_baseline
+ } }
+}
+
+tca_swap_begin_payer_t = {
+ scope = character
+ is_valid = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } tca_swap_taxpayer_eligible_trigger = yes scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_t } }
+ effect = { if = { limit = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } tca_swap_taxpayer_eligible_trigger = yes scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_t } }
+
+  set_variable = { name = tca_swap_scan_payer value = scope:taxpayer }
+  set_variable = { name = tca_swap_scan_side value = 2 }
+  remove_variable = tca_swap_scan_baseline
+ } }
+}
+
+tca_swap_record_baseline = {
+ scope = character
+ is_valid = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } exists = scope:taxpayer exists = scope:gold has_variable = tca_swap_scan_payer
+ scope:taxpayer = var:tca_swap_scan_payer tca_swap_taxpayer_eligible_trigger = yes
+ OR = {
+  AND = { var:tca_swap_scan_side = 1 scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_s } }
+  AND = { var:tca_swap_scan_side = 2 scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_t } }
+ } }
+ effect = { if = { limit = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } exists = scope:taxpayer exists = scope:gold has_variable = tca_swap_scan_payer
+ scope:taxpayer = var:tca_swap_scan_payer tca_swap_taxpayer_eligible_trigger = yes
+ OR = {
+  AND = { var:tca_swap_scan_side = 1 scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_s } }
+  AND = { var:tca_swap_scan_side = 2 scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_t } }
+ } }
+  set_variable = { name = tca_swap_scan_baseline value = scope:gold }
+ } }
+}
+
+tca_swap_record_other = {
+ scope = character
+ is_valid = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } exists = scope:taxpayer exists = scope:gold has_variable = tca_swap_scan_payer
+ scope:taxpayer = var:tca_swap_scan_payer tca_swap_taxpayer_eligible_trigger = yes
+ OR = {
+  AND = { var:tca_swap_scan_side = 1 scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_s } }
+  AND = { var:tca_swap_scan_side = 2 scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_t } }
+ } has_variable = tca_swap_scan_baseline }
+ effect = { if = { limit = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } exists = scope:taxpayer exists = scope:gold has_variable = tca_swap_scan_payer
+ scope:taxpayer = var:tca_swap_scan_payer tca_swap_taxpayer_eligible_trigger = yes
+ OR = {
+  AND = { var:tca_swap_scan_side = 1 scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_s } }
+  AND = { var:tca_swap_scan_side = 2 scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_t } }
+ } has_variable = tca_swap_scan_baseline }
+
+  set_variable = { name = tca_swap_candidate_gain value = scope:gold }
+  change_variable = { name = tca_swap_candidate_gain subtract = var:tca_swap_scan_baseline }
+
+  if = { limit = { var:tca_swap_scan_side = 1 OR = {
+   NOT = { has_variable = tca_swap_best_a }
+   var:tca_swap_candidate_gain > var:tca_swap_a_gain
+  } }
+   set_variable = { name = tca_swap_best_a value = scope:taxpayer }
+   set_variable = { name = tca_swap_a_gain value = var:tca_swap_candidate_gain }
+   set_variable = { name = tca_swap_a_from value = var:tca_swap_scan_baseline }
+   set_variable = { name = tca_swap_a_to value = scope:gold }
+  }
+  if = { limit = { var:tca_swap_scan_side = 1 NOT = { any_in_list = { variable = tca_swap_s_scanned this = scope:taxpayer } } }
+   add_to_variable_list = { name = tca_swap_s_scanned target = scope:taxpayer }
+  }
+  if = { limit = { var:tca_swap_scan_side = 2 OR = {
+   NOT = { has_variable = tca_swap_best_b }
+   var:tca_swap_candidate_gain > var:tca_swap_b_gain
+  } }
+   set_variable = { name = tca_swap_best_b value = scope:taxpayer }
+   set_variable = { name = tca_swap_b_gain value = var:tca_swap_candidate_gain }
+   set_variable = { name = tca_swap_b_from value = var:tca_swap_scan_baseline }
+   set_variable = { name = tca_swap_b_to value = scope:gold }
+  }
+  if = { limit = { var:tca_swap_scan_side = 2 NOT = { any_in_list = { variable = tca_swap_t_scanned this = scope:taxpayer } } }
+   add_to_variable_list = { name = tca_swap_t_scanned target = scope:taxpayer }
+  }
+ } }
+}
+
+tca_swap_side_s_complete = {
+ scope = character
+ is_valid = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending }
+  NOT = { any_in_list = { variable = tca_swap_s_payers
+   save_temporary_scope_as = taxpayer
+   root = {
+    tca_swap_taxpayer_eligible_trigger = yes
+    scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_s }
+    NOT = { any_in_list = { variable = tca_swap_s_scanned this = scope:taxpayer } }
+   }
+  } }
+ }
+}
+
+tca_swap_side_t_complete = {
+ scope = character
+ is_valid = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending }
+  NOT = { any_in_list = { variable = tca_swap_t_payers
+   save_temporary_scope_as = taxpayer
+   root = {
+    tca_swap_taxpayer_eligible_trigger = yes
+    scope:taxpayer = { assigned_tax_slot = root.var:tca_swap_slot_t }
+    NOT = { any_in_list = { variable = tca_swap_t_scanned this = scope:taxpayer } }
+   }
+  } }
+ }
+}
+
+tca_swap_pair_has_improvement = { scope = character is_valid = { tca_swap_pair_structurally_valid_trigger = yes } }
+
+tca_swap_prepare_transaction = {
+ scope = character
+ is_valid = { tca_swap_pair_structurally_valid_trigger = yes NOT = { has_variable = tca_swap_tx_pending } NOT = { exists = global_var:tca_swap_recovery_owner } exists = scope:was_paused exists = scope:autoassign }
+ effect = { if = { limit = { tca_swap_pair_structurally_valid_trigger = yes NOT = { has_variable = tca_swap_tx_pending } NOT = { exists = global_var:tca_swap_recovery_owner } exists = scope:was_paused exists = scope:autoassign }
+
+  var:tca_swap_best_a = { save_scope_as = taxpayer }
+  var:tca_swap_collector_t = { save_scope_as = collector }
+  if = { limit = { tca_swap_taxpayer_eligible_for_slot_trigger = yes }
+   var:tca_swap_best_b = { save_scope_as = taxpayer }
+   var:tca_swap_collector_s = { save_scope_as = collector }
+   if = { limit = { tca_swap_taxpayer_eligible_for_slot_trigger = yes }
+    set_variable = { name = tca_swap_tx_pending value = yes }
+    set_global_variable = { name = tca_swap_recovery_owner value = root }
+    remove_variable = tca_swap_tx_rollback
+    remove_variable = tca_swap_tx_ready
+    set_variable = { name = tca_swap_tx_state value = 1 }
+    # Presence flags avoid converting a saved boolean Scope into CFixedPoint
+    # in the GUI: IsSet is the complete public meaning of each flag.
+    remove_variable = tca_swap_tx_was_paused
+    remove_variable = tca_swap_tx_autoassign
+    if = { limit = { scope:was_paused = yes }
+     set_variable = { name = tca_swap_tx_was_paused value = yes }
+    }
+    if = { limit = { scope:autoassign = yes }
+     set_variable = { name = tca_swap_tx_autoassign value = yes }
+    }
+    set_variable = { name = tca_swap_tx_a value = var:tca_swap_best_a }
+    set_variable = { name = tca_swap_tx_b value = var:tca_swap_best_b }
+    set_variable = { name = tca_swap_tx_s value = var:tca_swap_slot_s }
+    set_variable = { name = tca_swap_tx_t value = var:tca_swap_slot_t }
+    set_variable = { name = tca_swap_tx_collector_s value = var:tca_swap_collector_s }
+    set_variable = { name = tca_swap_tx_collector_t value = var:tca_swap_collector_t }
+    set_variable = { name = tca_swap_tx_a_from value = var:tca_swap_a_from }
+    set_variable = { name = tca_swap_tx_a_to value = var:tca_swap_a_to }
+    set_variable = { name = tca_swap_tx_b_from value = var:tca_swap_b_from }
+    set_variable = { name = tca_swap_tx_b_to value = var:tca_swap_b_to }
+    if = { limit = { var:tca_swap_tx_s = { is_active_obligation = default_tax_collector } }
+     set_variable = { name = tca_swap_tx_s_obligation value = 1 }
+    }
+    if = { limit = { var:tca_swap_tx_s = { is_active_obligation = strict_taxation_tax_collector } }
+     set_variable = { name = tca_swap_tx_s_obligation value = 2 }
+    }
+    if = { limit = { var:tca_swap_tx_s = { is_active_obligation = iqta_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_s_obligation value = 3 }
+    }
+    if = { limit = { var:tca_swap_tx_s = { is_active_obligation = ghazi_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_s_obligation value = 4 }
+    }
+    if = { limit = { var:tca_swap_tx_s = { is_active_obligation = muqata_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_s_obligation value = 5 }
+    }
+    if = { limit = { var:tca_swap_tx_s = { is_active_obligation = jizya_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_s_obligation value = 6 }
+    }
+    if = { limit = { var:tca_swap_tx_s = { is_active_obligation = deqhan_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_s_obligation value = 7 }
+    }
+    if = { limit = { var:tca_swap_tx_s = { is_active_obligation = maguh_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_s_obligation value = 8 }
+    }
+    if = { limit = { var:tca_swap_tx_t = { is_active_obligation = default_tax_collector } }
+     set_variable = { name = tca_swap_tx_t_obligation value = 1 }
+    }
+    if = { limit = { var:tca_swap_tx_t = { is_active_obligation = strict_taxation_tax_collector } }
+     set_variable = { name = tca_swap_tx_t_obligation value = 2 }
+    }
+    if = { limit = { var:tca_swap_tx_t = { is_active_obligation = iqta_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_t_obligation value = 3 }
+    }
+    if = { limit = { var:tca_swap_tx_t = { is_active_obligation = ghazi_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_t_obligation value = 4 }
+    }
+    if = { limit = { var:tca_swap_tx_t = { is_active_obligation = muqata_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_t_obligation value = 5 }
+    }
+    if = { limit = { var:tca_swap_tx_t = { is_active_obligation = jizya_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_t_obligation value = 6 }
+    }
+    if = { limit = { var:tca_swap_tx_t = { is_active_obligation = deqhan_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_t_obligation value = 7 }
+    }
+    if = { limit = { var:tca_swap_tx_t = { is_active_obligation = maguh_special_rights_tax_collector } }
+     set_variable = { name = tca_swap_tx_t_obligation value = 8 }
+    }
+   }
+  }
+ } }
+}
+
+tca_swap_tx_begin_validation = {
+ scope = character
+ is_valid = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes var:tca_swap_tx_state = 1 NOT = { has_variable = tca_swap_tx_rollback } }
+ effect = { if = { limit = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes var:tca_swap_tx_state = 1 NOT = { has_variable = tca_swap_tx_rollback } }
+  remove_variable = tca_swap_tx_ready
+  remove_variable = tca_swap_tx_a_from_check
+  remove_variable = tca_swap_tx_a_to_check
+  remove_variable = tca_swap_tx_b_from_check
+  remove_variable = tca_swap_tx_b_to_check
+ } }
+}
+
+tca_swap_tx_record_a_from = {
+ scope = character
+ is_valid = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes var:tca_swap_tx_state = 1 exists = scope:gold exists = scope:taxpayer scope:taxpayer = var:tca_swap_tx_a NOT = { has_variable = tca_swap_tx_rollback } }
+ effect = { if = { limit = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes var:tca_swap_tx_state = 1 exists = scope:gold exists = scope:taxpayer scope:taxpayer = var:tca_swap_tx_a NOT = { has_variable = tca_swap_tx_rollback } }
+  set_variable = { name = tca_swap_tx_a_from_check value = scope:gold }
+ } }
+}
+
+tca_swap_tx_record_a_to = {
+ scope = character
+ is_valid = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes var:tca_swap_tx_state = 1 exists = scope:gold exists = scope:taxpayer scope:taxpayer = var:tca_swap_tx_a NOT = { has_variable = tca_swap_tx_rollback } }
+ effect = { if = { limit = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes var:tca_swap_tx_state = 1 exists = scope:gold exists = scope:taxpayer scope:taxpayer = var:tca_swap_tx_a NOT = { has_variable = tca_swap_tx_rollback } }
+  set_variable = { name = tca_swap_tx_a_to_check value = scope:gold }
+ } }
+}
+
+tca_swap_tx_record_b_from = {
+ scope = character
+ is_valid = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes var:tca_swap_tx_state = 1 exists = scope:gold exists = scope:taxpayer scope:taxpayer = var:tca_swap_tx_b NOT = { has_variable = tca_swap_tx_rollback } }
+ effect = { if = { limit = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes var:tca_swap_tx_state = 1 exists = scope:gold exists = scope:taxpayer scope:taxpayer = var:tca_swap_tx_b NOT = { has_variable = tca_swap_tx_rollback } }
+  set_variable = { name = tca_swap_tx_b_from_check value = scope:gold }
+ } }
+}
+
+tca_swap_tx_record_b_to = {
+ scope = character
+ is_valid = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes var:tca_swap_tx_state = 1 exists = scope:gold exists = scope:taxpayer scope:taxpayer = var:tca_swap_tx_b NOT = { has_variable = tca_swap_tx_rollback } }
+ effect = { if = { limit = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes var:tca_swap_tx_state = 1 exists = scope:gold exists = scope:taxpayer scope:taxpayer = var:tca_swap_tx_b NOT = { has_variable = tca_swap_tx_rollback } }
+  set_variable = { name = tca_swap_tx_b_to_check value = scope:gold }
+ } }
+}
+
+tca_swap_tx_confirm = {
+ scope = character
+ is_valid = { tca_swap_tx_owner_trigger = yes tca_swap_tx_stable_context_trigger = yes tca_enabled_trigger = yes has_variable = tca_swap_tx_a_from_check has_variable = tca_swap_tx_a_to_check has_variable = tca_swap_tx_b_from_check has_variable = tca_swap_tx_b_to_check }
+ effect = { if = { limit = { tca_swap_tx_owner_trigger = yes tca_swap_tx_stable_context_trigger = yes tca_enabled_trigger = yes has_variable = tca_swap_tx_a_from_check has_variable = tca_swap_tx_a_to_check has_variable = tca_swap_tx_b_from_check has_variable = tca_swap_tx_b_to_check }
+
+  remove_variable = tca_swap_tx_ready
+  var:tca_swap_tx_a = { save_scope_as = taxpayer }
+  var:tca_swap_tx_collector_t = { save_scope_as = collector }
+  if = { limit = { tca_swap_taxpayer_eligible_for_slot_trigger = yes }
+   var:tca_swap_tx_b = { save_scope_as = taxpayer }
+   var:tca_swap_tx_collector_s = { save_scope_as = collector }
+   if = { limit = { tca_swap_taxpayer_eligible_for_slot_trigger = yes tca_swap_checked_gain_value > 0 }
+    set_variable = { name = tca_swap_tx_ready value = yes }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tca_swap_tx_ready } }
+   set_variable = { name = tca_swap_tx_rollback value = yes }
+  }
+  tca_swap_tx_observe_effect = yes
+ } }
+}
+
+tca_swap_tx_observe = {
+ scope = character
+ is_valid = { has_variable = tca_swap_tx_pending }
+ effect = { if = { limit = { has_variable = tca_swap_tx_pending }
+  tca_swap_tx_observe_effect = yes
+ } }
+}
+
+tca_swap_tx_cancel = {
+ scope = character
+ is_valid = { has_variable = tca_swap_tx_pending }
+ effect = { if = { limit = { has_variable = tca_swap_tx_pending }
+  set_variable = { name = tca_swap_tx_rollback value = yes }
+  tca_swap_tx_observe_effect = yes
+ } }
+}
+
+tca_swap_tx_block = {
+ scope = character
+ is_valid = { has_variable = tca_swap_tx_pending }
+ effect = { if = { limit = { has_variable = tca_swap_tx_pending }
+
+  set_variable = { name = tca_swap_tx_blocked value = yes }
+  set_variable = { name = tca_swap_tx_rollback value = yes }
+  tca_stop_effect = yes
+ } }
+}
+
+tca_swap_tx_unblock = {
+ scope = character
+ is_valid = { tca_enabled_trigger = yes has_variable = tca_swap_tx_pending has_variable = tca_swap_tx_blocked }
+ effect = { if = { limit = { tca_enabled_trigger = yes has_variable = tca_swap_tx_pending has_variable = tca_swap_tx_blocked }
+  remove_variable = tca_swap_tx_blocked
+ } }
+}
+
+tca_swap_tx_is_owned = { scope = character is_valid = { tca_swap_tx_owner_trigger = yes } }
+
+tca_swap_tx_can_remove_b = { scope = character is_valid = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes tca_swap_tx_stable_context_trigger = yes has_variable = tca_swap_tx_ready NOT = { has_variable = tca_swap_tx_rollback } NOT = { has_variable = tca_swap_tx_blocked } var:tca_swap_tx_a = { assigned_tax_slot = root.var:tca_swap_tx_s }
+  var:tca_swap_tx_b = { assigned_tax_slot = root.var:tca_swap_tx_t } } }
+
+tca_swap_tx_can_move_a = { scope = character is_valid = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes tca_swap_tx_stable_context_trigger = yes has_variable = tca_swap_tx_ready NOT = { has_variable = tca_swap_tx_rollback } NOT = { has_variable = tca_swap_tx_blocked } var:tca_swap_tx_a = { assigned_tax_slot = root.var:tca_swap_tx_s can_assign_to_tax_slot = root.var:tca_swap_tx_t }
+  var:tca_swap_tx_b = { NOT = { exists = assigned_tax_slot } } } }
+
+tca_swap_tx_can_move_b = { scope = character is_valid = { tca_swap_tx_owner_trigger = yes tca_enabled_trigger = yes tca_swap_tx_stable_context_trigger = yes has_variable = tca_swap_tx_ready NOT = { has_variable = tca_swap_tx_rollback } NOT = { has_variable = tca_swap_tx_blocked } var:tca_swap_tx_a = { assigned_tax_slot = root.var:tca_swap_tx_t }
+  var:tca_swap_tx_b = { NOT = { exists = assigned_tax_slot } can_assign_to_tax_slot = root.var:tca_swap_tx_s } } }
+
+tca_swap_tx_can_restore_a = { scope = character is_valid = { tca_swap_tx_owner_trigger = yes has_variable = tca_swap_tx_rollback NOT = { has_variable = tca_swap_tx_blocked }
+  var:tca_swap_tx_a = { is_alive = yes liege = root assigned_tax_slot = root.var:tca_swap_tx_t can_assign_to_tax_slot = root.var:tca_swap_tx_s }
+  var:tca_swap_tx_b = { NOT = { exists = assigned_tax_slot } } } }
+
+tca_swap_tx_can_restore_b = { scope = character is_valid = { tca_swap_tx_owner_trigger = yes has_variable = tca_swap_tx_rollback NOT = { has_variable = tca_swap_tx_blocked }
+  var:tca_swap_tx_a = { assigned_tax_slot = root.var:tca_swap_tx_s }
+  var:tca_swap_tx_b = { is_alive = yes liege = root NOT = { exists = assigned_tax_slot } can_assign_to_tax_slot = root.var:tca_swap_tx_t } } }
+
+tca_swap_tx_can_finish = { scope = character is_valid = { tca_swap_tx_can_finish_trigger = yes } }
+
+tca_swap_tx_finish = {
+ scope = character
+ is_valid = { tca_swap_tx_can_finish_trigger = yes }
+ effect = { if = { limit = { tca_swap_tx_can_finish_trigger = yes }
+
+  # Called only after the GUI restores native autoassign and pause settings.
+  if = { limit = {
+   var:tca_swap_tx_a = { assigned_tax_slot = root.var:tca_swap_tx_t }
+   var:tca_swap_tx_b = { assigned_tax_slot = root.var:tca_swap_tx_s }
+  }
+   # A profitable exchange changes which pairs are profitable. Restart the
+   # pair cursor without redoing recruitment or the direct-assignment pass.
+   set_variable = { name = tca_swap_i value = 1 }
+   set_variable = { name = tca_swap_j value = 2 }
+  }
+  else = {
+   change_variable = { name = tca_swap_j add = 1 }
+   if = { limit = { var:tca_swap_j > var:tca_swap_slot_count }
+    change_variable = { name = tca_swap_i add = 1 }
+    set_variable = { name = tca_swap_j value = var:tca_swap_i }
+    change_variable = { name = tca_swap_j add = 1 }
+   }
+  }
+  tca_swap_tx_clear_effect = yes
+  if = { limit = { tca_enabled_trigger = yes } tca_swap_load_pair_effect = yes }
+
+ } }
+}

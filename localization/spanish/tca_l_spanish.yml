@@ -1,0 +1,5 @@
+﻿l_spanish:
+ tca_automation_label:0 "Automatizar la recaudación"
+ tca_automation_tooltip:0 "Cubre las vacantes de recaudador de impuestos y sustituye al titular solo cuando un candidato tiene mayor aptitud. Asigna los contribuyentes a una jurisdicción disponible cuyo decreto fiscal vigente aporta más oro.\n\nEl panel de impuestos puede permanecer abierto. Comprueba al activarse y una vez al mes; otras ventanas abiertas pueden retrasar la revisión. Los controles fiscales manuales se desactivan durante la revisión, pero la casilla de automatización sigue disponible. También intercambia contribuyentes entre jurisdicciones llenas si aumenta su oro conjunto. El juego se pausa brevemente durante el intercambio. Desactivar detiene nuevas comprobaciones; primero se revierte cualquier intercambio interrumpido."
+ tca_automation_recovery_warning:0 "Intercambio detenido por cambios en las jurisdicciones. Revisa las asignaciones y vuelve a activar la automatización para reintentar la restauración."
+ tca_confirmation_title_template:0 "Reemplazar a [GetVariableSystem.Get('tca_confirmation_incumbent_name')]"

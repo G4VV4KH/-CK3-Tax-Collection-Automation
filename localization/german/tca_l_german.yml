@@ -1,0 +1,5 @@
+﻿l_german:
+ tca_automation_label:0 "Steuererhebung automatisieren"
+ tca_automation_tooltip:0 "Besetzt freie Steuereintreiberposten und ersetzt Amtsinhaber nur durch Kandidaten mit höherer Eignung. Weist Steuerzahler einem verfügbaren Steuerbezirk zu, dessen geltender Steuererlass mehr Gold einbringt.\n\nDas Steuerfenster kann geöffnet bleiben. Prüft nach dem Aktivieren und einmal im Monat; andere offene Fenster können die Prüfung verzögern. Während einer Prüfung sind manuelle Steueraktionen gesperrt; das Kontrollkästchen für die Automatisierung bleibt bedienbar. Tauscht Steuerzahler zwischen vollen Bezirken, wenn ihr gemeinsamer Goldertrag steigt. Während des Tauschs pausiert das Spiel kurz. Beim Deaktivieren endet neue Arbeit; ein unterbrochener Tausch wird zuerst rückgängig gemacht."
+ tca_automation_recovery_warning:0 "Der Tausch wurde wegen geänderter Bezirksbedingungen gestoppt. Zuweisungen prüfen und die Automatisierung erneut aktivieren, um die Wiederherstellung zu wiederholen."
+ tca_confirmation_title_template:0 "[GetVariableSystem.Get('tca_confirmation_incumbent_name')] ersetzen"

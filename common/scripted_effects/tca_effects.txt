@@ -1,0 +1,133 @@
+﻿# CK3 exposes no scripted hire-tax-collector or assign-taxpayer effect.
+# These helpers only prepare work for the native GUI command bridge. Never
+# fire an incumbent before the native replacement command has a candidate.
+
+tca_schedule_effect = {
+	if = {
+		limit = {
+			tca_enabled_trigger = yes
+			NOT = { has_variable = tca_loop_pending }
+		}
+		set_variable = { name = tca_loop_pending value = yes }
+		trigger_event = { on_action = tca_monthly_tick months = 1 }
+	}
+}
+
+tca_refresh_effect = {
+	if = {
+		limit = { tca_enabled_trigger = yes }
+		# Coalesce monthly requests during a long GUI pass. Advancing the game
+		# at high speed must not continuously invalidate an unfinished pass.
+		if = {
+			limit = { NOT = { has_variable = tca_refresh_pending } }
+			if = {
+				limit = { has_variable = tca_refresh_epoch }
+				change_variable = { name = tca_refresh_epoch add = 1 }
+			}
+			else = { set_variable = { name = tca_refresh_epoch value = 1 } }
+			# Bind the native GUI to persistent empty lists before its first
+			# window is created. A same-epoch retry keeps the existing pair plan.
+			clear_variable_list = tca_swap_s_payers
+			clear_variable_list = tca_swap_t_payers
+			set_variable = { name = tca_refresh_pending value = yes }
+		}
+		tca_schedule_effect = yes
+	}
+}
+
+tca_clear_work_effect = {
+	remove_variable = tca_refresh_pending
+	remove_variable = tca_active_epoch
+	remove_variable = tca_best_candidate
+	remove_variable = tca_best_score
+	remove_variable = tca_current_collector
+	remove_variable = tca_taxpayer
+	remove_variable = tca_best_tax_gold
+	clear_variable_list = tca_taxpayers
+}
+
+tca_load_reset_effect = {
+	if = {
+		limit = { tca_enabled_trigger = yes }
+		# Old UI selections are not game-state transactions. Discard a pending
+		# plan and change its generation before using fresh native windows.
+		tca_clear_work_effect = yes
+		tca_refresh_effect = yes
+	}
+}
+
+tca_stop_effect = {
+	remove_variable = tca_enabled
+	tca_clear_work_effect = yes
+	# Keep tca_loop_pending until the already queued tick consumes it. A rapid
+	# off/on sequence must not create duplicate recurring loops.
+}
+
+tca_begin_empty_slot_effect = {
+	remove_variable = tca_best_candidate
+	remove_variable = tca_current_collector
+	set_variable = { name = tca_best_score value = -1000000 }
+}
+
+tca_begin_slot_effect = {
+	tca_begin_empty_slot_effect = yes
+	if = {
+		limit = { exists = scope:current_collector }
+		set_variable = { name = tca_current_collector value = scope:current_collector }
+		set_variable = { name = tca_best_candidate value = scope:current_collector }
+		set_variable = { name = tca_best_score value = scope:current_collector.tca_candidate_aptitude_value }
+	}
+}
+
+tca_consider_candidate_effect = {
+	if = {
+		limit = {
+			tca_candidate_can_be_considered_trigger = yes
+			scope:candidate.tca_candidate_aptitude_value > var:tca_best_score
+		}
+		set_variable = { name = tca_best_candidate value = scope:candidate }
+		set_variable = { name = tca_best_score value = scope:candidate.tca_candidate_aptitude_value }
+	}
+}
+
+# Take only the engine's actual taxpayer sets: assigned + unassigned. This
+# respects future changes to which governments use clan tax jurisdictions.
+tca_build_taxpayer_list_effect = {
+	clear_variable_list = tca_taxpayers
+	save_scope_as = tca_owner
+	every_tax_slot = {
+		every_tax_slot_vassal = {
+			save_scope_as = tca_list_vassal
+			scope:tca_owner = {
+				add_to_variable_list = { name = tca_taxpayers target = scope:tca_list_vassal }
+			}
+		}
+	}
+	every_unassigned_taxpayers = {
+		save_scope_as = tca_list_vassal
+		scope:tca_owner = {
+			add_to_variable_list = { name = tca_taxpayers target = scope:tca_list_vassal }
+		}
+	}
+	clear_saved_scope = tca_list_vassal
+}
+
+# Baselines and alternatives must come from the same native preview API.
+# tax_to_liege did not equal the GUI preview in the native test and must not
+# be mixed with it. Assigned taxpayers remain unscorable until the UI seeds
+# their incumbent preview; unassigned taxpayers can use a zero-gold slot.
+tca_begin_taxpayer_effect = {
+	# Each native preview attempt gets a new token, including retries of the
+	# same taxpayer after an interrupted pass. Cleanup deliberately retains it.
+	if = {
+		limit = { has_variable = tca_preview_epoch }
+		change_variable = { name = tca_preview_epoch add = 1 }
+	}
+	else = { set_variable = { name = tca_preview_epoch value = 1 } }
+	set_variable = { name = tca_taxpayer value = scope:taxpayer }
+	remove_variable = tca_best_tax_gold
+	if = {
+		limit = { scope:taxpayer = { NOT = { exists = assigned_tax_slot } } }
+		set_variable = { name = tca_best_tax_gold value = -1 }
+	}
+}

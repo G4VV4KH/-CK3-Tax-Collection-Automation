@@ -1,0 +1,122 @@
+﻿# Native command eligibility. UI must additionally confirm its exact window,
+# selected row, pause readback and native CanSelectTaxSlot before acting.
+tca_swap_pair_structurally_valid_trigger = {
+ tca_enabled_trigger = yes
+ exists = var:tca_swap_best_a
+ exists = var:tca_swap_best_b
+ exists = var:tca_swap_slot_s
+ exists = var:tca_swap_slot_t
+ exists = var:tca_swap_collector_s
+ exists = var:tca_swap_collector_t
+ var:tca_swap_slot_s != var:tca_swap_slot_t
+ var:tca_swap_best_a != var:tca_swap_best_b
+ var:tca_swap_collector_s = { is_tax_collector_of = root tax_slot = root.var:tca_swap_slot_s }
+ var:tca_swap_collector_t = { is_tax_collector_of = root tax_slot = root.var:tca_swap_slot_t }
+ var:tca_swap_best_a = { is_alive = yes liege = root assigned_tax_slot = root.var:tca_swap_slot_s }
+ var:tca_swap_best_b = { is_alive = yes liege = root assigned_tax_slot = root.var:tca_swap_slot_t }
+ var:tca_swap_slot_s = { any_tax_slot_vassal = { always = yes } }
+ var:tca_swap_slot_t = { any_tax_slot_vassal = { always = yes } }
+ var:tca_swap_best_a = { save_temporary_scope_as = taxpayer }
+ var:tca_swap_collector_t = { save_temporary_scope_as = collector }
+ tca_swap_taxpayer_eligible_for_slot_trigger = yes
+ var:tca_swap_best_b = { save_temporary_scope_as = taxpayer }
+ var:tca_swap_collector_s = { save_temporary_scope_as = collector }
+ tca_swap_taxpayer_eligible_for_slot_trigger = yes
+ has_variable = tca_swap_a_gain
+ has_variable = tca_swap_b_gain
+ tca_swap_combined_gain_value > 0
+}
+
+tca_swap_tx_owner_trigger = {
+ is_ai = no
+ is_alive = yes
+ has_variable = tca_swap_tx_pending
+ exists = var:tca_swap_tx_s
+ exists = var:tca_swap_tx_t
+ any_tax_slot = { this = root.var:tca_swap_tx_s }
+ any_tax_slot = { this = root.var:tca_swap_tx_t }
+}
+
+tca_swap_tx_stable_context_trigger = {
+ tca_swap_tx_owner_trigger = yes
+ exists = var:tca_swap_tx_collector_s
+ exists = var:tca_swap_tx_collector_t
+ exists = var:tca_swap_tx_a
+ exists = var:tca_swap_tx_b
+ var:tca_swap_tx_collector_s = { is_tax_collector_of = root tax_slot = root.var:tca_swap_tx_s }
+ var:tca_swap_tx_collector_t = { is_tax_collector_of = root tax_slot = root.var:tca_swap_tx_t }
+ var:tca_swap_tx_a = { is_alive = yes liege = root is_tax_collector = no }
+ var:tca_swap_tx_b = { is_alive = yes liege = root is_tax_collector = no }
+ trigger_if = { limit = { exists = diarch }
+  var:tca_swap_tx_a != diarch
+  var:tca_swap_tx_b != diarch
+ }
+ trigger_if = { limit = { var:tca_swap_tx_s_obligation = 1 }
+  var:tca_swap_tx_s = { is_active_obligation = default_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_s_obligation = 2 }
+  var:tca_swap_tx_s = { is_active_obligation = strict_taxation_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_s_obligation = 3 }
+  var:tca_swap_tx_s = { is_active_obligation = iqta_special_rights_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_s_obligation = 4 }
+  var:tca_swap_tx_s = { is_active_obligation = ghazi_special_rights_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_s_obligation = 5 }
+  var:tca_swap_tx_s = { is_active_obligation = muqata_special_rights_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_s_obligation = 6 }
+  var:tca_swap_tx_s = { is_active_obligation = jizya_special_rights_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_s_obligation = 7 }
+  var:tca_swap_tx_s = { is_active_obligation = deqhan_special_rights_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_s_obligation = 8 }
+  var:tca_swap_tx_s = { is_active_obligation = maguh_special_rights_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_t_obligation = 1 }
+  var:tca_swap_tx_t = { is_active_obligation = default_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_t_obligation = 2 }
+  var:tca_swap_tx_t = { is_active_obligation = strict_taxation_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_t_obligation = 3 }
+  var:tca_swap_tx_t = { is_active_obligation = iqta_special_rights_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_t_obligation = 4 }
+  var:tca_swap_tx_t = { is_active_obligation = ghazi_special_rights_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_t_obligation = 5 }
+  var:tca_swap_tx_t = { is_active_obligation = muqata_special_rights_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_t_obligation = 6 }
+  var:tca_swap_tx_t = { is_active_obligation = jizya_special_rights_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_t_obligation = 7 }
+  var:tca_swap_tx_t = { is_active_obligation = deqhan_special_rights_tax_collector }
+ }
+ trigger_if = { limit = { var:tca_swap_tx_t_obligation = 8 }
+  var:tca_swap_tx_t = { is_active_obligation = maguh_special_rights_tax_collector }
+ }
+}
+
+tca_swap_tx_can_finish_trigger = {
+ is_ai = no
+ has_variable = tca_swap_tx_pending
+ exists = var:tca_swap_tx_a
+ exists = var:tca_swap_tx_b
+ exists = var:tca_swap_tx_s
+ exists = var:tca_swap_tx_t
+ OR = {
+  AND = {
+   var:tca_swap_tx_a = { assigned_tax_slot = root.var:tca_swap_tx_t }
+   var:tca_swap_tx_b = { assigned_tax_slot = root.var:tca_swap_tx_s }
+  }
+  AND = {
+   has_variable = tca_swap_tx_rollback
+   var:tca_swap_tx_a = { assigned_tax_slot = root.var:tca_swap_tx_s }
+   var:tca_swap_tx_b = { assigned_tax_slot = root.var:tca_swap_tx_t }
+  }
+ }
+}

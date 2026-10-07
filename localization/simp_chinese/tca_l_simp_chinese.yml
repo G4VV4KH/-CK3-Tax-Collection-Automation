@@ -1,0 +1,5 @@
+﻿l_simp_chinese:
+ tca_automation_label:0 "自动征税"
+ tca_automation_tooltip:0 "填补税吏空缺，仅在候选人的资质高于现任税吏时进行替换。将纳税人分配到有空位且现行税令能带来更多金币的税收管辖区。\n\n税收面板可以保持打开。启用后及每月检查一次；其他打开的窗口可能推迟检查。检查期间手动税收操作暂不可用，但仍可使用自动化复选框。若能提高双方的金币总收入，也会在已满的管辖区之间交换纳税人。交换期间游戏会短暂暂停。关闭后停止新的检查，并先撤销尚未完成的交换。"
+ tca_automation_recovery_warning:0 "管辖区条件发生变化，交换已停止。请检查纳税人分配，然后重新启用自动化以重试恢复。"
+ tca_confirmation_title_template:0 "替换[GetVariableSystem.Get('tca_confirmation_incumbent_name')]"

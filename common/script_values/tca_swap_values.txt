@@ -1,0 +1,10 @@
+﻿tca_swap_combined_gain_value = {
+ value = var:tca_swap_a_gain
+ add = var:tca_swap_b_gain
+}
+tca_swap_checked_gain_value = {
+ value = var:tca_swap_tx_a_to_check
+ add = var:tca_swap_tx_b_to_check
+ subtract = var:tca_swap_tx_a_from_check
+ subtract = var:tca_swap_tx_b_from_check
+}

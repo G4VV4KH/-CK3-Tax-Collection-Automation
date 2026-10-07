@@ -1,0 +1,138 @@
+﻿# Root for every bridge call is GetPlayer.MakeScope. Native list rows supply
+# the named scopes with GuiScope.AddScope. These actions do not appoint/fire.
+tca_begin_refresh = {
+	scope = character
+	is_valid = { tca_enabled_trigger = yes has_variable = tca_refresh_pending }
+	effect = {
+		if = {
+			limit = { tca_enabled_trigger = yes has_variable = tca_refresh_pending }
+			set_variable = { name = tca_active_epoch value = var:tca_refresh_epoch }
+			tca_schedule_effect = yes
+		}
+	}
+}
+
+tca_begin_slot = {
+	scope = character
+	is_shown = { tca_enabled_trigger = yes }
+	is_valid = { tca_enabled_trigger = yes exists = scope:current_collector }
+	effect = {
+		if = {
+			limit = { tca_enabled_trigger = yes exists = scope:current_collector }
+			tca_begin_slot_effect = yes
+		}
+	}
+}
+
+tca_begin_empty_slot = {
+	scope = character
+	is_shown = { tca_enabled_trigger = yes }
+	is_valid = { tca_enabled_trigger = yes }
+	effect = {
+		if = {
+			limit = { tca_enabled_trigger = yes }
+			tca_begin_empty_slot_effect = yes
+		}
+	}
+}
+
+tca_consider_candidate = {
+	scope = character
+	is_shown = { tca_enabled_trigger = yes }
+	is_valid = { tca_candidate_can_be_considered_trigger = yes }
+	effect = { tca_consider_candidate_effect = yes }
+}
+
+tca_prepare_taxpayers = {
+	scope = character
+	is_shown = { tca_enabled_trigger = yes }
+	is_valid = { tca_enabled_trigger = yes }
+	effect = {
+		if = {
+			limit = { tca_enabled_trigger = yes }
+			tca_build_taxpayer_list_effect = yes
+		}
+	}
+}
+
+tca_finish_refresh = {
+	scope = character
+	is_valid = { is_ai = no }
+	effect = {
+		if = {
+			limit = {
+				has_variable = tca_active_epoch
+				has_variable = tca_refresh_epoch
+				var:tca_active_epoch = var:tca_refresh_epoch
+			}
+			tca_clear_work_effect = yes
+		}
+	}
+}
+
+# Scope:taxpayer comes from the engine-derived tca_taxpayers list. Membership
+# may have changed while the UI was idle, so recheck the direct liege now.
+tca_taxpayer_is_eligible = {
+	scope = character
+	is_valid = {
+		tca_taxpayer_can_be_considered_trigger = yes
+	}
+}
+
+tca_begin_taxpayer = {
+	scope = character
+	is_valid = {
+		tca_taxpayer_can_be_considered_trigger = yes
+	}
+	effect = {
+		if = {
+			limit = {
+				tca_taxpayer_can_be_considered_trigger = yes
+			}
+			tca_begin_taxpayer_effect = yes
+		}
+	}
+}
+
+# scope:gold is a numeric scope produced by the native selected-slot preview:
+# MakeScopeValue(TaxSlotAssignVassalWindow.GetVassalTaxBreakdown.GetFixedPointValue).
+# Calling IsValid before Execute lets the UI retain the matching slot ID.
+tca_seed_native_taxpayer_gold = {
+	scope = character
+	is_valid = {
+		tca_enabled_trigger = yes
+		exists = scope:gold
+		has_variable = tca_taxpayer
+	}
+	effect = {
+		if = {
+			limit = {
+				tca_enabled_trigger = yes
+				exists = scope:gold
+				has_variable = tca_taxpayer
+			}
+			set_variable = { name = tca_best_tax_gold value = scope:gold }
+		}
+	}
+}
+
+tca_record_taxpayer_gold = {
+	scope = character
+	is_valid = {
+		tca_enabled_trigger = yes
+		exists = scope:gold
+		has_variable = tca_best_tax_gold
+		scope:gold > var:tca_best_tax_gold
+	}
+	effect = {
+		if = {
+			limit = {
+				tca_enabled_trigger = yes
+				exists = scope:gold
+				has_variable = tca_best_tax_gold
+				scope:gold > var:tca_best_tax_gold
+			}
+			set_variable = { name = tca_best_tax_gold value = scope:gold }
+		}
+	}
+}

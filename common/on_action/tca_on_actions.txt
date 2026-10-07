@@ -1,0 +1,35 @@
+﻿# A save-persistent, character-local loop exists only after opt-in. An off
+# tick only consumes its marker and never inspects a candidate or taxpayer.
+tca_monthly_tick = {
+	effect = {
+		remove_variable = tca_loop_pending
+		if = {
+			limit = { tca_enabled_trigger = yes }
+			tca_refresh_effect = yes
+		}
+	}
+}
+
+# Resume the existing ruler's own opt-in when returning to them. Do not copy
+# preferences to an AI ruler or silently opt a new player character in.
+on_player_character_change = {
+	on_actions = { tca_resume }
+}
+
+on_government_change = {
+	on_actions = { tca_resume }
+}
+
+tca_resume = {
+	effect = { tca_refresh_effect = yes }
+}
+
+on_game_start_after_lobby = {
+	on_actions = { tca_load_reset }
+}
+
+tca_load_reset = {
+	effect = {
+		every_player = { tca_load_reset_effect = yes }
+	}
+}

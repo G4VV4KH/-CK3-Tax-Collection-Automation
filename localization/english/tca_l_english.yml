@@ -1,0 +1,5 @@
+﻿l_english:
+ tca_automation_label:0 "Automate tax collection"
+ tca_automation_tooltip:0 "Fills vacant tax collector positions and replaces an incumbent only when a candidate has higher aptitude. Assigns taxpayers to an available jurisdiction that provides more gold under its current tax decree.\n\nThe tax panel may remain open. Checks after enabling and once per month; other open windows can delay a review. Manual tax controls are temporarily unavailable during a review; the automation checkbox remains usable. Full jurisdictions also exchange taxpayer pairs when their combined gold increases. The game briefly pauses during an exchange. Disabling stops new work; an interrupted exchange is restored first."
+ tca_automation_recovery_warning:0 "Taxpayer exchange stopped because jurisdiction conditions changed. Check the assignments, then enable automation again to retry recovery."
+ tca_confirmation_title_template:0 "Replace [GetVariableSystem.Get('tca_confirmation_incumbent_name')]"

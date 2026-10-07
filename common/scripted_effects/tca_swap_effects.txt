@@ -1,0 +1,174 @@
+﻿# A pair is an unordered pair of staffed jurisdictions. The list and cursor are
+# character variables so a closed view does not restart a quadratic search.
+tca_swap_begin_scan_effect = {
+ if = { limit = { tca_enabled_trigger = yes NOT = { has_variable = tca_swap_tx_pending } }
+  if = { limit = { OR = {
+   NOT = { has_variable = tca_swap_scan_refresh_epoch }
+   var:tca_swap_scan_refresh_epoch != var:tca_refresh_epoch
+  } }
+   set_variable = { name = tca_swap_scan_refresh_epoch value = var:tca_refresh_epoch }
+   remove_variable = tca_swap_scan_complete
+   clear_variable_list = tca_swap_collectors
+   set_variable = { name = tca_swap_slot_count value = 0 }
+   save_scope_as = tca_swap_owner
+   every_tax_slot = {
+    limit = { has_tax_collector = yes }
+    tax_collector = { save_scope_as = tca_swap_collector }
+    scope:tca_swap_owner = {
+     add_to_variable_list = { name = tca_swap_collectors target = scope:tca_swap_collector }
+     change_variable = { name = tca_swap_slot_count add = 1 }
+    }
+   }
+   set_variable = { name = tca_swap_i value = 1 }
+   set_variable = { name = tca_swap_j value = 2 }
+   tca_swap_load_pair_effect = yes
+  }
+ }
+}
+
+tca_swap_load_pair_effect = {
+ remove_variable = tca_swap_collector_s
+ remove_variable = tca_swap_collector_t
+ remove_variable = tca_swap_slot_s
+ remove_variable = tca_swap_slot_t
+ remove_variable = tca_swap_scan_payer
+ remove_variable = tca_swap_scan_baseline
+ remove_variable = tca_swap_best_a
+ remove_variable = tca_swap_best_b
+ remove_variable = tca_swap_a_gain
+ remove_variable = tca_swap_b_gain
+ clear_variable_list = tca_swap_s_payers
+ clear_variable_list = tca_swap_t_payers
+ clear_variable_list = tca_swap_s_scanned
+ clear_variable_list = tca_swap_t_scanned
+ if = { limit = { has_variable = tca_swap_pair_epoch }
+  change_variable = { name = tca_swap_pair_epoch add = 1 }
+ } else = { set_variable = { name = tca_swap_pair_epoch value = 1 } }
+ if = { limit = { var:tca_swap_i < var:tca_swap_slot_count }
+  save_scope_as = tca_swap_owner
+  set_variable = { name = tca_swap_cursor value = 0 }
+  every_in_list = {
+   variable = tca_swap_collectors
+   save_scope_as = tca_swap_collector
+   scope:tca_swap_owner = {
+    change_variable = { name = tca_swap_cursor add = 1 }
+    if = { limit = { var:tca_swap_cursor = var:tca_swap_i }
+     set_variable = { name = tca_swap_collector_s value = scope:tca_swap_collector }
+    }
+    if = { limit = { var:tca_swap_cursor = var:tca_swap_j }
+     set_variable = { name = tca_swap_collector_t value = scope:tca_swap_collector }
+    }
+   }
+  }
+  if = { limit = {
+   exists = var:tca_swap_collector_s.tax_slot
+   exists = var:tca_swap_collector_t.tax_slot
+   var:tca_swap_collector_s = { is_tax_collector_of = root }
+   var:tca_swap_collector_t = { is_tax_collector_of = root }
+  }
+   set_variable = { name = tca_swap_slot_s value = var:tca_swap_collector_s.tax_slot }
+   set_variable = { name = tca_swap_slot_t value = var:tca_swap_collector_t.tax_slot }
+   if = { limit = {
+    var:tca_swap_slot_s = { any_tax_slot_vassal = { always = yes } }
+    var:tca_swap_slot_t = { any_tax_slot_vassal = { always = yes } }
+   }
+    var:tca_swap_collector_t = { save_scope_as = collector }
+    var:tca_swap_slot_s = { every_tax_slot_vassal = {
+     save_scope_as = taxpayer
+     scope:tca_swap_owner = { if = { limit = { tca_swap_taxpayer_eligible_for_slot_trigger = yes }
+      add_to_variable_list = { name = tca_swap_s_payers target = scope:taxpayer }
+     } }
+    } }
+    var:tca_swap_collector_s = { save_scope_as = collector }
+    var:tca_swap_slot_t = { every_tax_slot_vassal = {
+     save_scope_as = taxpayer
+     scope:tca_swap_owner = { if = { limit = { tca_swap_taxpayer_eligible_for_slot_trigger = yes }
+      add_to_variable_list = { name = tca_swap_t_payers target = scope:taxpayer }
+     } }
+    } }
+   }
+  }
+ } else = { set_variable = { name = tca_swap_scan_complete value = yes } }
+}
+
+tca_swap_next_pair_effect = {
+ change_variable = { name = tca_swap_j add = 1 }
+ if = { limit = { var:tca_swap_j > var:tca_swap_slot_count }
+  change_variable = { name = tca_swap_i add = 1 }
+  set_variable = { name = tca_swap_j value = var:tca_swap_i }
+  change_variable = { name = tca_swap_j add = 1 }
+ }
+ tca_swap_load_pair_effect = yes
+}
+
+# The journal has no GUI timer dependency. Observe actual native assignment
+# scopes after every command and after a reload before selecting the next step.
+tca_swap_tx_observe_effect = {
+ if = { limit = { has_variable = tca_swap_tx_pending }
+  if = { limit = { NOT = { tca_enabled_trigger = yes } }
+   set_variable = { name = tca_swap_tx_rollback value = yes }
+  }
+  set_variable = { name = tca_swap_tx_state value = 90 }
+  if = { limit = { exists = var:tca_swap_tx_a exists = var:tca_swap_tx_b }
+   if = { limit = {
+    var:tca_swap_tx_a = { assigned_tax_slot = root.var:tca_swap_tx_s }
+    var:tca_swap_tx_b = { assigned_tax_slot = root.var:tca_swap_tx_t }
+   } set_variable = { name = tca_swap_tx_state value = 1 } }
+   else_if = { limit = {
+    var:tca_swap_tx_a = { assigned_tax_slot = root.var:tca_swap_tx_s }
+    var:tca_swap_tx_b = { NOT = { exists = assigned_tax_slot } }
+   } set_variable = { name = tca_swap_tx_state value = 2 } }
+   else_if = { limit = {
+    var:tca_swap_tx_a = { assigned_tax_slot = root.var:tca_swap_tx_t }
+    var:tca_swap_tx_b = { NOT = { exists = assigned_tax_slot } }
+   } set_variable = { name = tca_swap_tx_state value = 3 } }
+   else_if = { limit = {
+    var:tca_swap_tx_a = { assigned_tax_slot = root.var:tca_swap_tx_t }
+    var:tca_swap_tx_b = { assigned_tax_slot = root.var:tca_swap_tx_s }
+   } set_variable = { name = tca_swap_tx_state value = 4 } }
+  }
+  if = { limit = { OR = {
+   var:tca_swap_tx_state = 90
+   NOT = { tca_swap_tx_stable_context_trigger = yes }
+   AND = {
+    var:tca_swap_tx_state = 2
+    var:tca_swap_tx_a = { NOT = { can_assign_to_tax_slot = root.var:tca_swap_tx_t } }
+   }
+   AND = {
+    var:tca_swap_tx_state = 3
+    var:tca_swap_tx_b = { NOT = { can_assign_to_tax_slot = root.var:tca_swap_tx_s } }
+   }
+  } }
+   set_variable = { name = tca_swap_tx_rollback value = yes }
+  }
+ }
+}
+
+tca_swap_tx_clear_effect = {
+ remove_variable = tca_swap_tx_pending
+ remove_variable = tca_swap_tx_blocked
+ remove_variable = tca_swap_tx_a
+ remove_variable = tca_swap_tx_b
+ remove_variable = tca_swap_tx_s
+ remove_variable = tca_swap_tx_t
+ remove_variable = tca_swap_tx_collector_s
+ remove_variable = tca_swap_tx_collector_t
+ remove_variable = tca_swap_tx_state
+ remove_variable = tca_swap_tx_ready
+ remove_variable = tca_swap_tx_rollback
+ remove_variable = tca_swap_tx_was_paused
+ remove_variable = tca_swap_tx_autoassign
+ remove_variable = tca_swap_tx_s_obligation
+ remove_variable = tca_swap_tx_t_obligation
+ remove_variable = tca_swap_tx_a_from
+ remove_variable = tca_swap_tx_a_to
+ remove_variable = tca_swap_tx_b_from
+ remove_variable = tca_swap_tx_b_to
+ remove_variable = tca_swap_tx_a_from_check
+ remove_variable = tca_swap_tx_a_to_check
+ remove_variable = tca_swap_tx_b_from_check
+ remove_variable = tca_swap_tx_b_to_check
+ if = { limit = { exists = global_var:tca_swap_recovery_owner global_var:tca_swap_recovery_owner = root }
+  remove_global_variable = tca_swap_recovery_owner
+ }
+}
