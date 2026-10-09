@@ -1623,6 +1623,7 @@ state = { name = tca_close_background_manager alpha = 1 on_start = "[CloseGameVi
 type tca_confirmation_worker = widget {
 size = { 1 1 }
 alwaystransparent = yes
+visible = "[GetPlayer.IsValid]"
 widget = {
 size = { 1 1 }
 alwaystransparent = yes

@@ -2,7 +2,7 @@
 
 ## At a glance
 
-- 🟢 **Version 0.1.1** · Targets CK3 **1.20.0.4**.
+- 🟢 **Version 0.1.2** · Targets CK3 **1.20.0.4**.
 - 🟢 A standalone project for player-controlled clan rulers and their tax jurisdictions.
 - 🟢 Maintains capable collectors and directs taxpayers toward better gold income.
 - 🟢 **Languages:** English, French, German, Japanese, Korean, Polish, Russian, Simplified Chinese and Spanish.

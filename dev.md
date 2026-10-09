@@ -1,6 +1,6 @@
 # Tax Collection Automation — developer guide
 
-Version 0.1.1 targets CK3 1.20.0.4. See [README](README.md) for installation,
+Version 0.1.2 targets CK3 1.20.0.4. See [README](README.md) for installation,
 player instructions, compatibility and known limitations.
 
 ## Runtime structure
@@ -70,13 +70,20 @@ Review them against the actual target game's files when updating for a new CK3
 version. Changing load order does not merge another mod's edits to these files.
 Do not broaden the owned collector-confirmation handler to unrelated dialogs.
 
+The shared confirmation popup also exists before a campaign has loaded.
+Gate the entire automation worker's visibility with `GetPlayer.IsValid`. A
+boolean `And` inside a state condition is insufficient: its arguments can still
+evaluate game-only callbacks with no active player. Frontend preset overwrite
+and save deletion must remain ordinary native confirmations.
+
 ## Validation and publication
 
 Use disposable native CK3 campaigns with independent profiles, saves and logs.
 Exercise the actual production checkbox and native commands. Relevant checks
 include an open tax panel, collector vacancies, monthly scheduling, disabled
 stability, profitable exchanges, cancellation, control restoration and real
-save/load recovery. Bind evidence to the complete tested runtime and harness;
+save/load recovery. Also exercise main-menu preset overwrite and save deletion,
+and unrelated confirmations inside a loaded campaign. Bind evidence to the complete tested runtime and harness;
 static checks alone do not establish native behavior.
 
 Hidden native runs do not establish visual layout, clipping or manual pointer
@@ -91,6 +98,16 @@ runtime and its scoped evidence. Confirm all supported languages, platform
 identities, archive contents and delivered bytes before claiming a publication
 complete. Preserve the artwork and code attribution in the player description.
 
-## CAA family metadata revision
+## Release 0.1.2
 
-The current publication copy includes all seven other maintained mods, with Steam Workshop links. Update only the canonical My other mods block and project that block into the existing README and platform outputs; preserve the rest of each platform description. Parley and Vassalization Extended Steam exports use whitespace-only BBCode compaction to remain within the 8,000-byte UTF-8 CRLF form limit. Recheck the current shared publication contract and scoped release metadata guide before publishing. Runtime, version, archives, media, and prior localization evidence are unchanged.
+This update fixes a crash when a shared confirmation opens before a campaign
+has loaded, including game-rule preset overwrite and save deletion. The guard
+prevents the collector-confirmation worker from accessing absent campaign UI
+state. Collector selection, gold comparisons, tax decrees and saved opt-in
+behavior are unchanged.
+
+The current player description uses the reviewed family catalog, grouped into
+standalone mods and compatibility patches. Keep canonical copy, generated
+descriptions and release fields synchronized without modifying frozen older
+packs. Artwork and the authentic gallery are reused from the approved release;
+their bytes and provenance remain unchanged.
