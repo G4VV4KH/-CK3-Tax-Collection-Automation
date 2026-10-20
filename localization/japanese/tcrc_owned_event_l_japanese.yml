@@ -1,0 +1,6 @@
+﻿l_japanese:
+ tcrc_event_title:0 "徴税を再計算しています"
+ tcrc_event_desc:0 "徴税の再計算が終わると、以前の一時停止状態に戻ります。"
+ tcrc_event_complete:0 "再計算が完了しました"
+ tcrc_event_cancel:0 "自動化を停止しました"
+ tcrc_event_failed:0 "検証に失敗したため、自動化を停止しました"

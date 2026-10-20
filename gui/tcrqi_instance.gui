@@ -1,0 +1,12 @@
+﻿window = { name = tcrqi_instance_driver size = { 1 1 } alwaystransparent = yes
+state = { name = tcrqi_created trigger_on_create = yes duration = 0 alpha = 1
+ on_finish = "[PdxGuiWidget.TriggerAnimation('tcrqi_wait_player')]" }
+state = { name = tcrqi_wait_player duration = 0.1 alpha = 1
+ on_finish = "[PdxGuiWidget.TriggerAnimation(Select_CString(And(GetPlayer.IsValid,GetScriptedGui('tcrqi_instance_birth').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('single_player',MakeScopeBool(Not(GameIsMultiplayer))).End)),'tcrqi_admit','tcrqi_retry'))]" }
+state = { name = tcrqi_retry duration = 0.1 alpha = 1
+ on_finish = "[PdxGuiWidget.TriggerAnimation('tcrqi_wait_player')]" }
+state = { name = tcrqi_admit duration = 0 alpha = 1
+ on_finish = "[GetScriptedGui('tcrqi_instance_birth').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('single_player',MakeScopeBool(Not(GameIsMultiplayer))).End)]"
+ on_finish = "[PdxGuiWidget.TriggerAnimation('tcrqi_done')]" }
+state = { name = tcrqi_done alpha = 1 }
+}

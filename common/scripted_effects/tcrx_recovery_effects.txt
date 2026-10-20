@@ -1,0 +1,127 @@
+﻿
+# Class43: interrupted bounded batch, any exact observed source/target subset.
+# Observation never writes tcrx_assigned_ack or tcrx_removed_ack.
+tcrx_recovery_classify_effect = {
+ set_variable = { name = tcrq_class value = 49 }
+ if = { limit = {
+  tcrx_recovery_identity_trigger = yes
+  OR = { has_variable = tcrx_active tcrx_recovery_handoff_trigger = yes }
+  has_variable = tcrq_pending has_variable = tcrq_epoch
+  NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+  NOT = { has_variable = tcr_command_generation } NOT = { has_variable = tcrb_active }
+  NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+  OR = { NOT = { has_variable = tcrm_active } tcrx_recovery_handoff_trigger = yes }
+  NOT = { has_variable = tcrs_restore_pending }
+  tcrv_no_pending_trigger = yes
+ }
+  if = { limit = { var:tcrs_phase = 40 has_variable = tcrv_active OR = {
+   AND = { has_variable = tcrx_active var:tcrv_phase = 60 OR = {
+    var:tcrx_phase = 10 var:tcrx_phase = 20 var:tcrx_phase = 21
+    var:tcrx_phase = 22 var:tcrx_phase = 30 var:tcrx_phase = 40
+    var:tcrx_phase = 50 var:tcrx_phase = 80
+   } }
+   tcrx_recovery_handoff_trigger = yes
+  } }
+   tcrx_recovery_check_map_effect = yes
+   set_variable = { name = tcrx_recovery_members value = 0 }
+   set_variable = { name = tcrx_recovery_moved value = 0 }
+   every_in_list = { variable = tcrx_payers
+    root = { change_variable = { name = tcrx_recovery_members add = 1 } }
+    if = { limit = { tcrx_member_trigger = yes }
+     if = { limit = { assigned_tax_slot = var:tcrx_target }
+      root = { change_variable = { name = tcrx_recovery_moved add = 1 } }
+     } else_if = { limit = { assigned_tax_slot != var:tcrx_source }
+      root = { set_variable = { name = tcrx_map_bad value = yes } }
+     }
+     if = { limit = { root = { has_variable = tcrx_accepted } }
+      if = { limit = { NOT = { tcrx_sealed_receipt_trigger = yes } }
+       root = { set_variable = { name = tcrx_map_bad value = yes } }
+      }
+     } else = {
+      if = { limit = { NOT = { has_variable = tcrc_payer_revision } }
+       root = { set_variable = { name = tcrx_map_bad value = yes } }
+      } else_if = { limit = { var:tcrc_payer_revision != 0 }
+       root = { set_variable = { name = tcrx_map_bad value = yes } }
+      }
+     }
+    } else = { root = { set_variable = { name = tcrx_map_bad value = yes } } }
+   }
+   if = { limit = { var:tcrx_recovery_members != var:tcrx_count }
+    set_variable = { name = tcrx_map_bad value = yes }
+   }
+   if = { limit = { var:tcrx_recovery_moved > 0 NOT = { has_variable = tcrx_dispatched } }
+    set_variable = { name = tcrx_map_bad value = yes }
+   }
+   if = { limit = { has_variable = tcrx_accepted }
+    if = { limit = { OR = {
+     NOT = { OR = { var:tcrx_phase = 80 var:tcrx_phase = 90 } }
+     var:tcrx_recovery_moved != var:tcrx_count
+     var:tcrv_parent_accepted_count != var:tcrx_count
+    } } set_variable = { name = tcrx_map_bad value = yes } }
+   } else_if = { limit = { OR = {
+    var:tcrx_phase = 80 var:tcrv_parent_accepted_count != 0
+   } } set_variable = { name = tcrx_map_bad value = yes } }
+   if = { limit = { NOT = { has_variable = tcrx_map_bad } }
+    set_variable = { name = tcrq_class value = 43 }
+   }
+  }
+ }
+}
+
+# Called only after reclassification and the owned event/closed-helper barrier.
+# Keep immutable originals and all real ACKs. Mark the actually moved subset,
+# retire this batch's UI job, then request the ordinary exact component rollback.
+tcrx_recovery_retire_effect = {
+ if = { limit = { tcrx_recovery_identity_trigger = yes
+  has_variable = tcrq_epoch
+  OR = { has_variable = tcrx_active tcrx_recovery_handoff_trigger = yes } }
+  if = { limit = { var:tcrq_class = 43 }
+   every_in_list = { variable = tcrx_payers
+    if = { limit = { assigned_tax_slot = var:tcrx_target }
+     set_variable = { name = tcrx_mechanical_outcome value = yes }
+    }
+   }
+   remove_variable = tcrx_active
+   set_variable = { name = tcrx_phase value = 90 }
+   remove_variable = tcrv_active remove_variable = tcrv_job_payer
+   remove_variable = tcrv_job_source remove_variable = tcrv_job_target
+   remove_variable = tcrv_parent_job_purpose
+   set_variable = { name = tcrv_phase value = 70 }
+   set_variable = { name = tcrv_settled value = yes }
+   tcrm_invalidate_effect = yes tcrv_clear_advisory_effect = yes
+   tcrs_request_rollback_effect = yes
+   debug_log = "TCRX|RELOAD_OBSERVED|members=[GetPlayer.MakeScope.Var('tcrx_recovery_members').GetValue]|moved=[GetPlayer.MakeScope.Var('tcrx_recovery_moved').GetValue]"
+  }
+ }
+}
+
+
+# Native Load recalculates aptitude: the same collector's opinion can change
+# after the batch moved that collector as a taxpayer. A stale economic cache
+# cannot forbid restoring an exact journal. Keep every structural/decree check;
+# ordinary dispatch/acceptance still use their unchanged aptitude equality.
+# Exact restored native income, date and wallet remain mandatory downstream.
+tcrx_recovery_check_map_effect = {
+ save_scope_as = tcrx_owner
+ remove_variable = tcrx_map_bad
+ tcrs_check_payers_effect = yes
+ tcrs_check_collectors_effect = yes
+ if = { limit = { OR = { has_variable = tcrs_payer_error has_variable = tcrs_topology_bad } }
+  set_variable = { name = tcrx_map_bad value = yes }
+ }
+ every_in_list = { variable = tcrv_slots
+  if = { limit = { OR = { has_tax_collector = no
+   tax_collector != var:tcrv_collector
+   NOT = { OR = { AND = { var:tcrv_obligation = 1 is_active_obligation = default_tax_collector } AND = { var:tcrv_obligation = 2 is_active_obligation = strict_taxation_tax_collector } AND = { var:tcrv_obligation = 3 is_active_obligation = iqta_special_rights_tax_collector } AND = { var:tcrv_obligation = 4 is_active_obligation = ghazi_special_rights_tax_collector } AND = { var:tcrv_obligation = 5 is_active_obligation = muqata_special_rights_tax_collector } AND = { var:tcrv_obligation = 6 is_active_obligation = jizya_special_rights_tax_collector } AND = { var:tcrv_obligation = 7 is_active_obligation = deqhan_special_rights_tax_collector } AND = { var:tcrv_obligation = 8 is_active_obligation = maguh_special_rights_tax_collector } } }
+  } } scope:tcrx_owner = { set_variable = { name = tcrx_map_bad value = yes } } }
+ }
+ every_in_list = { variable = tcrs_original_payers
+  if = { limit = { tcrx_member_trigger = yes }
+   if = { limit = { NOT = { OR = {
+    assigned_tax_slot = var:tcrx_source assigned_tax_slot = var:tcrx_target
+   } } } scope:tcrx_owner = { set_variable = { name = tcrx_map_bad value = yes } } }
+  } else_if = { limit = { assigned_tax_slot != var:tcrs_payer_original_slot }
+   scope:tcrx_owner = { set_variable = { name = tcrx_map_bad value = yes } }
+  }
+ }
+}

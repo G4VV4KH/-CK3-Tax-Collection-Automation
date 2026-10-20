@@ -1,0 +1,2 @@
+﻿l_english:
+ tcro_owner_hold_notice:0 "Tax automation is on hold after the player character changed or a transaction was reloaded. The previous ruler's transaction and pause ownership are retained; no new ruler commands or automatic resume are issued."

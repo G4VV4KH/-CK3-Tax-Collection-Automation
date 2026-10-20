@@ -1,0 +1,535 @@
+﻿# One reviewed capability switch; false until native composite and parent tests pass.
+tcrf_capability_trigger = { always = yes }
+tcrf_parent_permission_trigger = {
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_phase
+}
+tcrf_capability_trigger = yes tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes has_variable = tcrc_lifecycle_active
+has_variable = tcr_active_generation var:tcrc_phase = 33
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+
+} trigger_else = { always = no }
+
+}
+tcrf_lease_trigger = {
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_owner
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+var:tcrf_owner = this var:tcrf_lifecycle = var:tcrc_lifecycle
+var:tcrf_generation = var:tcr_active_generation var:tcrc_phase = 33
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+
+} trigger_else = { always = no }
+
+}
+tcrf_identity_trigger = {
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_owner
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+var:tcrf_owner = this var:tcrf_lifecycle = var:tcrc_lifecycle
+var:tcrf_generation = var:tcr_active_generation var:tcrc_phase = 33
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+has_variable = tcrf_active
+
+} trigger_else = { always = no }
+
+}
+tcrf_continue_trigger = {
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcr_expected_collector
+has_variable = tcr_expected_kind
+has_variable = tcr_expected_slot
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+has_variable = tcre_job_generation
+has_variable = tcre_sequence
+has_variable = tcrf_authorized_sequence
+has_variable = tcrf_fired_count
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_owner
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+has_variable = tcrf_slot
+has_variable = tcrf_vacancy_sequence
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+var:tcrf_owner = this var:tcrf_lifecycle = var:tcrc_lifecycle
+var:tcrf_generation = var:tcr_active_generation var:tcrc_phase = 33
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+has_variable = tcrf_active has_variable = tcrf_pending
+var:tcrf_authorized_sequence = var:tcrf_sequence
+has_variable = tcre_job_active var:tcre_job_generation = var:tcrf_generation
+var:tcre_sequence = var:tcrf_vacancy_sequence
+var:tcr_command_generation = var:tcrf_generation var:tcr_expected_kind = 1
+var:tcr_expected_collector = var:tcrf_new var:tcr_expected_slot = var:tcrf_slot
+var:tcrf_fired_count = 1
+var:tcrf_old = { is_tax_collector = no }
+OR = {
+ AND = { var:tcrf_phase = 25 var:tcrf_slot = { has_tax_collector = no }
+  var:tcrf_new = { is_alive = yes is_tax_collector = no } }
+ AND = { var:tcrf_phase = 30
+  var:tcrf_new = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot } }
+}
+
+} trigger_else = { always = no }
+
+}
+tcrf_requeue_allowed_trigger = {
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+has_variable = tcrf_authorized_sequence
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_owner
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+has_variable = tcrf_slot
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+var:tcrf_owner = this var:tcrf_lifecycle = var:tcrc_lifecycle
+var:tcrf_generation = var:tcr_active_generation var:tcrc_phase = 33
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+has_variable = tcrf_recover_queue has_variable = tcrf_pending
+var:tcrf_phase = 25 var:tcrf_authorized_sequence = var:tcrf_sequence
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+var:tcrf_old = { is_tax_collector = no }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_slot = { has_tax_collector = no }
+scope:tcre_desired_collector = var:tcrf_new scope:tcre_desired_slot = var:tcrf_slot
+
+} trigger_else = { always = no }
+
+}
+tcrf_expected_fired_hook_trigger = {
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+has_variable = tcrf_authorized_sequence
+has_variable = tcrf_fired_count
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_old
+has_variable = tcrf_owner
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+has_variable = tcrf_slot
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+var:tcrf_owner = this var:tcrf_lifecycle = var:tcrc_lifecycle
+var:tcrf_generation = var:tcr_active_generation var:tcrc_phase = 33
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+has_variable = tcrf_active has_variable = tcrf_pending
+var:tcrf_phase = 25 var:tcrf_fired_count = 0
+scope:tax_collector = var:tcrf_old scope:tax_slot = var:tcrf_slot
+var:tcrf_authorized_sequence = var:tcrf_sequence
+
+} trigger_else = { always = no }
+
+}
+tcrf_expected_hired_hook_trigger = {
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+has_variable = tcrf_authorized_sequence
+has_variable = tcrf_generation
+has_variable = tcrf_hired_count
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_owner
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+has_variable = tcrf_slot
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+var:tcrf_owner = this var:tcrf_lifecycle = var:tcrc_lifecycle
+var:tcrf_generation = var:tcr_active_generation var:tcrc_phase = 33
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+has_variable = tcrf_active has_variable = tcrf_pending
+var:tcrf_phase = 25 var:tcrf_hired_count = 0
+scope:tax_collector = var:tcrf_new scope:tax_slot = var:tcrf_slot
+var:tcrf_authorized_sequence = var:tcrf_sequence
+
+} trigger_else = { always = no }
+
+}
+tcrf_receipt_trigger = {
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_owner
+has_variable = tcrf_phase
+has_variable = tcrf_receipt_generation
+has_variable = tcrf_receipt_lifecycle
+has_variable = tcrf_receipt_new
+has_variable = tcrf_receipt_old
+has_variable = tcrf_receipt_owner
+has_variable = tcrf_receipt_producer
+has_variable = tcrf_receipt_schema
+has_variable = tcrf_receipt_sequence
+has_variable = tcrf_receipt_slot
+has_variable = tcrf_sequence
+has_variable = tcrf_settled_sequence
+has_variable = tcrf_slot
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+var:tcrf_owner = this var:tcrf_lifecycle = var:tcrc_lifecycle
+var:tcrf_generation = var:tcr_active_generation var:tcrc_phase = 33
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+var:tcrf_old = { is_tax_collector = no }
+var:tcrf_new = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+has_variable = tcrf_pending has_variable = tcrf_receipt_pending
+var:tcrf_phase = 70 var:tcrf_receipt_schema = 1 var:tcrf_receipt_producer = 33
+var:tcrf_settled_sequence = var:tcrf_sequence
+var:tcrf_receipt_owner = this var:tcrf_receipt_lifecycle = var:tcrc_lifecycle
+var:tcrf_receipt_generation = var:tcr_active_generation
+var:tcrf_receipt_sequence = var:tcrf_sequence
+var:tcrf_receipt_old = var:tcrf_old var:tcrf_receipt_new = var:tcrf_new
+var:tcrf_receipt_slot = var:tcrf_slot
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+NOT = { has_variable = tcrf_active }
+
+} trigger_else = { always = no }
+
+}
+tcrf_native_settled_trigger = {
+trigger_if = { limit = {
+has_variable = tcre_completed_generation
+has_variable = tcre_completed_sequence
+has_variable = tcrf_fired_count
+has_variable = tcrf_generation
+has_variable = tcrf_hired_count
+has_variable = tcrf_vacancy_sequence
+}
+var:tcrf_hired_count = 1 var:tcrf_fired_count = 1
+var:tcre_completed_generation = var:tcrf_generation var:tcre_completed_sequence = var:tcrf_vacancy_sequence
+
+} trigger_else = { always = no }
+
+}
+tcrf_target_confirmed_trigger = { OR = { has_variable = tcrf_recovered_target tcrf_native_settled_trigger = yes } }
+tcrf_list_row_record_trigger = {
+trigger_if = { limit = {
+has_variable = tcrf_list_index
+has_variable = tcrf_list_lifecycle
+has_variable = tcrf_list_owner
+has_variable = tcrf_list_selectable
+has_variable = tcrf_list_sequence
+}
+var:tcrf_list_owner = root
+var:tcrf_list_lifecycle = root.var:tcrf_lifecycle var:tcrf_list_sequence = root.var:tcrf_sequence
+var:tcrf_list_index = scope:index var:tcrf_list_selectable = scope:selectable
+
+} trigger_else = { always = no }
+
+}
+tcrf_record_trigger = {
+trigger_if = { limit = {
+has_variable = tcrf_record_lifecycle
+has_variable = tcrf_record_owner
+has_variable = tcrf_record_sequence
+}
+trigger_if = { limit = {
+has_variable = tcrf_record_lifecycle
+has_variable = tcrf_record_owner
+has_variable = tcrf_record_sequence
+}
+var:tcrf_record_owner = scope:tcrf_owner
+var:tcrf_record_lifecycle = scope:tcrf_owner.var:tcrf_lifecycle
+var:tcrf_record_sequence = scope:tcrf_owner.var:tcrf_sequence
+
+} trigger_else = { always = no }
+
+} trigger_else = { always = no }
+
+}
+
+tcrf_recovery_no_command_trigger = {
+trigger_if = { limit = {
+has_variable = tcrf_slot
+}
+NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcrq_command_schema }
+NOT = { has_variable = tcrq_source_kind }
+NOT = { has_variable = tcr_command_generation }
+NOT = { has_variable = tcr_expected_kind }
+NOT = { has_variable = tcr_verified_generation }
+NOT = { has_variable = tcr_expected_collector }
+NOT = { has_variable = tcr_expected_slot }
+NOT = { has_variable = tcr_expected_payer }
+NOT = { has_variable = tcr_expected_source }
+NOT = { has_variable = tcr_hired_ack }
+NOT = { has_variable = tcr_fired_ack }
+NOT = { has_variable = tcr_assigned_ack }
+NOT = { has_variable = tcr_removed_ack }
+var:tcrf_slot = { NOT = { has_variable = tcre_slot_owner } NOT = { has_variable = tcre_slot_generation } NOT = { has_variable = tcre_slot_sequence } }
+} trigger_else = { always = no }
+
+}
+tcrf_recovery_dispatched_compatible_trigger = {
+ trigger_if = { limit = { OR = { has_variable = tcre_dispatched_generation has_variable = tcre_dispatched_sequence } }
+  trigger_if = { limit = { has_variable = tcre_dispatched_generation has_variable = tcre_dispatched_sequence has_variable = tcrf_generation has_variable = tcrf_vacancy_sequence }
+   var:tcre_dispatched_generation = var:tcrf_generation var:tcre_dispatched_sequence = var:tcrf_vacancy_sequence
+  } trigger_else = { always = no }
+ } trigger_else = { always = yes }
+}
+tcrf_recovery_hired_compatible_trigger = {
+ trigger_if = { limit = { OR = { has_variable = tcre_hired_generation_ack has_variable = tcre_hired_sequence_ack } }
+  trigger_if = { limit = { has_variable = tcre_hired_generation_ack has_variable = tcre_hired_sequence_ack has_variable = tcrf_generation has_variable = tcrf_vacancy_sequence }
+   var:tcre_hired_generation_ack = var:tcrf_generation var:tcre_hired_sequence_ack = var:tcrf_vacancy_sequence
+  } trigger_else = { always = no }
+ } trigger_else = { always = yes }
+}
+tcrf_recovery_ack_compatible_trigger = {
+ trigger_if = { limit = { has_variable = tcr_hired_ack }
+  trigger_if = { limit = { has_variable = tcrf_generation }
+   var:tcr_hired_ack = var:tcrf_generation
+  } trigger_else = { always = no }
+ } trigger_else = { always = yes }
+}
+tcrf_recovery_slot_marker_trigger = {
+trigger_if = { limit = {
+has_variable = tcre_slot_generation
+has_variable = tcre_slot_owner
+has_variable = tcre_slot_sequence
+}
+var:tcre_slot_owner = root
+var:tcre_slot_generation = root.var:tcrf_generation var:tcre_slot_sequence = root.var:tcrf_vacancy_sequence
+
+} trigger_else = { always = no }
+
+}
+tcrf_recovery_exact_command_trigger = {
+trigger_if = { limit = {
+has_variable = tcr_command_generation
+has_variable = tcr_expected_collector
+has_variable = tcr_expected_kind
+has_variable = tcr_expected_slot
+has_variable = tcre_job_generation
+has_variable = tcre_phase
+has_variable = tcre_sequence
+has_variable = tcrf_generation
+has_variable = tcrf_new
+has_variable = tcrf_slot
+has_variable = tcrf_vacancy_sequence
+has_variable = tcrq_command_schema
+has_variable = tcrq_source_kind
+}
+has_variable = tcre_job_active
+var:tcre_job_generation = var:tcrf_generation var:tcre_sequence = var:tcrf_vacancy_sequence
+var:tcr_command_generation = var:tcrf_generation var:tcr_expected_kind = 1
+var:tcrq_command_schema = 1 var:tcrq_source_kind = 1
+var:tcr_expected_collector = var:tcrf_new var:tcr_expected_slot = var:tcrf_slot
+NOT = { has_variable = tcr_expected_payer } NOT = { has_variable = tcr_expected_source }
+NOT = { has_variable = tcr_fired_ack } NOT = { has_variable = tcr_assigned_ack } NOT = { has_variable = tcr_removed_ack }
+NOT = { has_variable = tcr_verified_generation }
+tcrf_recovery_dispatched_compatible_trigger = yes tcrf_recovery_hired_compatible_trigger = yes tcrf_recovery_ack_compatible_trigger = yes
+var:tcrf_slot = { tcrf_recovery_slot_marker_trigger = yes }
+OR = {
+ AND = { OR = { var:tcre_phase = 10 var:tcre_phase = 20 }
+  NOT = { has_variable = tcre_dispatched_generation } NOT = { has_variable = tcre_dispatched_sequence }
+  NOT = { has_variable = tcre_hired_generation_ack } NOT = { has_variable = tcre_hired_sequence_ack } NOT = { has_variable = tcr_hired_ack }
+ }
+ AND = { var:tcre_phase = 25 has_variable = tcre_dispatched_generation has_variable = tcre_dispatched_sequence
+  NOT = { has_variable = tcre_hired_generation_ack } NOT = { has_variable = tcre_hired_sequence_ack } NOT = { has_variable = tcr_hired_ack }
+ }
+ AND = { var:tcre_phase = 30 has_variable = tcre_dispatched_generation has_variable = tcre_dispatched_sequence
+  has_variable = tcre_hired_generation_ack has_variable = tcre_hired_sequence_ack has_variable = tcr_hired_ack
+ }
+}
+
+} trigger_else = { always = no }
+
+}
+tcrf_recovery_completed_target_trigger = {
+trigger_if = { limit = {
+has_variable = tcre_completed_generation
+has_variable = tcre_completed_sequence
+has_variable = tcrf_fired_count
+has_variable = tcrf_generation
+has_variable = tcrf_hired_count
+has_variable = tcrf_vacancy_sequence
+}
+tcrf_recovery_no_command_trigger = yes
+var:tcre_completed_generation = var:tcrf_generation var:tcre_completed_sequence = var:tcrf_vacancy_sequence
+var:tcrf_fired_count = 1 var:tcrf_hired_count = 1
+
+} trigger_else = { always = no }
+
+}
+tcrf_recovery_no_current_completion_trigger = {
+ trigger_if = { limit = { OR = { has_variable = tcre_completed_generation has_variable = tcre_completed_sequence } }
+  trigger_if = { limit = { has_variable = tcre_completed_generation has_variable = tcre_completed_sequence has_variable = tcrf_generation has_variable = tcrf_vacancy_sequence }
+   OR = { var:tcre_completed_generation != var:tcrf_generation var:tcre_completed_sequence != var:tcrf_vacancy_sequence }
+  } trigger_else = { always = no }
+ } trigger_else = { always = yes }
+}
+tcrf_recovery_vacant_command_trigger = {
+trigger_if = { limit = {
+has_variable = tcre_phase
+}
+tcrf_recovery_exact_command_trigger = yes
+OR = { var:tcre_phase = 10 var:tcre_phase = 20 var:tcre_phase = 25 }
+NOT = { has_variable = tcr_hired_ack } NOT = { has_variable = tcre_hired_generation_ack } NOT = { has_variable = tcre_hired_sequence_ack }
+
+} trigger_else = { always = no }
+
+}
+
+# COLLECTOR_USER_UI_YIELD: no native helper is acquired by these permissions.
+tcrf_ui_yield_generation_trigger = {
+ trigger_if = { limit = { has_variable = tcr_active_generation }
+  trigger_if = { limit = { has_variable = tcrf_ui_yield_generation }
+   var:tcr_active_generation = var:tcrf_ui_yield_generation
+  } trigger_else = { always = no }
+ } trigger_else = { OR = {
+  trigger_if = { limit = { has_variable = tcrc_cancelled_generation has_variable = tcrf_ui_yield_generation }
+   var:tcrc_cancelled_generation = var:tcrf_ui_yield_generation
+  } trigger_else = { always = no }
+  trigger_if = { limit = { has_variable = tcr_completed_generation has_variable = tcrf_ui_yield_generation }
+   var:tcr_completed_generation = var:tcrf_ui_yield_generation
+  } trigger_else = { always = no }
+ } }
+}
+tcrf_ui_yield_payer_empty_trigger = {
+ trigger_if = { limit = { has_variable = tcrb_active }
+  trigger_if = { limit = { has_variable = tcrb_owner has_variable = tcrb_lifecycle has_variable = tcrb_generation has_variable = tcrb_initial_count has_variable = tcrb_added_count has_variable = tcrb_remaining_count has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_payer_count has_variable = tcrf_ui_yield_generation has_variable = tcrc_lifecycle }
+   var:tcrb_owner = this var:tcrb_lifecycle = var:tcrc_lifecycle var:tcrb_generation = var:tcrf_ui_yield_generation
+   var:tcrm_owner = this var:tcrm_generation = var:tcrf_ui_yield_generation
+   var:tcrb_initial_count = 0 var:tcrb_added_count = 0 var:tcrb_remaining_count = 0 var:tcrm_payer_count = 0 has_variable = tcrm_no_work
+  } trigger_else = { always = no }
+ } trigger_else = { always = yes }
+}
+tcrf_user_ui_deferred_trigger = {
+trigger_if = { limit = {
+has_variable = tcrc_lifecycle
+has_variable = tcrf_lifecycle
+has_variable = tcrf_owner
+has_variable = tcrf_parent_skip_optional_lifecycle
+}
+has_variable = tcrc_lifecycle_active tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+var:tcrf_owner = this var:tcrf_lifecycle = var:tcrc_lifecycle
+var:tcrf_parent_skip_optional_lifecycle = var:tcrc_lifecycle
+
+} trigger_else = { always = no }
+
+}
+tcrf_ui_yield_current_trigger = {
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrf_lifecycle
+has_variable = tcrf_owner
+has_variable = tcrf_parent_skip_optional_lifecycle
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+has_variable = tcrf_ui_yield_lifecycle
+has_variable = tcrf_ui_yield_quiet
+has_variable = tcrf_ui_yield_sequence
+}
+has_variable = tcrc_lifecycle_active tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+var:tcrf_owner = this var:tcrf_lifecycle = var:tcrc_lifecycle
+var:tcrf_ui_yield_lifecycle = var:tcrc_lifecycle var:tcrf_ui_yield_sequence = var:tcrf_sequence
+var:tcrf_ui_yield_quiet = var:tcrc_lifecycle var:tcrf_parent_skip_optional_lifecycle = var:tcrc_lifecycle
+var:tcrf_phase = 72 NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+NOT = { has_variable = tcrf_receipt_pending } NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation }
+tcrf_ui_yield_generation_trigger = yes
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+
+} trigger_else = { always = no }
+
+}
+tcrf_ui_yield_no_work_trigger = {
+tcrf_ui_yield_current_trigger = yes
+has_variable = tcrf_ui_yield_no_work NOT = { any_unassigned_taxpayers = { always = yes } }
+NOT = { has_variable = tcrm_active } tcrf_ui_yield_payer_empty_trigger = yes
+
+}

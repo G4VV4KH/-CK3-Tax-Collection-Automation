@@ -1,0 +1,31 @@
+﻿window = { name = tcri_ingress_driver size = { 1 1 } alwaystransparent = yes visible = "[GetPlayer.IsValid]"
+widget = { size = { 1 1 } alwaystransparent = yes
+state = { name = tcri_observe_idle alpha = 1 }
+state = { name = tcri_observe_check trigger_when = "[And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tca_enabled').IsSet,GetScriptedGui('tcri_observe').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('single_player',MakeScopeBool(Not(GameIsMultiplayer))).End)))]" alpha = 1 duration = 0
+ on_finish = "[PdxGuiWidget.TriggerAnimation(Select_CString(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tca_enabled').IsSet,GetScriptedGui('tcri_observe').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('single_player',MakeScopeBool(Not(GameIsMultiplayer))).End))),'tcri_observe_do','tcri_observe_idle'))]"
+}
+state = { name = tcri_observe_do alpha = 1 duration = 0
+ on_start = "[GetScriptedGui('tcri_observe').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('single_player',MakeScopeBool(Not(GameIsMultiplayer))).End)]"
+}
+}
+}
+types TcriIngressTypes {
+type tcri_automation_controls = vbox {
+ layoutpolicy_horizontal = expanding
+ button_checkbox_label = {
+  blockoverride "text" { max_width = 460 text = "tcri_automation_label" }
+  tooltip = "tcri_automation_tooltip"
+  enabled = "[And(GetPlayer.IsValid,GetScriptedGui('tcri_toggle').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('single_player',MakeScopeBool(Not(GameIsMultiplayer))).End))]"
+  onclick = "[GetScriptedGui('tcri_toggle').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('single_player',MakeScopeBool(Not(GameIsMultiplayer))).End)]"
+  blockoverride "checkbox" { checked = "[GetPlayer.MakeScope.GetVariable('tca_enabled').IsSet]" }
+ }
+ text_single = {
+  visible = "[GetPlayer.MakeScope.GetVariable('tcrc_lifecycle_active').IsSet]"
+  text = "tcri_automation_working"
+ }
+ text_single = {
+  visible = "[Or(GetPlayer.MakeScope.GetVariable('tcri_hold_reason').IsSet,GetPlayer.MakeScope.GetVariable('tcr_failed').IsSet)]"
+  text = "tcri_automation_held"
+ }
+}
+}

@@ -1,0 +1,259 @@
+﻿tcrb_fail_effect = {
+ tcr_fail_generation_effect = yes
+ set_variable = { name = tcrb_phase value = 90 }
+ debug_log = "TCRB|UNCERTAIN_FAILURE|reason=[GetPlayer.MakeScope.Var('tcrb_failure_reason').GetValue]"
+}
+tcrb_begin_mandatory_effect = {
+ if = { limit = {
+  tcrc_payer_native_mutation_allowed_trigger = yes
+  scope:paused = yes scope:speed = var:tcrc_original_speed
+  NOT = { has_variable = tcrb_active }
+  NOT = { has_variable = tcrp_job_active }
+  NOT = { has_variable = tcr_command_generation }
+ }
+  if = { limit = { any_unassigned_taxpayers = { always = yes } } remove_variable = tcrf_ui_yield_no_work }
+  save_scope_as = tcrb_owner
+  every_in_list = { variable = tcrb_original_payers remove_variable = tcrb_original_slot }
+  every_in_list = { variable = tcrb_initial_payers
+   remove_variable = tcrb_payer_owner remove_variable = tcrb_payer_generation
+   remove_variable = tcrb_plan_slot remove_variable = tcrb_done
+  }
+  clear_variable_list = tcrb_original_payers
+  clear_variable_list = tcrb_initial_payers
+  clear_variable_list = tcrb_plan
+  remove_variable = tcrb_settled remove_variable = tcrb_cancelled
+  remove_variable = tcrb_replanned_generation remove_variable = tcrb_replanned_lifecycle
+  remove_variable = tcrb_failure_reason remove_variable = tcrb_deferred_reason
+  remove_variable = tcrb_job_payer remove_variable = tcrb_job_slot
+  remove_variable = tcrb_expected_sequence remove_variable = tcrb_verified
+  set_variable = { name = tcrb_owner value = this }
+  set_variable = { name = tcrb_generation value = var:tcr_active_generation }
+  set_variable = { name = tcrb_lifecycle value = var:tcrc_lifecycle }
+  set_variable = { name = tcrb_active value = yes }
+  set_variable = { name = tcrb_phase value = 10 }
+  set_variable = { name = tcrb_outcome value = 1 }
+  set_variable = { name = tcrb_added_count value = 0 }
+  set_variable = { name = tcrb_original_count value = 0 }
+  set_variable = { name = tcrb_initial_count value = 0 }
+  set_variable = { name = tcrb_remaining_count value = 0 }
+  every_tax_slot = { every_tax_slot_vassal = {
+   save_scope_as = tcrb_payer
+   set_variable = { name = tcrb_original_slot value = assigned_tax_slot }
+   scope:tcrb_owner = {
+    add_to_variable_list = { name = tcrb_original_payers target = scope:tcrb_payer }
+    change_variable = { name = tcrb_original_count add = 1 }
+   }
+  } }
+  every_unassigned_taxpayers = {
+   save_scope_as = tcrb_payer
+   set_variable = { name = tcrb_payer_owner value = scope:tcrb_owner }
+   set_variable = { name = tcrb_payer_generation value = scope:tcrb_owner.var:tcrb_generation }
+   scope:tcrb_owner = {
+    add_to_variable_list = { name = tcrb_initial_payers target = scope:tcrb_payer }
+    change_variable = { name = tcrb_initial_count add = 1 }
+   }
+  }
+  tcrm_begin_mandatory_effect = yes
+ }
+}
+tcrb_receive_matrix_effect = {
+ save_scope_as = tcrb_owner
+ if = { limit = { has_variable = tcrm_no_work }
+  set_variable = { name = tcrb_phase value = 40 }
+ } else_if = { limit = {
+  has_variable = tcrm_apply_ready tcrm_context_valid_trigger = yes
+  has_variable = tcrm_plan_complete var:tcrm_mode = 1
+ }
+  every_in_list = { variable = tcrm_apply_order
+   save_scope_as = tcrb_payer
+   if = { limit = {
+    has_variable = tcrb_payer_owner var:tcrb_payer_owner = scope:tcrb_owner
+    has_variable = tcrb_payer_generation var:tcrb_payer_generation = scope:tcrb_owner.var:tcrb_generation
+    NOT = { exists = assigned_tax_slot } has_variable = tcrm_plan_slot
+   }
+    set_variable = { name = tcrb_plan_slot value = var:tcrm_plan_slot }
+    scope:tcrb_owner = { add_to_variable_list = { name = tcrb_plan target = scope:tcrb_payer } }
+   } else = {
+    scope:tcrb_owner = { set_variable = { name = tcrb_failure_reason value = 1 } }
+   }
+  }
+  if = { limit = { has_variable = tcrb_failure_reason } tcrb_fail_effect = yes }
+  else = { set_variable = { name = tcrb_phase value = 30 } }
+ } else = {
+  # No mutation from partial/unknown matrix. Outcome3 is deferred, not success.
+  set_variable = { name = tcrb_outcome value = 3 }
+  set_variable = { name = tcrb_deferred_reason value = 1 }
+  set_variable = { name = tcrb_phase value = 40 }
+ }
+}
+tcrb_queue_next_effect = {
+ save_scope_as = tcrb_owner
+ remove_variable = tcrb_next_queued
+ every_in_list = { variable = tcrb_plan
+  if = { limit = {
+   NOT = { has_variable = tcrb_done }
+   NOT = { scope:tcrb_owner = { has_variable = tcrb_next_queued } }
+  }
+   save_scope_as = tcrp_desired_payer
+   var:tcrb_plan_slot = { save_scope_as = tcrp_desired_slot }
+   scope:tcrb_owner = {
+    set_variable = { name = tcrb_next_queued value = yes }
+    if = { limit = { scope:tcrp_desired_payer = { exists = assigned_tax_slot } }
+     # A manual/native change invalidates this immutable mandatory plan.
+     set_variable = { name = tcrb_failure_reason value = 2 }
+     tcrb_fail_effect = yes
+    } else = {
+     set_variable = { name = tcrb_job_payer value = scope:tcrp_desired_payer }
+     set_variable = { name = tcrb_job_slot value = scope:tcrp_desired_slot }
+     set_variable = { name = tcrb_phase value = 31 }
+     tcrp_queue_transfer_effect = yes
+     set_variable = { name = tcrb_expected_sequence value = var:tcrp_sequence }
+     if = { limit = { has_variable = tcrp_enqueue_rejected }
+      set_variable = { name = tcrb_failure_reason value = 3 } tcrb_fail_effect = yes
+     } else_if = { limit = { var:tcrp_phase = 50 }
+      tcrb_defer_job_effect = yes
+     }
+    }
+   }
+  }
+ }
+ if = { limit = { NOT = { has_variable = tcrb_next_queued } }
+  set_variable = { name = tcrb_phase value = 40 }
+ }
+}
+tcrb_accept_job_effect = {
+ tcrv_parent_record_mandatory_effect = yes
+ var:tcrb_job_payer = { set_variable = { name = tcrb_done value = yes } }
+ change_variable = { name = tcrb_added_count add = 1 }
+ remove_variable = tcrb_job_payer remove_variable = tcrb_job_slot
+ remove_variable = tcrb_expected_sequence
+ set_variable = { name = tcrb_phase value = 30 }
+}
+
+tcrb_accept_settled_replan_job_effect = {
+ # tcrp phase40 already proved the exact actual pair. A later player change
+ # belongs to the fresh generation baseline, so do not require the old pair.
+ change_variable = { name = tcrb_added_count add = 1 }
+ remove_variable = tcrb_job_payer remove_variable = tcrb_job_slot
+ remove_variable = tcrb_expected_sequence
+ set_variable = { name = tcrb_phase value = 85 }
+}
+tcrb_defer_job_effect = {
+ set_variable = { name = tcrb_outcome value = 3 }
+ set_variable = { name = tcrb_deferred_reason value = 2 }
+ remove_variable = tcrb_job_payer remove_variable = tcrb_job_slot
+ remove_variable = tcrb_expected_sequence
+ set_variable = { name = tcrb_phase value = 40 }
+}
+tcrb_verify_actual_effect = {
+ save_scope_as = tcrb_owner
+ remove_variable = tcrb_verified
+ remove_variable = tcrb_verify_bad
+ set_variable = { name = tcrb_actual_count value = 0 }
+ set_variable = { name = tcrb_remaining_count value = 0 }
+ every_tax_slot = { every_tax_slot_vassal = {
+  scope:tcrb_owner = { change_variable = { name = tcrb_actual_count add = 1 } }
+ } }
+ every_in_list = { variable = tcrb_original_payers
+  if = { limit = { OR = {
+   NOT = { tcrv_parent_mandatory_original_mapping_trigger = yes }
+  } } scope:tcrb_owner = { set_variable = { name = tcrb_verify_bad value = yes } } }
+ }
+ every_in_list = { variable = tcrb_initial_payers
+  if = { limit = { has_variable = tcrb_done }
+   if = { limit = { OR = {
+    NOT = { tcrv_parent_mandatory_added_mapping_trigger = yes }
+   } } scope:tcrb_owner = { set_variable = { name = tcrb_verify_bad value = yes } } }
+  } else_if = { limit = { exists = assigned_tax_slot }
+   scope:tcrb_owner = { set_variable = { name = tcrb_verify_bad value = yes } }
+  }
+ }
+ every_unassigned_taxpayers = {
+  if = { limit = { OR = {
+   NOT = { has_variable = tcrb_payer_owner } var:tcrb_payer_owner != scope:tcrb_owner
+   NOT = { has_variable = tcrb_payer_generation } var:tcrb_payer_generation != scope:tcrb_owner.var:tcrb_generation
+  } } scope:tcrb_owner = { set_variable = { name = tcrb_verify_bad value = yes } } }
+  scope:tcrb_owner = { change_variable = { name = tcrb_remaining_count add = 1 } }
+  if = { limit = { NOT = { has_variable = tcrm_unmatched_reason } }
+   set_variable = { name = tcrm_unmatched_reason value = 4 }
+  }
+ }
+ set_variable = { name = tcrb_expected_actual value = var:tcrb_original_count }
+ change_variable = { name = tcrb_expected_actual add = var:tcrb_added_count }
+ set_variable = { name = tcrb_expected_remaining value = var:tcrb_initial_count }
+ change_variable = { name = tcrb_expected_remaining subtract = var:tcrb_added_count }
+ if = { limit = {
+  NOT = { has_variable = tcrb_verify_bad }
+  var:tcrb_actual_count = var:tcrb_expected_actual
+  var:tcrb_remaining_count = var:tcrb_expected_remaining
+  NOT = { has_variable = tcrp_job_active }
+  NOT = { has_variable = tcr_command_generation }
+ }
+  set_variable = { name = tcrb_verified value = var:tcrb_generation }
+ } else = {
+  set_variable = { name = tcrb_failure_reason value = 4 }
+  tcrb_fail_effect = yes
+ }
+}
+tcrb_finish_verification_effect = {
+ tcrb_verify_actual_effect = yes
+ if = { limit = { has_variable = tcrb_verified NOT = { has_variable = tcr_failed } }
+  if = { limit = { var:tcrb_remaining_count > 0 var:tcrb_outcome = 1 }
+   set_variable = { name = tcrb_outcome value = 2 }
+  }
+  # Store after actual mutations/ACKs. No engine mutation uses this fingerprint.
+  tcrm_record_unmatched_snapshot_effect = yes
+  set_variable = { name = tcrb_phase value = 45 }
+ }
+}
+tcrb_finish_effect = {
+ set_variable = { name = tcrb_settled value = yes }
+ set_variable = { name = tcrb_settled_generation value = var:tcrb_generation }
+ set_variable = { name = tcrb_settled_lifecycle value = var:tcrb_lifecycle }
+ remove_variable = tcrb_active
+ set_variable = { name = tcrb_phase value = 70 }
+ debug_log = "TCRB|SETTLED|outcome=[GetPlayer.MakeScope.Var('tcrb_outcome').GetValue]|added=[GetPlayer.MakeScope.Var('tcrb_added_count').GetValue]|remaining=[GetPlayer.MakeScope.Var('tcrb_remaining_count').GetValue]"
+}
+tcrb_abort_readonly_effect = {
+ tcrm_invalidate_effect = yes
+ set_variable = { name = tcrb_phase value = 80 }
+}
+tcrb_abort_clear_undispatched_effect = {
+ tcrp_clear_slot_marker_effect = yes
+ tcr_clear_command_effect = yes
+ remove_variable = tcrp_job_active
+ set_variable = { name = tcrp_phase value = 60 }
+ remove_variable = tcrb_job_payer remove_variable = tcrb_job_slot
+ remove_variable = tcrb_expected_sequence
+}
+
+tcrb_clear_blocked_job_effect = {
+ # Proven pre-dispatch block: no journal/native job remains, no addition ACK.
+ remove_variable = tcrb_job_payer remove_variable = tcrb_job_slot
+ remove_variable = tcrb_expected_sequence
+}
+tcrb_abort_verify_effect = {
+ tcrb_verify_actual_effect = yes
+ if = { limit = { has_variable = tcrb_verified NOT = { has_variable = tcr_failed } }
+  set_variable = { name = tcrb_phase value = 81 }
+ }
+}
+tcrb_finish_abort_effect = {
+ set_variable = { name = tcrb_cancelled value = yes }
+ set_variable = { name = tcrb_cancelled_generation value = var:tcrb_generation }
+ set_variable = { name = tcrb_cancelled_lifecycle value = var:tcrb_lifecycle }
+ remove_variable = tcrb_active
+ set_variable = { name = tcrb_phase value = 82 }
+}
+tcrb_begin_replan_effect = {
+ # No rollback or obsolete original-membership test after an external change.
+ # A currently dispatched exact command still has to settle first.
+ tcrm_invalidate_effect = yes
+ set_variable = { name = tcrb_phase value = 85 }
+}
+tcrb_finish_replan_effect = {
+ set_variable = { name = tcrb_replanned_generation value = var:tcrb_generation }
+ set_variable = { name = tcrb_replanned_lifecycle value = var:tcrb_lifecycle }
+ remove_variable = tcrb_active
+ set_variable = { name = tcrb_phase value = 87 }
+}

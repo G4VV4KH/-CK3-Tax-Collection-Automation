@@ -1,0 +1,6 @@
+﻿l_english:
+ tcrc_event_title:0 "Tax collection is being recalculated"
+ tcrc_event_desc:0 "The previous pause state will be restored after tax collection is reconciled."
+ tcrc_event_complete:0 "Recalculation complete"
+ tcrc_event_cancel:0 "Automation stopped"
+ tcrc_event_failed:0 "Automation stopped after a verification failure"

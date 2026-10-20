@@ -1,0 +1,315 @@
+﻿tcrf_fail_effect = {
+ set_variable = { name = tcrf_failed value = yes }
+ set_variable = { name = tcrf_phase value = 90 }
+ # Keep the composite lease and pause; a half replacement is not an ordinary failure exit.
+ debug_log = "TCRF|FAILED_PENDING|sequence=[GetPlayer.MakeScope.Var('tcrf_sequence').GetValue]"
+}
+tcrf_capture_topology_effect = {
+ save_scope_as = tcrf_owner
+ clear_variable_list = tcrf_job_slots clear_variable_list = tcrf_job_collectors clear_variable_list = tcrf_job_payers
+ set_variable = { name = tcrf_slot_count value = 0 }
+ set_variable = { name = tcrf_payer_count value = 0 }
+ set_variable = { name = tcrf_collector_count value = 0 }
+ remove_variable = tcrf_unknown_decree
+ every_tax_slot = {
+set_variable = { name = tcrf_record_owner value = scope:tcrf_owner }
+set_variable = { name = tcrf_record_lifecycle value = scope:tcrf_owner.var:tcrf_lifecycle }
+set_variable = { name = tcrf_record_sequence value = scope:tcrf_owner.var:tcrf_sequence }
+
+  remove_variable = tcrf_record_decree
+if = { limit = { is_active_obligation = default_tax_collector } set_variable = { name = tcrf_record_decree value = 0 } }
+if = { limit = { is_active_obligation = strict_taxation_tax_collector } set_variable = { name = tcrf_record_decree value = 1 } }
+if = { limit = { is_active_obligation = jizya_special_rights_tax_collector } set_variable = { name = tcrf_record_decree value = 2 } }
+if = { limit = { is_active_obligation = iqta_special_rights_tax_collector } set_variable = { name = tcrf_record_decree value = 3 } }
+if = { limit = { is_active_obligation = ghazi_special_rights_tax_collector } set_variable = { name = tcrf_record_decree value = 4 } }
+if = { limit = { is_active_obligation = deqhan_special_rights_tax_collector } set_variable = { name = tcrf_record_decree value = 5 } }
+if = { limit = { is_active_obligation = maguh_special_rights_tax_collector } set_variable = { name = tcrf_record_decree value = 6 } }
+if = { limit = { is_active_obligation = muqata_special_rights_tax_collector } set_variable = { name = tcrf_record_decree value = 7 } }
+  save_scope_as = tcrf_scan_slot
+  scope:tcrf_owner = { add_to_variable_list = { name = tcrf_job_slots target = scope:tcrf_scan_slot } change_variable = { name = tcrf_slot_count add = 1 } }
+  if = { limit = { NOT = { has_variable = tcrf_record_decree } } scope:tcrf_owner = { set_variable = { name = tcrf_unknown_decree value = yes } } }
+  every_tax_slot_vassal = {
+set_variable = { name = tcrf_record_owner value = scope:tcrf_owner }
+set_variable = { name = tcrf_record_lifecycle value = scope:tcrf_owner.var:tcrf_lifecycle }
+set_variable = { name = tcrf_record_sequence value = scope:tcrf_owner.var:tcrf_sequence }
+
+   set_variable = { name = tcrf_record_payer_slot value = assigned_tax_slot }
+   save_scope_as = tcrf_scan_payer
+   scope:tcrf_owner = { add_to_variable_list = { name = tcrf_job_payers target = scope:tcrf_scan_payer } change_variable = { name = tcrf_payer_count add = 1 } }
+  }
+ }
+ every_tax_collector = {
+set_variable = { name = tcrf_record_owner value = scope:tcrf_owner }
+set_variable = { name = tcrf_record_lifecycle value = scope:tcrf_owner.var:tcrf_lifecycle }
+set_variable = { name = tcrf_record_sequence value = scope:tcrf_owner.var:tcrf_sequence }
+
+  set_variable = { name = tcrf_record_collector_slot value = tax_slot }
+  save_scope_as = tcrf_scan_collector
+  scope:tcrf_owner = { add_to_variable_list = { name = tcrf_job_collectors target = scope:tcrf_scan_collector } change_variable = { name = tcrf_collector_count add = 1 } }
+ }
+}
+tcrf_check_topology_effect = { tcrf_check_topology_count_effect = { MISSING = 0 } }
+tcrf_check_vacant_topology_effect = { tcrf_check_topology_count_effect = { MISSING = 1 } }
+tcrf_check_topology_count_effect = {
+ save_scope_as = tcrf_owner
+ remove_variable = tcrf_topology_invalid
+ set_variable = { name = tcrf_expected_collectors value = var:tcrf_collector_count }
+ change_variable = { name = tcrf_expected_collectors subtract = $MISSING$ }
+ set_variable = { name = tcrf_actual_slots value = 0 }
+ set_variable = { name = tcrf_actual_payers value = 0 }
+ set_variable = { name = tcrf_actual_collectors value = 0 }
+ set_variable = { name = tcrf_recorded_payers value = 0 }
+ set_variable = { name = tcrf_recorded_collectors value = 0 }
+ every_tax_slot = {
+  scope:tcrf_owner = { change_variable = { name = tcrf_actual_slots add = 1 } }
+  if = { limit = { NOT = { tcrf_record_trigger = yes } } scope:tcrf_owner = { set_variable = { name = tcrf_topology_invalid value = yes } } }
+  else_if = { limit = { NOT = { has_variable = tcrf_record_decree } } scope:tcrf_owner = { set_variable = { name = tcrf_topology_invalid value = yes } } }
+  else_if = { limit = { NOT = { OR = {
+AND = { var:tcrf_record_decree = 0 is_active_obligation = default_tax_collector }
+AND = { var:tcrf_record_decree = 1 is_active_obligation = strict_taxation_tax_collector }
+AND = { var:tcrf_record_decree = 2 is_active_obligation = jizya_special_rights_tax_collector }
+AND = { var:tcrf_record_decree = 3 is_active_obligation = iqta_special_rights_tax_collector }
+AND = { var:tcrf_record_decree = 4 is_active_obligation = ghazi_special_rights_tax_collector }
+AND = { var:tcrf_record_decree = 5 is_active_obligation = deqhan_special_rights_tax_collector }
+AND = { var:tcrf_record_decree = 6 is_active_obligation = maguh_special_rights_tax_collector }
+AND = { var:tcrf_record_decree = 7 is_active_obligation = muqata_special_rights_tax_collector }
+} } } scope:tcrf_owner = { set_variable = { name = tcrf_topology_invalid value = yes } } }
+  every_tax_slot_vassal = { scope:tcrf_owner = { change_variable = { name = tcrf_actual_payers add = 1 } } }
+ }
+ every_in_list = { variable = tcrf_job_payers
+  scope:tcrf_owner = { change_variable = { name = tcrf_recorded_payers add = 1 } }
+  if = { limit = { NOT = { tcrf_record_trigger = yes } } scope:tcrf_owner = { set_variable = { name = tcrf_topology_invalid value = yes } } }
+  else_if = { limit = { NOT = { has_variable = tcrf_record_payer_slot } } scope:tcrf_owner = { set_variable = { name = tcrf_topology_invalid value = yes } } }
+  else_if = { limit = { NOT = { assigned_tax_slot = var:tcrf_record_payer_slot } } scope:tcrf_owner = { set_variable = { name = tcrf_topology_invalid value = yes } } }
+ }
+ every_tax_collector = { scope:tcrf_owner = { change_variable = { name = tcrf_actual_collectors add = 1 } } }
+ every_in_list = { variable = tcrf_job_collectors
+  scope:tcrf_owner = { change_variable = { name = tcrf_recorded_collectors add = 1 } }
+  if = { limit = { this != scope:tcrf_owner.var:tcrf_old }
+   if = { limit = { NOT = { tcrf_record_trigger = yes } } scope:tcrf_owner = { set_variable = { name = tcrf_topology_invalid value = yes } } }
+   else_if = { limit = { NOT = { has_variable = tcrf_record_collector_slot } } scope:tcrf_owner = { set_variable = { name = tcrf_topology_invalid value = yes } } }
+   else_if = { limit = { NOT = { is_tax_collector_of = scope:tcrf_owner tax_slot = var:tcrf_record_collector_slot } } scope:tcrf_owner = { set_variable = { name = tcrf_topology_invalid value = yes } } }
+  }
+ }
+ if = { limit = { OR = { var:tcrf_actual_slots != var:tcrf_slot_count var:tcrf_actual_payers != var:tcrf_payer_count var:tcrf_actual_collectors != var:tcrf_expected_collectors var:tcrf_recorded_payers != var:tcrf_payer_count var:tcrf_recorded_collectors != var:tcrf_collector_count gold != var:tcrc_start_gold } } set_variable = { name = tcrf_topology_invalid value = yes } }
+}
+tcrf_parent_init_effect = { if = { limit = {
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_phase
+}
+tcrf_capability_trigger = yes tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes has_variable = tcrc_lifecycle_active
+has_variable = tcr_active_generation var:tcrc_phase = 33
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+
+} trigger_else = { always = no }
+
+}
+save_scope_as = tcrf_owner
+if = { limit = { NOT = { has_variable = tcrf_parent_lifecycle } }
+ set_variable = { name = tcrf_parent_reset value = yes }
+} else_if = { limit = { var:tcrf_parent_lifecycle != var:tcrc_lifecycle } set_variable = { name = tcrf_parent_reset value = yes } }
+if = { limit = { has_variable = tcrf_parent_reset }
+ remove_variable = tcrf_parent_reset
+ set_variable = { name = tcrf_parent_lifecycle value = var:tcrc_lifecycle }
+ set_variable = { name = tcrf_parent_attempts value = 0 }
+ set_variable = { name = tcrf_parent_accepted value = 0 }
+ set_variable = { name = tcrf_parent_budget value = 0 }
+ remove_variable = tcrf_parent_initial_floor remove_variable = tcrf_parent_last_total
+remove_variable = tcrf_parent_skip_optional_lifecycle
+ clear_variable_list = tcrf_parent_processed_slots clear_variable_list = tcrf_parent_accepted_slots
+ every_tax_slot = { scope:tcrf_owner = { change_variable = { name = tcrf_parent_budget add = 1 } } }
+ # Immutable entry mapping; neither commit nor retry rewrites these records.
+ every_tax_collector = {
+  save_scope_as = tcrf_initial_collector
+  tax_slot = {
+   set_variable = { name = tcrf_initial_owner value = scope:tcrf_owner }
+   set_variable = { name = tcrf_initial_lifecycle value = scope:tcrf_owner.var:tcrc_lifecycle }
+   set_variable = { name = tcrf_initial_collector value = scope:tcrf_initial_collector }
+  }
+ }
+}
+
+} }
+tcrf_parent_add_candidate_effect = { if = { limit = {
+tcrcp_candidate_eligible_trigger = yes is_tax_collector = no
+}
+set_variable = { name = tcrf_candidate_aptitude value = tax_collector_aptitude_score }
+save_scope_as = tcrf_scan_candidate
+scope:tcrf_owner = {
+ if = { limit = { NOT = { has_variable = tcrf_best_free } } set_variable = { name = tcrf_best_free value = scope:tcrf_scan_candidate } }
+ else_if = { limit = { scope:tcrf_scan_candidate.var:tcrf_candidate_aptitude > var:tcrf_best_free.var:tcrf_candidate_aptitude } set_variable = { name = tcrf_best_free value = scope:tcrf_scan_candidate } }
+}
+
+} }
+tcrf_parent_choose_effect = { if = { limit = {
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_phase
+}
+tcrf_capability_trigger = yes tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes has_variable = tcrc_lifecycle_active
+has_variable = tcr_active_generation var:tcrc_phase = 33
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+NOT = { has_variable = tcr_command_generation } NOT = { has_variable = tcre_job_active }
+
+} trigger_else = { always = no }
+
+}
+tcrf_parent_init_effect = yes
+save_scope_as = tcrf_owner save_scope_as = tcrcp_owner
+remove_variable = tcrf_best_free remove_variable = tcrf_worst_incumbent
+if = { limit = { var:tcrf_parent_attempts < var:tcrf_parent_budget NOT = { has_variable = tcrf_parent_skip_optional_lifecycle } }
+ every_courtier = { tcrf_parent_add_candidate_effect = yes }
+ every_vassal = { tcrf_parent_add_candidate_effect = yes }
+ every_tax_collector = {
+  save_scope_as = tcrf_scan_incumbent tax_slot = { save_scope_as = tcrf_scan_slot }
+  set_variable = { name = tcrf_candidate_aptitude value = tax_collector_aptitude_score }
+  if = { limit = { NOT = { scope:tcrf_owner = { any_in_list = { variable = tcrf_parent_processed_slots this = scope:tcrf_scan_slot } } } }
+   scope:tcrf_owner = {
+    if = { limit = { NOT = { has_variable = tcrf_worst_incumbent } } set_variable = { name = tcrf_worst_incumbent value = scope:tcrf_scan_incumbent } }
+    else_if = { limit = { scope:tcrf_scan_incumbent.var:tcrf_candidate_aptitude < var:tcrf_worst_incumbent.var:tcrf_candidate_aptitude } set_variable = { name = tcrf_worst_incumbent value = scope:tcrf_scan_incumbent } }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrf_best_free has_variable = tcrf_worst_incumbent }
+ if = { limit = { var:tcrf_best_free.var:tcrf_candidate_aptitude > var:tcrf_worst_incumbent.var:tcrf_candidate_aptitude }
+  var:tcrf_best_free = { save_scope_as = tcrf_desired_new }
+  var:tcrf_worst_incumbent = { save_scope_as = tcrf_desired_old tax_slot = { save_scope_as = tcrf_desired_slot } }
+  tcrf_queue_effect = yes
+ } else = { tcrs_prepare_effect = yes }
+} else = { tcrs_prepare_effect = yes }
+
+} }
+tcrf_queue_effect = { if = { limit = {
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_phase
+}
+tcrf_capability_trigger = yes tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes has_variable = tcrc_lifecycle_active
+has_variable = tcr_active_generation var:tcrc_phase = 33
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+exists = scope:tcrf_desired_old exists = scope:tcrf_desired_new exists = scope:tcrf_desired_slot
+scope:tcrf_desired_old = { is_tax_collector_of = root tax_slot = scope:tcrf_desired_slot }
+scope:tcrf_desired_new = { is_alive = yes is_tax_collector = no }
+any_tax_slot = { this = scope:tcrf_desired_slot }
+
+} trigger_else = { always = no }
+
+}
+if = { limit = { has_variable = tcrf_sequence } change_variable = { name = tcrf_sequence add = 1 } } else = { set_variable = { name = tcrf_sequence value = 1 } }
+set_variable = { name = tcrf_owner value = this }
+set_variable = { name = tcrf_lifecycle value = var:tcrc_lifecycle }
+set_variable = { name = tcrf_generation value = var:tcr_active_generation }
+set_variable = { name = tcrf_old value = scope:tcrf_desired_old }
+set_variable = { name = tcrf_new value = scope:tcrf_desired_new }
+set_variable = { name = tcrf_slot value = scope:tcrf_desired_slot }
+set_variable = { name = tcrf_phase value = 10 }
+set_variable = { name = tcrf_preview_nonce value = var:tcrf_sequence }
+remove_variable = tcrf_preview_observed
+set_variable = { name = tcrf_active value = yes }
+set_variable = { name = tcrf_hired_count value = 0 }
+set_variable = { name = tcrf_fired_count value = 0 }
+remove_variable = tcrf_settled_sequence remove_variable = tcrf_authorized_sequence
+remove_variable = tcrf_floor remove_variable = tcrf_total_floor remove_variable = tcrf_preview
+remove_variable = tcrf_recovered_target remove_variable = tcrf_receipt_pending
+remove_variable = tcrf_deferred_reason
+remove_variable = tcrf_list_pass
+remove_variable = tcrf_list_count remove_variable = tcrf_list_cursor
+clear_variable_list = tcrf_list_candidates
+change_variable = { name = tcrf_parent_attempts add = 1 }
+add_to_variable_list = { name = tcrf_parent_processed_slots target = scope:tcrf_desired_slot }
+save_scope_as = tcrf_owner
+scope:tcrf_desired_slot = {
+ set_variable = { name = tcrf_slot_owner value = scope:tcrf_owner }
+ set_variable = { name = tcrf_slot_lifecycle value = scope:tcrf_owner.var:tcrf_lifecycle }
+ set_variable = { name = tcrf_slot_sequence value = scope:tcrf_owner.var:tcrf_sequence }
+}
+tcrf_capture_topology_effect = yes
+if = { limit = { has_variable = tcrf_unknown_decree } set_variable = { name = tcrf_phase value = 71 } set_variable = { name = tcrf_deferred_reason value = 1 } }
+
+} }
+tcrf_fired_hook_effect = { if = { limit = {
+tcrf_expected_fired_hook_trigger = yes
+}
+change_variable = { name = tcrf_fired_count add = 1 }
+set_variable = { name = tcrf_fired_sequence value = var:tcrf_sequence }
+
+} }
+tcrf_hired_hook_effect = { if = { limit = {
+tcrf_expected_hired_hook_trigger = yes
+}
+change_variable = { name = tcrf_hired_count add = 1 }
+set_variable = { name = tcrf_hired_sequence value = var:tcrf_sequence }
+set_variable = { name = tcrf_phase value = 30 }
+} }
+tcrf_parent_commit_effect = { if = { limit = {
+tcrf_receipt_trigger = yes
+}
+tcrf_check_topology_effect = yes
+if = { limit = { NOT = { has_variable = tcrf_topology_invalid }
+ any_in_list = { variable = tcrc_attainable_collectors this = root.var:tcrf_old }
+ var:tcrf_old = { var:tcrc_plan_owner = root var:tcrc_plan_generation = root.var:tcr_active_generation var:tcrc_plan_slot = root.var:tcrf_slot }
+}
+ save_scope_as = tcrf_owner
+ # Named integration block: COLLECTOR_ACCEPT_EXACT_PAIR. No global rebaseline.
+ remove_list_variable = { name = tcrc_attainable_collectors target = var:tcrf_old }
+ add_to_variable_list = { name = tcrc_attainable_collectors target = var:tcrf_new }
+ var:tcrf_new = {
+  set_variable = { name = tcrc_plan_owner value = scope:tcrf_owner }
+  set_variable = { name = tcrc_plan_generation value = scope:tcrf_owner.var:tcr_active_generation }
+  set_variable = { name = tcrc_plan_slot value = scope:tcrf_owner.var:tcrf_slot }
+ }
+ var:tcrf_slot = { set_variable = { name = tcrc_planned_collector value = scope:tcrf_owner.var:tcrf_new } }
+ if = { limit = { any_in_list = { variable = tcrc_original_collectors this = root.var:tcrf_old } }
+  remove_list_variable = { name = tcrc_original_collectors target = var:tcrf_old }
+  add_to_variable_list = { name = tcrc_original_collectors target = var:tcrf_new }
+  var:tcrf_new = { set_variable = { name = tcrc_original_collector_slot value = scope:tcrf_owner.var:tcrf_slot } }
+ }
+ var:tcrf_slot = {
+  # Durable immutable accepted receipt for this slot/lifecycle. This slot is never reattempted in this lifetime.
+  set_variable = { name = tcrf_accepted_owner value = scope:tcrf_owner }
+  set_variable = { name = tcrf_accepted_lifecycle value = scope:tcrf_owner.var:tcrf_lifecycle }
+  set_variable = { name = tcrf_accepted_generation value = scope:tcrf_owner.var:tcrf_generation }
+  set_variable = { name = tcrf_accepted_sequence value = scope:tcrf_owner.var:tcrf_sequence }
+  set_variable = { name = tcrf_accepted_old value = scope:tcrf_owner.var:tcrf_old }
+  set_variable = { name = tcrf_accepted_new value = scope:tcrf_owner.var:tcrf_new }
+  set_variable = { name = tcrf_accepted_floor value = scope:tcrf_owner.var:tcrf_floor }
+  set_variable = { name = tcrf_accepted_actual value = scope:tcrf_owner.var:tcrf_actual }
+ }
+ add_to_variable_list = { name = tcrf_parent_accepted_slots target = var:tcrf_slot }
+ change_variable = { name = tcrf_parent_accepted add = 1 }
+ set_variable = { name = tcrf_parent_last_total value = var:tcrf_actual_total }
+ set_variable = { name = tcrf_parent_committed_sequence value = var:tcrf_sequence }
+ remove_variable = tcrf_receipt_pending remove_variable = tcrf_pending
+ set_variable = { name = tcrf_phase value = 72 }
+ # Subsequent provider observations must be fresh; existing payer ledgers remain untouched.
+ tcrm_invalidate_effect = yes
+ debug_log = "TCRF|PARENT_ACCEPTED|sequence=[GetPlayer.MakeScope.Var('tcrf_sequence').GetValue]"
+} else = { tcrf_fail_effect = yes }
+
+} }

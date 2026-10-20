@@ -1,0 +1,869 @@
+﻿# Native contribution is authoritative. Tooltip-breakdown values can differ.
+# Keep exact row/context/readiness guards; do not require equality of different getters.
+tcrm_metadata = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day }
+trigger_if = { limit = { var:tcrm_phase = 10 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+scope:identity = yes scope:capacity >= scope:used scope:used >= 0
+scope:collector = { is_tax_collector_of = root }
+scope:collector.tax_slot = {
+ has_variable = tcrm_slot_owner var:tcrm_slot_owner = root
+ has_variable = tcrm_slot_epoch var:tcrm_slot_epoch = root.var:tcrm_epoch
+ has_variable = tcrm_snapshot_collector var:tcrm_snapshot_collector = scope:collector
+ NOT = { has_variable = tcrm_metadata_ready }
+}
+
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+} effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day }
+trigger_if = { limit = { var:tcrm_phase = 10 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+scope:identity = yes scope:capacity >= scope:used scope:used >= 0
+scope:collector = { is_tax_collector_of = root }
+scope:collector.tax_slot = {
+ has_variable = tcrm_slot_owner var:tcrm_slot_owner = root
+ has_variable = tcrm_slot_epoch var:tcrm_slot_epoch = root.var:tcrm_epoch
+ has_variable = tcrm_snapshot_collector var:tcrm_snapshot_collector = scope:collector
+ NOT = { has_variable = tcrm_metadata_ready }
+}
+
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+}
+save_scope_as = tcrm_owner
+scope:collector.tax_slot = {
+ set_variable = { name = tcrm_native_capacity value = scope:capacity }
+ set_variable = { name = tcrm_native_used value = scope:used }
+ set_variable = { name = tcrm_metadata_free value = scope:capacity }
+ change_variable = { name = tcrm_metadata_free subtract = scope:used }
+ if = { limit = { var:tcrm_metadata_free = var:tcrm_snapshot_available }
+ set_variable = { name = tcrm_capacity value = scope:capacity }
+ if = { limit = { root.var:tcrm_mode = 1 }
+  change_variable = { name = tcrm_capacity subtract = scope:used }
+ }
+ set_variable = { name = tcrm_metadata_ready value = yes }
+ scope:tcrm_owner = { change_variable = { name = tcrm_metadata_count add = 1 } }
+ } else = {
+  scope:tcrm_owner = {
+   set_variable = { name = tcrm_incomplete_reason value = 6 }
+   tcrm_mark_incomplete_effect = yes
+  }
+ }
+}
+
+} } }
+
+tcrm_start_rows = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day }
+trigger_if = { limit = { var:tcrm_phase = 10 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+var:tcrm_metadata_count = var:tcrm_slot_count
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+} effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day }
+trigger_if = { limit = { var:tcrm_phase = 10 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+var:tcrm_metadata_count = var:tcrm_slot_count
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+}
+save_scope_as = tcrm_owner
+set_variable = { name = tcrm_snapshot_ready value = yes }
+tcrm_next_payer_effect = yes
+} } }
+
+tcrm_source_capture = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 20 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer
+# Capture every expected member of this source slot before advancing.
+# Keep contribution and breakdown as separate current-source receipts.
+# A missing breakdown is incomplete, never a zero/default comparison.
+exists = scope:reference
+scope:identity = yes
+is_target_in_variable_list = { name = tcrm_payers target = scope:payer }
+trigger_if = { limit = {
+ scope:payer = { has_variable = tcrm_payer_owner has_variable = tcrm_payer_epoch has_variable = tcrm_native_slot }
+ var:tcrm_current_payer = { has_variable = tcrm_native_slot }
+}
+ scope:payer = {
+  var:tcrm_payer_owner = root
+  var:tcrm_payer_epoch = root.var:tcrm_epoch
+  NOT = { has_variable = tcrm_source_done }
+  assigned_tax_slot = var:tcrm_native_slot
+  var:tcrm_native_slot = root.var:tcrm_current_payer.var:tcrm_native_slot
+ }
+ scope:collector.tax_slot = scope:payer.assigned_tax_slot
+ scope:collector = scope:payer.var:tcrm_native_slot.var:tcrm_snapshot_collector
+} trigger_else = { always = no }
+
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+} effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 20 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer
+# Capture every expected member of this source slot before advancing.
+# Keep contribution and breakdown as separate current-source receipts.
+# A missing breakdown is incomplete, never a zero/default comparison.
+exists = scope:reference
+scope:identity = yes
+is_target_in_variable_list = { name = tcrm_payers target = scope:payer }
+trigger_if = { limit = {
+ scope:payer = { has_variable = tcrm_payer_owner has_variable = tcrm_payer_epoch has_variable = tcrm_native_slot }
+ var:tcrm_current_payer = { has_variable = tcrm_native_slot }
+}
+ scope:payer = {
+  var:tcrm_payer_owner = root
+  var:tcrm_payer_epoch = root.var:tcrm_epoch
+  NOT = { has_variable = tcrm_source_done }
+  assigned_tax_slot = var:tcrm_native_slot
+  var:tcrm_native_slot = root.var:tcrm_current_payer.var:tcrm_native_slot
+ }
+ scope:collector.tax_slot = scope:payer.assigned_tax_slot
+ scope:collector = scope:payer.var:tcrm_native_slot.var:tcrm_snapshot_collector
+} trigger_else = { always = no }
+
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+}
+save_scope_as = tcrm_owner
+scope:payer = {
+ set_variable = { name = tcrm_source_gold value = scope:gold }
+ set_variable = { name = tcrm_source_reference value = scope:reference }
+ set_variable = { name = tcrm_source_done value = yes }
+}
+# Keep the window and cursor stable until each expected source member is read.
+# A missing native row remains incomplete; never substitute zero contribution.
+if = { limit = {
+ NOT = { any_in_list = { variable = tcrm_payers
+  trigger_if = { limit = { has_variable = tcrm_native_slot }
+   var:tcrm_native_slot = root.var:tcrm_current_payer.var:tcrm_native_slot
+   NOT = { has_variable = tcrm_source_done }
+  } trigger_else = { always = no }
+ } }
+}
+ set_variable = { name = tcrm_phase value = 30 }
+ tcrm_drain_script_edges_effect = yes
+}
+
+} } }
+
+tcrm_source_edge = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 30 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+var:tcrm_current_payer = { has_variable = tcrm_native_slot var:tcrm_native_slot = root.var:tcrm_current_slot has_variable = tcrm_source_done has_variable = tcrm_source_gold }
+
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+} effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 30 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+var:tcrm_current_payer = { has_variable = tcrm_native_slot var:tcrm_native_slot = root.var:tcrm_current_slot has_variable = tcrm_source_done has_variable = tcrm_source_gold }
+
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+}
+save_scope_as = tcrm_owner
+if = { limit = { var:tcrm_column = 0 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_0 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_0 value = 1 } } }
+if = { limit = { var:tcrm_column = 1 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_1 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_1 value = 1 } } }
+if = { limit = { var:tcrm_column = 2 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_2 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_2 value = 1 } } }
+if = { limit = { var:tcrm_column = 3 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_3 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_3 value = 1 } } }
+if = { limit = { var:tcrm_column = 4 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_4 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_4 value = 1 } } }
+if = { limit = { var:tcrm_column = 5 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_5 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_5 value = 1 } } }
+if = { limit = { var:tcrm_column = 6 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_6 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_6 value = 1 } } }
+if = { limit = { var:tcrm_column = 7 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_7 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_7 value = 1 } } }
+if = { limit = { var:tcrm_column = 8 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_8 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_8 value = 1 } } }
+if = { limit = { var:tcrm_column = 9 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_9 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_9 value = 1 } } }
+if = { limit = { var:tcrm_column = 10 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_10 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_10 value = 1 } } }
+if = { limit = { var:tcrm_column = 11 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_11 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_11 value = 1 } } }
+if = { limit = { var:tcrm_column = 12 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_12 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_12 value = 1 } } }
+if = { limit = { var:tcrm_column = 13 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_13 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_13 value = 1 } } }
+if = { limit = { var:tcrm_column = 14 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_14 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_14 value = 1 } } }
+if = { limit = { var:tcrm_column = 15 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_15 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_15 value = 1 } } }
+if = { limit = { var:tcrm_column = 16 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_16 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_16 value = 1 } } }
+if = { limit = { var:tcrm_column = 17 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_17 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_17 value = 1 } } }
+if = { limit = { var:tcrm_column = 18 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_18 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_18 value = 1 } } }
+if = { limit = { var:tcrm_column = 19 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_19 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_19 value = 1 } } }
+if = { limit = { var:tcrm_column = 20 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_20 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_20 value = 1 } } }
+if = { limit = { var:tcrm_column = 21 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_21 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_21 value = 1 } } }
+if = { limit = { var:tcrm_column = 22 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_22 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_22 value = 1 } } }
+if = { limit = { var:tcrm_column = 23 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_23 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_23 value = 1 } } }
+if = { limit = { var:tcrm_column = 24 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_24 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_24 value = 1 } } }
+if = { limit = { var:tcrm_column = 25 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_25 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_25 value = 1 } } }
+if = { limit = { var:tcrm_column = 26 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_26 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_26 value = 1 } } }
+if = { limit = { var:tcrm_column = 27 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_27 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_27 value = 1 } } }
+if = { limit = { var:tcrm_column = 28 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_28 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_28 value = 1 } } }
+if = { limit = { var:tcrm_column = 29 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_29 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_29 value = 1 } } }
+if = { limit = { var:tcrm_column = 30 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_30 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_30 value = 1 } } }
+if = { limit = { var:tcrm_column = 31 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_31 value = var:tcrm_source_gold } set_variable = { name = tcrm_edge_status_31 value = 1 } } }
+var:tcrm_current_payer = { change_variable = { name = tcrm_legal_edges add = 1 } }
+tcrm_edge_finished_effect = yes
+} } }
+
+tcrm_capacity_edge = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 30 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+tcrm_capacity_edge_unavailable_trigger = yes
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+} effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 30 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+tcrm_capacity_edge_unavailable_trigger = yes
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+}
+save_scope_as = tcrm_owner
+if = { limit = { var:tcrm_column = 0 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_0 value = 3 } } }
+if = { limit = { var:tcrm_column = 1 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_1 value = 3 } } }
+if = { limit = { var:tcrm_column = 2 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_2 value = 3 } } }
+if = { limit = { var:tcrm_column = 3 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_3 value = 3 } } }
+if = { limit = { var:tcrm_column = 4 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_4 value = 3 } } }
+if = { limit = { var:tcrm_column = 5 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_5 value = 3 } } }
+if = { limit = { var:tcrm_column = 6 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_6 value = 3 } } }
+if = { limit = { var:tcrm_column = 7 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_7 value = 3 } } }
+if = { limit = { var:tcrm_column = 8 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_8 value = 3 } } }
+if = { limit = { var:tcrm_column = 9 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_9 value = 3 } } }
+if = { limit = { var:tcrm_column = 10 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_10 value = 3 } } }
+if = { limit = { var:tcrm_column = 11 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_11 value = 3 } } }
+if = { limit = { var:tcrm_column = 12 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_12 value = 3 } } }
+if = { limit = { var:tcrm_column = 13 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_13 value = 3 } } }
+if = { limit = { var:tcrm_column = 14 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_14 value = 3 } } }
+if = { limit = { var:tcrm_column = 15 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_15 value = 3 } } }
+if = { limit = { var:tcrm_column = 16 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_16 value = 3 } } }
+if = { limit = { var:tcrm_column = 17 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_17 value = 3 } } }
+if = { limit = { var:tcrm_column = 18 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_18 value = 3 } } }
+if = { limit = { var:tcrm_column = 19 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_19 value = 3 } } }
+if = { limit = { var:tcrm_column = 20 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_20 value = 3 } } }
+if = { limit = { var:tcrm_column = 21 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_21 value = 3 } } }
+if = { limit = { var:tcrm_column = 22 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_22 value = 3 } } }
+if = { limit = { var:tcrm_column = 23 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_23 value = 3 } } }
+if = { limit = { var:tcrm_column = 24 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_24 value = 3 } } }
+if = { limit = { var:tcrm_column = 25 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_25 value = 3 } } }
+if = { limit = { var:tcrm_column = 26 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_26 value = 3 } } }
+if = { limit = { var:tcrm_column = 27 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_27 value = 3 } } }
+if = { limit = { var:tcrm_column = 28 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_28 value = 3 } } }
+if = { limit = { var:tcrm_column = 29 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_29 value = 3 } } }
+if = { limit = { var:tcrm_column = 30 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_30 value = 3 } } }
+if = { limit = { var:tcrm_column = 31 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_31 value = 3 } } }
+tcrm_edge_finished_effect = yes
+} } }
+
+tcrm_selection_receipt = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 30 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+scope:payer = var:tcrm_current_payer scope:identity = yes
+scope:column = var:tcrm_column
+scope:collector = var:tcrm_current_slot.var:tcrm_snapshot_collector
+scope:collector.tax_slot = var:tcrm_current_slot
+scope:selected = yes scope:selectable = yes
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+} effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 30 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+scope:payer = var:tcrm_current_payer scope:identity = yes
+scope:column = var:tcrm_column
+scope:collector = var:tcrm_current_slot.var:tcrm_snapshot_collector
+scope:collector.tax_slot = var:tcrm_current_slot
+scope:selected = yes scope:selectable = yes
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+}
+save_scope_as = tcrm_owner
+set_variable = { name = tcrm_phase value = 31 }
+} } }
+
+tcrm_gold_capture = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 31 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+scope:payer = var:tcrm_current_payer scope:identity = yes
+scope:column = var:tcrm_column
+scope:collector = var:tcrm_current_slot.var:tcrm_snapshot_collector
+scope:collector.tax_slot = var:tcrm_current_slot
+scope:selected = yes scope:selectable = yes
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+} effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 31 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+scope:payer = var:tcrm_current_payer scope:identity = yes
+scope:column = var:tcrm_column
+scope:collector = var:tcrm_current_slot.var:tcrm_snapshot_collector
+scope:collector.tax_slot = var:tcrm_current_slot
+scope:selected = yes scope:selectable = yes
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+}
+save_scope_as = tcrm_owner
+set_variable = { name = tcrm_pending_gold value = scope:gold }
+set_variable = { name = tcrm_phase value = 32 }
+} } }
+
+tcrm_gold_reference = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 32 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+scope:payer = var:tcrm_current_payer scope:identity = yes
+scope:column = var:tcrm_column
+scope:collector = var:tcrm_current_slot.var:tcrm_snapshot_collector
+scope:collector.tax_slot = var:tcrm_current_slot
+scope:selected = yes scope:selectable = yes has_variable = tcrm_pending_gold
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+} effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 32 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+scope:payer = var:tcrm_current_payer scope:identity = yes
+scope:column = var:tcrm_column
+scope:collector = var:tcrm_current_slot.var:tcrm_snapshot_collector
+scope:collector.tax_slot = var:tcrm_current_slot
+scope:selected = yes scope:selectable = yes has_variable = tcrm_pending_gold
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+}
+save_scope_as = tcrm_owner
+if = { limit = { scope:gold = var:tcrm_pending_gold }
+if = { limit = { var:tcrm_column = 0 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_0 value = scope:gold } set_variable = { name = tcrm_edge_status_0 value = 1 } } }
+if = { limit = { var:tcrm_column = 1 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_1 value = scope:gold } set_variable = { name = tcrm_edge_status_1 value = 1 } } }
+if = { limit = { var:tcrm_column = 2 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_2 value = scope:gold } set_variable = { name = tcrm_edge_status_2 value = 1 } } }
+if = { limit = { var:tcrm_column = 3 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_3 value = scope:gold } set_variable = { name = tcrm_edge_status_3 value = 1 } } }
+if = { limit = { var:tcrm_column = 4 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_4 value = scope:gold } set_variable = { name = tcrm_edge_status_4 value = 1 } } }
+if = { limit = { var:tcrm_column = 5 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_5 value = scope:gold } set_variable = { name = tcrm_edge_status_5 value = 1 } } }
+if = { limit = { var:tcrm_column = 6 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_6 value = scope:gold } set_variable = { name = tcrm_edge_status_6 value = 1 } } }
+if = { limit = { var:tcrm_column = 7 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_7 value = scope:gold } set_variable = { name = tcrm_edge_status_7 value = 1 } } }
+if = { limit = { var:tcrm_column = 8 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_8 value = scope:gold } set_variable = { name = tcrm_edge_status_8 value = 1 } } }
+if = { limit = { var:tcrm_column = 9 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_9 value = scope:gold } set_variable = { name = tcrm_edge_status_9 value = 1 } } }
+if = { limit = { var:tcrm_column = 10 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_10 value = scope:gold } set_variable = { name = tcrm_edge_status_10 value = 1 } } }
+if = { limit = { var:tcrm_column = 11 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_11 value = scope:gold } set_variable = { name = tcrm_edge_status_11 value = 1 } } }
+if = { limit = { var:tcrm_column = 12 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_12 value = scope:gold } set_variable = { name = tcrm_edge_status_12 value = 1 } } }
+if = { limit = { var:tcrm_column = 13 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_13 value = scope:gold } set_variable = { name = tcrm_edge_status_13 value = 1 } } }
+if = { limit = { var:tcrm_column = 14 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_14 value = scope:gold } set_variable = { name = tcrm_edge_status_14 value = 1 } } }
+if = { limit = { var:tcrm_column = 15 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_15 value = scope:gold } set_variable = { name = tcrm_edge_status_15 value = 1 } } }
+if = { limit = { var:tcrm_column = 16 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_16 value = scope:gold } set_variable = { name = tcrm_edge_status_16 value = 1 } } }
+if = { limit = { var:tcrm_column = 17 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_17 value = scope:gold } set_variable = { name = tcrm_edge_status_17 value = 1 } } }
+if = { limit = { var:tcrm_column = 18 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_18 value = scope:gold } set_variable = { name = tcrm_edge_status_18 value = 1 } } }
+if = { limit = { var:tcrm_column = 19 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_19 value = scope:gold } set_variable = { name = tcrm_edge_status_19 value = 1 } } }
+if = { limit = { var:tcrm_column = 20 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_20 value = scope:gold } set_variable = { name = tcrm_edge_status_20 value = 1 } } }
+if = { limit = { var:tcrm_column = 21 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_21 value = scope:gold } set_variable = { name = tcrm_edge_status_21 value = 1 } } }
+if = { limit = { var:tcrm_column = 22 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_22 value = scope:gold } set_variable = { name = tcrm_edge_status_22 value = 1 } } }
+if = { limit = { var:tcrm_column = 23 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_23 value = scope:gold } set_variable = { name = tcrm_edge_status_23 value = 1 } } }
+if = { limit = { var:tcrm_column = 24 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_24 value = scope:gold } set_variable = { name = tcrm_edge_status_24 value = 1 } } }
+if = { limit = { var:tcrm_column = 25 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_25 value = scope:gold } set_variable = { name = tcrm_edge_status_25 value = 1 } } }
+if = { limit = { var:tcrm_column = 26 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_26 value = scope:gold } set_variable = { name = tcrm_edge_status_26 value = 1 } } }
+if = { limit = { var:tcrm_column = 27 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_27 value = scope:gold } set_variable = { name = tcrm_edge_status_27 value = 1 } } }
+if = { limit = { var:tcrm_column = 28 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_28 value = scope:gold } set_variable = { name = tcrm_edge_status_28 value = 1 } } }
+if = { limit = { var:tcrm_column = 29 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_29 value = scope:gold } set_variable = { name = tcrm_edge_status_29 value = 1 } } }
+if = { limit = { var:tcrm_column = 30 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_30 value = scope:gold } set_variable = { name = tcrm_edge_status_30 value = 1 } } }
+if = { limit = { var:tcrm_column = 31 } var:tcrm_current_payer = { set_variable = { name = tcrm_gold_31 value = scope:gold } set_variable = { name = tcrm_edge_status_31 value = 1 } } }
+ var:tcrm_current_payer = { change_variable = { name = tcrm_legal_edges add = 1 } }
+ tcrm_edge_finished_effect = yes
+} else = {
+ set_variable = { name = tcrm_incomplete_reason value = 5 }
+ tcrm_mark_incomplete_effect = yes
+}
+
+} } }
+
+tcrm_unselectable_edge = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 30 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+scope:payer = var:tcrm_current_payer scope:identity = yes
+scope:column = var:tcrm_column
+scope:collector = var:tcrm_current_slot.var:tcrm_snapshot_collector
+scope:collector.tax_slot = var:tcrm_current_slot
+scope:selected = no scope:selectable = no
+NOT = { tcrm_capacity_edge_unavailable_trigger = yes }
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+} effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_current_payer has_variable = tcrm_current_slot }
+trigger_if = { limit = { var:tcrm_phase = 30 }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+tcrm_context_valid_trigger = yes
+scope:paused = yes
+scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrm_generation
+scope:epoch = var:tcrm_epoch
+scope:sequence = var:tcrm_sequence
+current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+scope:payer = var:tcrm_current_payer scope:identity = yes
+scope:column = var:tcrm_column
+scope:collector = var:tcrm_current_slot.var:tcrm_snapshot_collector
+scope:collector.tax_slot = var:tcrm_current_slot
+scope:selected = no scope:selectable = no
+NOT = { tcrm_capacity_edge_unavailable_trigger = yes }
+} trigger_else = { always = no }
+} trigger_else = { always = no }
+}
+save_scope_as = tcrm_owner
+if = { limit = {
+ var:tcrm_current_slot = { available_taxpayer_slots > 0 }
+ var:tcrm_current_payer = { NOT = { can_assign_to_tax_slot = root.var:tcrm_current_slot } }
+}
+if = { limit = { var:tcrm_column = 0 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_0 value = 2 } } }
+if = { limit = { var:tcrm_column = 1 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_1 value = 2 } } }
+if = { limit = { var:tcrm_column = 2 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_2 value = 2 } } }
+if = { limit = { var:tcrm_column = 3 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_3 value = 2 } } }
+if = { limit = { var:tcrm_column = 4 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_4 value = 2 } } }
+if = { limit = { var:tcrm_column = 5 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_5 value = 2 } } }
+if = { limit = { var:tcrm_column = 6 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_6 value = 2 } } }
+if = { limit = { var:tcrm_column = 7 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_7 value = 2 } } }
+if = { limit = { var:tcrm_column = 8 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_8 value = 2 } } }
+if = { limit = { var:tcrm_column = 9 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_9 value = 2 } } }
+if = { limit = { var:tcrm_column = 10 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_10 value = 2 } } }
+if = { limit = { var:tcrm_column = 11 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_11 value = 2 } } }
+if = { limit = { var:tcrm_column = 12 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_12 value = 2 } } }
+if = { limit = { var:tcrm_column = 13 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_13 value = 2 } } }
+if = { limit = { var:tcrm_column = 14 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_14 value = 2 } } }
+if = { limit = { var:tcrm_column = 15 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_15 value = 2 } } }
+if = { limit = { var:tcrm_column = 16 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_16 value = 2 } } }
+if = { limit = { var:tcrm_column = 17 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_17 value = 2 } } }
+if = { limit = { var:tcrm_column = 18 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_18 value = 2 } } }
+if = { limit = { var:tcrm_column = 19 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_19 value = 2 } } }
+if = { limit = { var:tcrm_column = 20 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_20 value = 2 } } }
+if = { limit = { var:tcrm_column = 21 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_21 value = 2 } } }
+if = { limit = { var:tcrm_column = 22 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_22 value = 2 } } }
+if = { limit = { var:tcrm_column = 23 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_23 value = 2 } } }
+if = { limit = { var:tcrm_column = 24 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_24 value = 2 } } }
+if = { limit = { var:tcrm_column = 25 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_25 value = 2 } } }
+if = { limit = { var:tcrm_column = 26 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_26 value = 2 } } }
+if = { limit = { var:tcrm_column = 27 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_27 value = 2 } } }
+if = { limit = { var:tcrm_column = 28 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_28 value = 2 } } }
+if = { limit = { var:tcrm_column = 29 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_29 value = 2 } } }
+if = { limit = { var:tcrm_column = 30 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_30 value = 2 } } }
+if = { limit = { var:tcrm_column = 31 } var:tcrm_current_payer = { set_variable = { name = tcrm_edge_status_31 value = 2 } } }
+ tcrm_edge_finished_effect = yes
+} else = {
+ # Full target may hide its potential edge; do not declare it illegal or zero.
+ set_variable = { name = tcrm_incomplete_reason value = 4 }
+ tcrm_mark_incomplete_effect = yes
+}
+
+} } }
+
+tcrm_context_breach = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending } trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+scope:generation = var:tcrm_generation scope:epoch = var:tcrm_epoch scope:sequence = var:tcrm_sequence NOT = { tcrm_context_valid_trigger = yes }
+} trigger_else = { always = no } } effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending } trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation has_variable = tcrm_phase has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day }
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+scope:generation = var:tcrm_generation scope:epoch = var:tcrm_epoch scope:sequence = var:tcrm_sequence NOT = { tcrm_context_valid_trigger = yes }
+} trigger_else = { always = no } } set_variable = { name = tcrm_incomplete_reason value = 2 } tcrm_mark_incomplete_effect = yes } } }
+
+# Bounded read-only observation; no native job or economic receipt is created.
+# The native manager widget resets this scratch on creation. Recovery epoch and
+# every cursor field prevent a saved or progressed cursor from aging a new one.
+tcrm_optional_stall_reset = { scope = character effect = {
+remove_variable = tcrm_watch_owner
+remove_variable = tcrm_watch_lifecycle
+remove_variable = tcrm_watch_generation
+remove_variable = tcrm_watch_recovery_epoch
+remove_variable = tcrm_watch_epoch
+remove_variable = tcrm_watch_sequence
+remove_variable = tcrm_watch_column
+remove_variable = tcrm_watch_payer
+remove_variable = tcrm_watch_slot
+remove_variable = tcrm_watch_ticks
+remove_variable = tcrm_watch_rejected
+} }
+
+tcrm_optional_stall_observe = { scope = character effect = {
+ if = { limit = { trigger_if = { limit = { has_variable = tcrc_phase has_variable = tcrv_phase
+has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch
+has_variable = tcrm_sequence has_variable = tcrm_column has_variable = tcrm_phase
+has_variable = tcrm_current_payer has_variable = tcrm_current_slot has_variable = tcrm_mode
+has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrq_epoch
+has_variable = tcrv_wallet has_variable = tcrv_initial_total has_variable = tcrv_total_floor
+has_variable = tcrc_original_speed }
+ tcrv_identity_trigger = yes tcrv_parent_ledger_identity_trigger = yes
+ tcrv_parent_provider_permission_trigger = yes
+ var:tcrc_phase = 37 var:tcrv_phase = 10 var:tcrm_phase = 30 var:tcrm_mode = 2
+ has_variable = tcrm_active var:tcrm_owner = this
+ var:tcrm_generation = var:tcrv_generation
+ scope:paused = yes scope:speed = var:tcrc_original_speed gold = var:tcrv_wallet
+ scope:manager_exact = yes scope:manager_rows > 0 scope:context_allowed = yes
+ NOT = { has_variable = tcrq_pending } NOT = { has_variable = tcrm_invalidated }
+ NOT = { has_variable = tcrm_incomplete }
+ NOT = { has_variable = tcrv_parent_recovery_readonly }
+ NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcrb_active } NOT = { has_variable = tcrf_active }
+ NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcrs_active }
+ NOT = { has_variable = tcrs_pending } NOT = { has_variable = tcrx_active }
+ NOT = { has_variable = tcr_command_generation }
+ NOT = { has_variable = tcrv_job_payer } NOT = { has_variable = tcrv_job_source }
+ NOT = { has_variable = tcrv_job_target } NOT = { has_variable = tcrv_expected_sequence }
+ NOT = { has_variable = tcrv_parent_job_purpose } NOT = { has_variable = tcrv_hold }
+ tcrv_no_pending_trigger = yes
+} trigger_else = { always = no } }
+  if = { limit = { trigger_if = { limit = { has_variable = tcrm_watch_owner has_variable = tcrm_watch_lifecycle has_variable = tcrm_watch_generation has_variable = tcrm_watch_recovery_epoch has_variable = tcrm_watch_epoch has_variable = tcrm_watch_sequence has_variable = tcrm_watch_column has_variable = tcrm_watch_payer has_variable = tcrm_watch_slot has_variable = tcrm_watch_ticks }
+   var:tcrm_watch_owner = this
+var:tcrm_watch_lifecycle = var:tcrv_lifecycle
+var:tcrm_watch_generation = var:tcrm_generation
+var:tcrm_watch_recovery_epoch = var:tcrq_epoch
+var:tcrm_watch_epoch = var:tcrm_epoch
+var:tcrm_watch_sequence = var:tcrm_sequence
+var:tcrm_watch_column = var:tcrm_column
+var:tcrm_watch_payer = var:tcrm_current_payer
+var:tcrm_watch_slot = var:tcrm_current_slot
+  } trigger_else = { always = no } }
+   if = { limit = { NOT = { has_variable = tcrm_watch_rejected } }
+    change_variable = { name = tcrm_watch_ticks add = 1 }
+   }
+  } else = {
+   remove_variable = tcrm_watch_owner
+remove_variable = tcrm_watch_lifecycle
+remove_variable = tcrm_watch_generation
+remove_variable = tcrm_watch_recovery_epoch
+remove_variable = tcrm_watch_epoch
+remove_variable = tcrm_watch_sequence
+remove_variable = tcrm_watch_column
+remove_variable = tcrm_watch_payer
+remove_variable = tcrm_watch_slot
+remove_variable = tcrm_watch_ticks
+remove_variable = tcrm_watch_rejected
+   set_variable = { name = tcrm_watch_owner value = this }
+set_variable = { name = tcrm_watch_lifecycle value = var:tcrv_lifecycle }
+set_variable = { name = tcrm_watch_generation value = var:tcrm_generation }
+set_variable = { name = tcrm_watch_recovery_epoch value = var:tcrq_epoch }
+set_variable = { name = tcrm_watch_epoch value = var:tcrm_epoch }
+set_variable = { name = tcrm_watch_sequence value = var:tcrm_sequence }
+set_variable = { name = tcrm_watch_column value = var:tcrm_column }
+set_variable = { name = tcrm_watch_payer value = var:tcrm_current_payer }
+set_variable = { name = tcrm_watch_slot value = var:tcrm_current_slot }
+   set_variable = { name = tcrm_watch_ticks value = 0 }
+  }
+  if = { limit = { var:tcrm_watch_ticks >= 5 NOT = { has_variable = tcrm_watch_rejected } }
+   # These strict existing checks include cached aptitude and full sealed maps.
+   tcrv_parent_check_ledger_effect = yes
+   tcrv_check_ledger_effect = yes
+   if = { limit = {
+    NOT = { has_variable = tcrv_parent_bad } NOT = { has_variable = tcrv_ledger_bad }
+    scope:total >= var:tcrv_initial_total scope:total >= var:tcrv_total_floor
+   }
+    debug_log = "TCRM|READONLY_STALL_DEFERRED|epoch=[GetPlayer.MakeScope.Var('tcrm_epoch').GetValue]|sequence=[GetPlayer.MakeScope.Var('tcrm_sequence').GetValue]|column=[GetPlayer.MakeScope.Var('tcrm_column').GetValue]|ticks=[GetPlayer.MakeScope.Var('tcrm_watch_ticks').GetValue]"
+    set_variable = { name = tcrm_incomplete_reason value = 6 }
+    tcrm_mark_incomplete_effect = yes
+    # Existing receive/defer/owned cleanup performs settlement and event release.
+   } else = {
+    set_variable = { name = tcrm_watch_rejected value = yes }
+    debug_log = "TCRM|READONLY_STALL_GUARD_REJECTED"
+   }
+  }
+ } else = {
+  remove_variable = tcrm_watch_owner
+remove_variable = tcrm_watch_lifecycle
+remove_variable = tcrm_watch_generation
+remove_variable = tcrm_watch_recovery_epoch
+remove_variable = tcrm_watch_epoch
+remove_variable = tcrm_watch_sequence
+remove_variable = tcrm_watch_column
+remove_variable = tcrm_watch_payer
+remove_variable = tcrm_watch_slot
+remove_variable = tcrm_watch_ticks
+remove_variable = tcrm_watch_rejected
+ }
+} }

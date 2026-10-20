@@ -1,0 +1,2 @@
+﻿l_french:
+ tcro_owner_hold_notice:0 "L’automatisation fiscale est suspendue après un changement de personnage joueur ou le chargement d’une transaction. La transaction du dirigeant précédent et son contrôle de la pause sont conservés ; aucune commande n’est envoyée au nouveau dirigeant et le jeu ne reprend pas automatiquement."

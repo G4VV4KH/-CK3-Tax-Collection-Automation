@@ -1,0 +1,4 @@
+﻿l_russian:
+ tcrui_recalculating_title:0 "Идёт пересчёт сбора налогов…"
+ tcrui_recalculating_description:0 "После пересчёта восстановится прежний режим паузы."
+ tcrui_disable_automation:0 "Отключить автоматизацию"

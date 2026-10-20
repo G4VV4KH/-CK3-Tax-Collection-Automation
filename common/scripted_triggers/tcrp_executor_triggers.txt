@@ -1,0 +1,48 @@
+﻿tcrp_command_active_trigger = {
+NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+}
+tcrp_source_unchanged_trigger = {
+trigger_if = { limit = { has_variable = tcr_expected_payer }
+
+ var:tcr_expected_payer = { is_alive = yes exists = liege liege = root }
+ trigger_if = { limit = { has_variable = tcr_expected_source }
+  var:tcr_expected_payer = { exists = assigned_tax_slot assigned_tax_slot = root.var:tcr_expected_source }
+ } trigger_else = { var:tcr_expected_payer = { NOT = { exists = assigned_tax_slot } } }
+
+} trigger_else = { always = no }
+}
+tcrp_native_ack_complete_trigger = {
+trigger_if = { limit = { has_variable = tcr_assigned_ack has_variable = tcr_active_generation has_variable = tcrp_assigned_sequence_ack has_variable = tcrp_assigned_generation_ack has_variable = tcrp_sequence has_variable = tcrp_job_generation }
+
+ has_variable = tcr_assigned_ack var:tcr_assigned_ack = var:tcr_active_generation
+ has_variable = tcrp_assigned_sequence_ack has_variable = tcrp_assigned_generation_ack
+ var:tcrp_assigned_sequence_ack = var:tcrp_sequence
+ var:tcrp_assigned_generation_ack = var:tcrp_job_generation
+ trigger_if = { limit = { has_variable = tcr_expected_source }
+  trigger_if = { limit = { has_variable = tcr_removed_ack has_variable = tcrp_removed_sequence_ack has_variable = tcrp_removed_generation_ack }
+  has_variable = tcr_removed_ack var:tcr_removed_ack = var:tcr_active_generation
+  has_variable = tcrp_removed_sequence_ack has_variable = tcrp_removed_generation_ack
+  var:tcrp_removed_sequence_ack = var:tcrp_sequence
+  var:tcrp_removed_generation_ack = var:tcrp_job_generation
+  } trigger_else = { always = no }
+ }
+
+} trigger_else = { always = no }
+}

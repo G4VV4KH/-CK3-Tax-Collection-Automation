@@ -1,0 +1,6 @@
+﻿l_polish:
+ tcrc_event_title:0 "Trwa przeliczanie poboru podatków"
+ tcrc_event_desc:0 "Po przeliczeniu poboru podatków zostanie przywrócony poprzedni stan pauzy."
+ tcrc_event_complete:0 "Przeliczanie zakończone"
+ tcrc_event_cancel:0 "Automatyzacja zatrzymana"
+ tcrc_event_failed:0 "Automatyzacja zatrzymana po nieudanej weryfikacji"

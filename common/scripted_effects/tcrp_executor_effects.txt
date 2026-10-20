@@ -1,0 +1,134 @@
+﻿# Ruler root; saved scopes tcrp_desired_payer(character) + tcrp_desired_slot(TaxSlot).
+# One payer per journal command. Parent feeds arbitrary-size plans while paused.
+tcrp_queue_transfer_effect = {
+ remove_variable = tcrp_enqueue_rejected
+ if = { limit = { OR = { has_variable = tcrp_job_active has_variable = tcr_command_generation } }
+  set_variable = { name = tcrp_enqueue_rejected value = 1 }
+ } else_if = { limit = {
+  tcr_enabled_trigger = yes has_variable = tcr_active_generation
+  tcrv_parent_execution_any_trigger = yes
+  scope:paused = yes scope:speed = var:tcrc_original_speed
+  NOT = { has_variable = tcr_failed }
+  exists = scope:tcrp_desired_payer exists = scope:tcrp_desired_slot
+  any_tax_slot = { this = scope:tcrp_desired_slot }
+  scope:tcrp_desired_payer = { is_alive = yes exists = liege liege = root }
+ }
+  remove_variable = tcrp_blocked_reason
+  remove_variable = tcrp_failure_reason
+  remove_variable = tcrp_assigned_sequence_ack
+  remove_variable = tcrp_assigned_generation_ack
+  remove_variable = tcrp_removed_sequence_ack
+  remove_variable = tcrp_removed_generation_ack
+  remove_variable = tcrp_dispatched_sequence
+  remove_variable = tcrp_dispatched_generation
+  if = { limit = { has_variable = tcrp_sequence }
+   change_variable = { name = tcrp_sequence add = 1 }
+  } else = { set_variable = { name = tcrp_sequence value = 1 } }
+  set_variable = { name = tcrp_job_generation value = var:tcr_active_generation }
+  set_variable = { name = tcrp_job_owner value = this }
+  if = { limit = { scope:tcrp_desired_payer = { exists = assigned_tax_slot assigned_tax_slot = scope:tcrp_desired_slot } }
+   # Preserve correct membership: no native command and no synthetic hook ACK.
+   set_variable = { name = tcrp_phase value = 41 }
+   set_variable = { name = tcrp_completed_generation value = var:tcrp_job_generation }
+   set_variable = { name = tcrp_completed_sequence value = var:tcrp_sequence }
+  } else_if = { limit = { scope:tcrp_desired_slot = { has_tax_collector = no } }
+   set_variable = { name = tcrp_phase value = 50 }
+   set_variable = { name = tcrp_blocked_reason value = 2 }
+  } else = {
+   tcr_clear_command_effect = yes
+   set_variable = { name = tcrp_job_active value = yes }
+   set_variable = { name = tcrp_phase value = 10 }
+   set_variable = { name = tcr_command_generation value = var:tcr_active_generation }
+   set_variable = { name = tcr_expected_kind value = 3 }
+set_variable = { name = tcrq_command_schema value = 1 }
+set_variable = { name = tcrq_source_kind value = 0 }
+if = { limit = { scope:tcrp_desired_payer = { exists = assigned_tax_slot } } set_variable = { name = tcrq_source_kind value = 2 } }
+   set_variable = { name = tcr_expected_payer value = scope:tcrp_desired_payer }
+   set_variable = { name = tcr_expected_slot value = scope:tcrp_desired_slot }
+   if = { limit = { scope:tcrp_desired_payer = { exists = assigned_tax_slot } }
+    set_variable = { name = tcr_expected_source value = scope:tcrp_desired_payer.assigned_tax_slot }
+   }
+   save_scope_as = tcrp_owner
+   scope:tcrp_desired_slot = {
+    set_variable = { name = tcrp_slot_owner value = scope:tcrp_owner }
+    set_variable = { name = tcrp_slot_generation value = scope:tcrp_owner.var:tcrp_job_generation }
+    set_variable = { name = tcrp_slot_sequence value = scope:tcrp_owner.var:tcrp_sequence }
+   }
+  }
+ } else = { set_variable = { name = tcrp_enqueue_rejected value = 2 } }
+}
+# Required additions after corresponding tcr_* hook, inside scope:liege.
+tcrp_assigned_sequence_hook_effect = {
+ if = { limit = {
+  tcrp_command_active_trigger = yes
+  has_variable = tcrp_dispatched_sequence has_variable = tcrp_dispatched_generation
+ }
+ if = { limit = {
+  tcr_expected_payer_hook_trigger = yes
+  var:tcrp_phase = 25 exists = scope:tax_slot
+  var:tcr_expected_slot = scope:tax_slot
+  has_variable = tcrp_dispatched_sequence has_variable = tcrp_dispatched_generation
+  var:tcrp_dispatched_sequence = var:tcrp_sequence
+  var:tcrp_dispatched_generation = var:tcrp_job_generation
+ }
+  set_variable = { name = tcrp_assigned_sequence_ack value = var:tcrp_sequence }
+  set_variable = { name = tcrp_assigned_generation_ack value = var:tcrp_job_generation }
+  tcrp_advance_ack_effect = yes
+ }
+ }
+}
+tcrp_removed_sequence_hook_effect = {
+ if = { limit = {
+  tcrp_command_active_trigger = yes has_variable = tcr_expected_source
+  has_variable = tcrp_dispatched_sequence has_variable = tcrp_dispatched_generation
+ }
+ if = { limit = {
+  tcr_expected_payer_hook_trigger = yes
+  var:tcrp_phase = 25 has_variable = tcr_expected_source exists = scope:tax_slot
+  var:tcr_expected_source = scope:tax_slot
+  has_variable = tcrp_dispatched_sequence has_variable = tcrp_dispatched_generation
+  var:tcrp_dispatched_sequence = var:tcrp_sequence
+  var:tcrp_dispatched_generation = var:tcrp_job_generation
+ }
+  set_variable = { name = tcrp_removed_sequence_ack value = var:tcrp_sequence }
+  set_variable = { name = tcrp_removed_generation_ack value = var:tcrp_job_generation }
+  tcrp_advance_ack_effect = yes
+ }
+ }
+}
+tcrp_advance_ack_effect = {
+ if = { limit = { tcrp_command_active_trigger = yes }
+ if = { limit = { var:tcrp_phase = 25 tcrp_native_ack_complete_trigger = yes }
+  set_variable = { name = tcrp_phase value = 30 }
+ }
+ }
+}
+tcrp_clear_slot_marker_effect = {
+ if = { limit = { has_variable = tcr_expected_slot has_variable = tcrp_job_generation has_variable = tcrp_sequence }
+ if = { limit = { exists = var:tcr_expected_slot }
+  var:tcr_expected_slot = {
+   if = { limit = {
+    has_variable = tcrp_slot_owner
+    has_variable = tcrp_slot_generation has_variable = tcrp_slot_sequence
+   }
+   if = { limit = {
+    var:tcrp_slot_owner = root
+    var:tcrp_slot_generation = root.var:tcrp_job_generation
+    var:tcrp_slot_sequence = root.var:tcrp_sequence
+   }
+    remove_variable = tcrp_slot_owner
+    remove_variable = tcrp_slot_generation
+    remove_variable = tcrp_slot_sequence
+   }
+   }
+  }
+ }
+ }
+}
+tcrp_block_without_mutation_effect = {
+ # Only before native dispatch. Caller writes explicit blocked reason.
+ tcrp_clear_slot_marker_effect = yes
+ tcr_clear_command_effect = yes
+ remove_variable = tcrp_job_active
+ set_variable = { name = tcrp_phase value = 50 }
+}

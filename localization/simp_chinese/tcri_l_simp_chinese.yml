@@ -1,0 +1,5 @@
+﻿l_simp_chinese:
+ tcri_automation_label:0 "自动征税"
+ tcri_automation_tooltip:0 "启用时、税吏职位出现空缺时，或出现尚未分配的纳税人时，将重新计算税收。重新计算期间游戏时间暂停，安全完成后将恢复此前的暂停状态。"
+ tcri_automation_working:0 "正在重新计算税收……"
+ tcri_automation_held:0 "税收自动化已暂停：需要恢复或验证。"

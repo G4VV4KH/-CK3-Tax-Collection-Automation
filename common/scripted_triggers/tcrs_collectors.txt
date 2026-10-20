@@ -1,0 +1,101 @@
+﻿# Experimental closed collector component. A script journal never authorizes a
+# native appointment by itself: tcre still validates the live candidate row.
+tcrs_identity_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrs_active has_variable = tcrs_owner
+  has_variable = tcrs_generation has_variable = tcrs_lifecycle
+  has_variable = tcrs_sequence has_variable = tcrs_phase
+  has_variable = tcr_active_generation has_variable = tcrc_lifecycle
+  has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+ }
+  tcro_current_player_owner_trigger = yes
+  var:tcrs_owner = this
+  var:tcrs_generation = var:tcr_active_generation
+  var:tcrs_lifecycle = var:tcrc_lifecycle
+  has_variable = tcrc_lifecycle_active
+  current_year = var:tcrc_life_year
+  current_month = var:tcrc_life_month
+  current_day = var:tcrc_life_day
+  gold = var:tcrc_start_gold
+ } trigger_else = { always = no }
+}
+tcrs_lease_trigger = {
+ tcrs_identity_trigger = yes
+ tcrc_event_pause_trigger = yes
+ NOT = { has_variable = tcrs_failed }
+ NOT = { has_variable = tcr_failed }
+}
+tcrs_member_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrs_record_owner has_variable = tcrs_record_sequence
+  has_variable = tcrs_original_slot has_variable = tcrs_target_slot
+ }
+  var:tcrs_record_owner = root
+  var:tcrs_record_sequence = root.var:tcrs_sequence
+  save_temporary_scope_as = tcrs_member_candidate
+  root = { any_in_list = { variable = tcrs_original_collectors this = scope:tcrs_member_candidate } }
+ } trigger_else = { always = no }
+}
+tcrs_quiescent_trigger = {
+ NOT = { has_variable = tcre_job_active }
+ NOT = { has_variable = tcr_command_generation }
+ NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcrb_active }
+ tcrv_parent_quiescent_trigger = yes
+ NOT = { has_variable = tcrf_active }
+ NOT = { has_variable = tcrf_pending }
+}
+tcrs_expected_fired_hook_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrs_active has_variable = tcrs_pending
+  has_variable = tcrs_fire_collector has_variable = tcrs_fire_slot
+  has_variable = tcrs_phase
+ }
+  tcrs_lease_trigger = yes
+  OR = { var:tcrs_phase = 20 var:tcrs_phase = 60 }
+  exists = scope:tax_collector exists = scope:tax_slot
+  scope:tax_collector = var:tcrs_fire_collector
+  scope:tax_slot = var:tcrs_fire_slot
+ } trigger_else = { always = no }
+}
+tcrs_requeue_allowed_trigger = {
+ tcrs_lease_trigger = yes
+ has_variable = tcrs_pending
+ OR = { var:tcrs_phase = 30 var:tcrs_phase = 60 }
+ exists = scope:tcre_desired_collector exists = scope:tcre_desired_slot
+ scope:tcre_desired_collector = {
+  tcrs_member_trigger = yes
+  is_alive = yes is_tax_collector = no
+  OR = {
+   AND = { root.var:tcrs_phase = 30 var:tcrs_target_slot = scope:tcre_desired_slot }
+   AND = { root.var:tcrs_phase = 60 var:tcrs_original_slot = scope:tcre_desired_slot }
+  }
+ }
+ scope:tcre_desired_slot = { has_tax_collector = no }
+}
+tcrs_continue_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcr_expected_collector has_variable = tcr_expected_slot
+  has_variable = tcr_command_generation has_variable = tcre_job_generation
+  has_variable = tcre_sequence has_variable = tcrs_vacancy_sequence
+  has_variable = tcre_phase has_variable = tcrs_command_collector
+  has_variable = tcrs_command_slot
+ }
+  tcrs_lease_trigger = yes
+  has_variable = tcrs_pending
+  OR = { var:tcrs_phase = 30 var:tcrs_phase = 60 }
+  has_variable = tcre_job_active
+  var:tcre_sequence = var:tcrs_vacancy_sequence
+  var:tcr_command_generation = var:tcrs_generation
+  var:tcre_job_generation = var:tcrs_generation
+  var:tcr_expected_collector = var:tcrs_command_collector
+  var:tcr_expected_slot = var:tcrs_command_slot
+  var:tcr_expected_collector = {
+   tcrs_member_trigger = yes is_alive = yes
+   OR = {
+    AND = { is_tax_collector = no root.var:tcr_expected_slot = { has_tax_collector = no } }
+    AND = { is_tax_collector_of = root tax_slot = root.var:tcr_expected_slot }
+   }
+  }
+ } trigger_else = { always = no }
+}

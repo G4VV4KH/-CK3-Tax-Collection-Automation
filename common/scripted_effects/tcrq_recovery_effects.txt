@@ -1,0 +1,268 @@
+﻿tcrq_load_effect = {
+ if = { limit = { has_global_variable = tcrq_epoch }
+  change_global_variable = { name = tcrq_epoch add = 1 }
+ } else = { set_global_variable = { name = tcrq_epoch value = 1 } }
+ every_player = {
+  remove_variable = tca_loop_pending
+  remove_variable = tcri_snapshot_ready
+  if = { limit = { tcri_legacy_pending_trigger = yes }
+   set_variable = { name = tcri_hold_reason value = 1 }
+  } else = {
+   set_variable = { name = tcrq_pending value = yes }
+   set_variable = { name = tcrq_epoch value = global_var:tcrq_epoch }
+   remove_variable = tcrq_bootstrap_ready
+   remove_variable = tcrq_event_seen
+   remove_variable = tcrq_event_cancel_ready
+   remove_variable = tcrq_class
+   remove_variable = tcrq_watch_started
+   remove_variable = tcrq_idle
+   remove_variable = tcrq_saved_failed
+   remove_variable = tcrq_bounded_cancel
+   remove_variable = tcrq_wait_reported
+   remove_variable = tcrq_waiting
+   remove_variable = tcrq_loaded_lifecycle
+   remove_variable = tcrq_saved_speed
+   # Previous generic reload quarantine is superseded only for this player.
+   # Legacy swap and player-handoff holds retain their distinct meaning.
+   if = { limit = { has_variable = tcri_hold_reason }
+    if = { limit = { var:tcri_hold_reason = 2 } remove_variable = tcri_hold_reason }
+   }
+   if = { limit = { has_variable = tcr_failed } set_variable = { name = tcrq_saved_failed value = yes } }
+   if = { limit = { OR = { has_variable = tcrs_active tcrv_parent_optional_state_trigger = yes has_variable = tcrf_active has_variable = tcrf_pending has_variable = tcrf_receipt_pending has_variable = tcrc_lifecycle_active has_variable = tcr_active_generation has_variable = tcre_job_active has_variable = tcrp_job_active has_variable = tcrb_active has_variable = tcr_command_generation tcro_owned_trigger = yes } }
+    if = { limit = { has_variable = tcrc_lifecycle }
+     set_variable = { name = tcrq_loaded_lifecycle value = var:tcrc_lifecycle }
+    }
+    remove_variable = tcrc_event_observed_lifecycle
+    if = { limit = { has_variable = tcrc_original_speed }
+     set_variable = { name = tcrq_saved_speed value = var:tcrc_original_speed }
+    }
+   } else = { set_variable = { name = tcrq_idle value = yes } }
+  }
+ }
+ # Character switch/death remains a separately declared unsupported route.
+ if = { limit = { exists = global_var:tcr_transaction_owner }
+  global_var:tcr_transaction_owner = {
+   if = { limit = { OR = { is_ai = yes is_alive = no } }
+    tcro_request_hold_effect = yes
+   }
+  }
+ }
+}
+
+tcrq_classify_effect = {
+if = { limit = { has_variable = tcrs_active } tcrs_recovery_classify_effect = yes } else = {
+
+# COLLECTOR_RECOVERY_PRECEDENCE
+if = { limit = { OR = { has_variable = tcrf_active has_variable = tcrf_pending has_variable = tcrf_receipt_pending } } tcrf_recovery_classify_effect = yes } else = {
+save_scope_as = tcrq_owner
+ set_variable = { name = tcrq_class value = 9 }
+ if = { limit = { tcrv_parent_optional_state_trigger = yes }
+  tcrv_parent_classify_recovery_effect = yes
+ } else_if = { limit = {
+  NOT = { has_variable = tcr_command_generation }
+  NOT = { has_variable = tcre_job_active }
+  NOT = { has_variable = tcrp_job_active }
+ }
+  set_variable = { name = tcrq_class value = 0 }
+ } else_if = { limit = {
+  has_variable = tcrq_command_schema has_variable = tcrq_source_kind
+  has_variable = tcr_expected_kind has_variable = tcr_command_generation
+  has_variable = tcr_active_generation
+ }
+  if = { limit = { var:tcrq_command_schema = 1 var:tcr_command_generation = var:tcr_active_generation }
+   if = { limit = { var:tcr_expected_kind = 1 var:tcrq_source_kind = 1
+    has_variable = tcre_job_active NOT = { has_variable = tcrp_job_active }
+    has_variable = tcre_job_generation has_variable = tcre_sequence
+   }
+    if = { limit = { var:tcre_job_generation = var:tcr_active_generation }
+     if = { limit = { exists = var:tcr_expected_collector exists = var:tcr_expected_slot }
+      if = { limit = { any_tax_slot = { this = scope:tcrq_owner.var:tcr_expected_slot } }
+       if = { limit = {
+        var:tcr_expected_collector = { is_tax_collector_of = scope:tcrq_owner tax_slot = scope:tcrq_owner.var:tcr_expected_slot }
+        var:tcr_expected_slot = { has_tax_collector = yes exists = tax_collector tax_collector = scope:tcrq_owner.var:tcr_expected_collector }
+       } set_variable = { name = tcrq_class value = 1 }
+       } else_if = { limit = { OR = {
+        var:tcr_expected_collector = { is_tax_collector_of = scope:tcrq_owner tax_slot = scope:tcrq_owner.var:tcr_expected_slot }
+        var:tcr_expected_slot = { has_tax_collector = no exists = tax_collector }
+        var:tcr_expected_slot = { has_tax_collector = yes NOT = { exists = tax_collector } }
+       } } set_variable = { name = tcrq_class value = 9 }
+       } else_if = { limit = {
+        var:tcr_expected_slot = { has_tax_collector = no }
+        var:tcr_expected_collector = { is_alive = yes is_tax_collector = no }
+       } set_variable = { name = tcrq_class value = 2 }
+       } else = { set_variable = { name = tcrq_class value = 3 } }
+      } else = { set_variable = { name = tcrq_class value = 3 } }
+     } else = { set_variable = { name = tcrq_class value = 3 } }
+    }
+   } else_if = { limit = { var:tcr_expected_kind = 3 var:tcrq_source_kind = 0
+    has_variable = tcrp_job_active NOT = { has_variable = tcre_job_active }
+    has_variable = tcrp_job_generation has_variable = tcrp_sequence
+    NOT = { has_variable = tcr_expected_source }
+   }
+    if = { limit = { var:tcrp_job_generation = var:tcr_active_generation }
+     if = { limit = { exists = var:tcr_expected_payer exists = var:tcr_expected_slot }
+      if = { limit = {
+       any_tax_slot = { this = scope:tcrq_owner.var:tcr_expected_slot }
+       var:tcr_expected_payer = { is_alive = yes exists = liege liege = scope:tcrq_owner }
+      }
+       if = { limit = {
+        var:tcr_expected_payer = { exists = assigned_tax_slot assigned_tax_slot = scope:tcrq_owner.var:tcr_expected_slot }
+        var:tcr_expected_slot = { any_tax_slot_vassal = { this = scope:tcrq_owner.var:tcr_expected_payer } }
+        NOT = { any_tax_slot = {
+         NOT = { this = scope:tcrq_owner.var:tcr_expected_slot }
+         any_tax_slot_vassal = { this = scope:tcrq_owner.var:tcr_expected_payer }
+        } }
+       } set_variable = { name = tcrq_class value = 1 }
+       } else_if = { limit = {
+        var:tcr_expected_payer = { NOT = { exists = assigned_tax_slot } }
+        NOT = { any_tax_slot = { any_tax_slot_vassal = { this = scope:tcrq_owner.var:tcr_expected_payer } } }
+       } set_variable = { name = tcrq_class value = 2 }
+       } else_if = { limit = {
+        var:tcr_expected_payer = { exists = assigned_tax_slot NOT = { assigned_tax_slot = scope:tcrq_owner.var:tcr_expected_slot } }
+        NOT = { var:tcr_expected_slot = { any_tax_slot_vassal = { this = scope:tcrq_owner.var:tcr_expected_payer } } }
+       }
+        # Read the new actual slot only after the existence guard above.
+        if = { limit = {
+         var:tcr_expected_payer = { assigned_tax_slot = { any_tax_slot_vassal = { this = scope:tcrq_owner.var:tcr_expected_payer } } }
+         any_tax_slot = { this = scope:tcrq_owner.var:tcr_expected_payer.assigned_tax_slot }
+         NOT = { any_tax_slot = {
+          NOT = { this = scope:tcrq_owner.var:tcr_expected_payer.assigned_tax_slot }
+          any_tax_slot_vassal = { this = scope:tcrq_owner.var:tcr_expected_payer }
+         } }
+        } set_variable = { name = tcrq_class value = 3 } }
+       }
+      } else = { set_variable = { name = tcrq_class value = 3 } }
+     } else = { set_variable = { name = tcrq_class value = 3 } }
+    }
+   }
+  }
+ }
+}
+
+}
+}
+
+tcrq_archive_retire_effect = {
+ if = { limit = { NOT = { tcrv_parent_optional_state_trigger = yes } }
+
+remove_variable = tcrq_last_lifecycle
+remove_variable = tcrq_last_generation
+remove_variable = tcrq_last_kind
+remove_variable = tcrq_last_sequence
+remove_variable = tcrq_last_collector
+remove_variable = tcrq_last_payer
+remove_variable = tcrq_last_slot
+ # Separate recovered actual-state evidence; never fabricate native hook ACKs.
+ set_variable = { name = tcrq_last_epoch value = var:tcrq_epoch }
+ set_variable = { name = tcrq_last_class value = var:tcrq_class }
+ if = { limit = { has_variable = tcrc_lifecycle } set_variable = { name = tcrq_last_lifecycle value = var:tcrc_lifecycle } }
+ if = { limit = { has_variable = tcr_command_generation } set_variable = { name = tcrq_last_generation value = var:tcr_command_generation } }
+ if = { limit = { has_variable = tcr_expected_kind } set_variable = { name = tcrq_last_kind value = var:tcr_expected_kind } }
+ if = { limit = { has_variable = tcre_job_active has_variable = tcre_sequence } set_variable = { name = tcrq_last_sequence value = var:tcre_sequence } }
+ if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_sequence } set_variable = { name = tcrq_last_sequence value = var:tcrp_sequence } }
+ if = { limit = { exists = var:tcr_expected_collector } set_variable = { name = tcrq_last_collector value = var:tcr_expected_collector } }
+ if = { limit = { exists = var:tcr_expected_payer } set_variable = { name = tcrq_last_payer value = var:tcr_expected_payer } }
+ if = { limit = { exists = var:tcr_expected_slot } set_variable = { name = tcrq_last_slot value = var:tcr_expected_slot } }
+ if = { limit = { has_variable = tcre_job_generation has_variable = tcre_sequence } tcre_clear_slot_marker_effect = yes }
+ if = { limit = { has_variable = tcrp_job_generation has_variable = tcrp_sequence } tcrp_clear_slot_marker_effect = yes }
+ tcr_clear_command_effect = yes
+ tcrm_invalidate_effect = yes
+ remove_variable = tcre_job_active remove_variable = tcrp_job_active remove_variable = tcrb_active
+ remove_variable = tcr_active_generation remove_variable = tcr_phase
+ remove_variable = tcr_collector_plan_ready remove_variable = tcrc_attainable_ready
+ remove_variable = tcrc_next_queued remove_variable = tcrc_expected_sequence
+ remove_variable = tcrb_settled remove_variable = tcrb_cancelled
+ remove_variable = tcrb_generation remove_variable = tcrb_lifecycle remove_variable = tcrb_added_count
+ remove_variable = tcrc_payers_accounted_generation
+ # The fresh baseline already contains any applied payer; don't double-count it.
+ set_variable = { name = tcrc_lifecycle_added_count value = 0 }
+ set_variable = { name = tcrc_baseline_added_count value = 0 }
+
+ }
+}
+
+tcrq_finish_idle_effect = {
+ if = { limit = { NOT = { tcrv_parent_optional_state_trigger = yes } }
+
+ remove_variable = tcrq_pending remove_variable = tcrq_idle
+ remove_variable = tcri_disable_requested
+ tcri_capture_edge_effect = yes
+ if = { limit = { tcr_enabled_trigger = yes OR = {
+  any_tax_slot = { has_tax_collector = no } any_unassigned_taxpayers = { always = yes }
+ } } tcr_request_effect = yes }
+ debug_log = "TCRQ|IDLE_REBOUND|date=[GetCurrentDate.GetString]"
+
+ }
+}
+
+tcrq_resume_effect = {
+ if = { limit = { NOT = { tcrv_parent_optional_state_trigger = yes } }
+
+remove_variable = tcrq_waiting
+remove_variable = tcrq_wait_reported
+ tcrq_archive_retire_effect = yes
+ set_variable = { name = tcrc_event_observed_lifecycle value = var:tcrc_lifecycle }
+ # Observe loader choices without changing any native pause/speed control.
+ set_variable = { name = tcrq_loaded_manual value = scope:manual }
+ set_variable = { name = tcrq_loaded_speed value = scope:speed }
+ set_variable = { name = tcrc_original_speed value = scope:speed }
+ set_variable = { name = tcrc_manager_was_open value = scope:manager_open }
+ remove_variable = tcrc_manager_owned
+ if = { limit = { scope:manager_open = no } set_variable = { name = tcrc_manager_owned value = yes } }
+ # Reload can precede the first post-command GUI snapshot.
+ # Seed once in that case; mature lifecycle ledgers and receipts stay intact.
+ if = { limit = { NOT = { has_variable = tcrc_snapshot_taken } }
+  tcrc_capture_payers_effect = yes
+ } else = { tcrc_capture_generation_baseline_effect = yes }
+ remove_variable = tcrq_pending
+ remove_variable = tcr_failed
+ set_variable = { name = tcr_requested value = yes }
+ set_variable = { name = tcrc_phase value = 20 }
+ debug_log = "TCRQ|REPLAN_ACTUAL_STATE|date=[GetCurrentDate.GetString]"
+
+ }
+}
+
+tcrq_retire_cancel_effect = {
+ if = { limit = { NOT = { tcrv_parent_optional_state_trigger = yes } }
+
+remove_variable = tcrq_waiting
+remove_variable = tcrq_wait_reported
+ tcrq_archive_retire_effect = yes
+ if = { limit = { has_variable = tcrc_lifecycle }
+  set_variable = { name = tcrq_cancelled_lifecycle value = var:tcrc_lifecycle }
+  set_variable = { name = tcrc_cancelled_lifecycle value = var:tcrc_lifecycle }
+  set_variable = { name = tcrc_event_released value = var:tcrc_lifecycle }
+  set_variable = { name = tcrc_event_release_kind value = 4 }
+ }
+ if = { limit = { exists = global_var:tcr_transaction_owner }
+  if = { limit = { global_var:tcr_transaction_owner = this }
+   # The exact character owns the old lease, including a malformed lifetime.
+   # Preserve that diagnostic before retiring it; never touch another player.
+   if = { limit = { exists = global_var:tcr_transaction_lifecycle }
+    set_variable = { name = tcrq_retired_global_lifecycle value = global_var:tcr_transaction_lifecycle }
+   }
+   remove_global_variable = tcr_transaction_owner remove_global_variable = tcr_transaction_lifecycle
+  }
+ }
+ remove_variable = tcrc_lifecycle_active remove_variable = tcrq_pending
+ remove_variable = tcri_disable_requested remove_variable = tcrc_abort_requested
+ remove_variable = tcr_requested remove_variable = tcr_failed
+ set_variable = { name = tcrc_phase value = 84 }
+ tcri_capture_edge_effect = yes
+ debug_log = "TCRQ|CANCELLED_RETIRED|date=[GetCurrentDate.GetString]"
+
+ }
+}
+
+tcrq_wait_pending_effect = {
+ # A wall-clock deadline cannot establish command settlement or event absence.
+ # Keep the journal, lease, pending barrier and current gap unacknowledged.
+ tcrq_classify_effect = yes
+ set_variable = { name = tcrq_waiting value = yes }
+ set_variable = { name = tcrq_wait_reported value = yes }
+ if = { limit = { has_variable = tca_enabled NOT = { has_variable = tcri_disable_requested } }
+  set_variable = { name = tcr_requested value = yes }
+ } else = { remove_variable = tcr_requested }
+ debug_log = "TCRQ|WAIT_PENDING|class=[GetPlayer.MakeScope.Var('tcrq_class').GetValue]|date=[GetCurrentDate.GetString]"
+}

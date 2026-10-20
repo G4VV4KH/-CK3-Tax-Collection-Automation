@@ -1,0 +1,1 @@
+﻿gui/tcrq_recovery.gui = tcrq_recovery_driver

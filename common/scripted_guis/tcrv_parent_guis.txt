@@ -1,0 +1,160 @@
+﻿tcrv_parent_finish = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrc_phase has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_wallet has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day }
+tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrv_generation scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrc_phase = 37 tcrv_settled_trigger = yes tcrv_parent_quiescent_trigger = yes
+scope:helpers_closed = yes NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrc_phase has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_wallet has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day }
+tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrv_generation scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrc_phase = 37 tcrv_settled_trigger = yes tcrv_parent_quiescent_trigger = yes
+scope:helpers_closed = yes NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+} trigger_else = { always = no } } tcrv_parent_check_ledger_effect = yes
+if = { limit = { NOT = { has_variable = tcrv_parent_bad } } set_variable = { name = tcrc_phase value = 40 } } } } }
+tcrv_parent_provider_permission = { scope = character is_valid = { tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes tcrv_parent_provider_permission_trigger = yes } }
+tcrv_parent_execution_permission = { scope = character is_valid = { tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes tcrv_parent_execution_permission_trigger = yes } }
+tcrv_parent_authorized_permission = { scope = character is_valid = { tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes tcrv_parent_authorized_permission_trigger = yes } }
+tcrv_parent_helper_permission = { scope = character is_valid = { tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes } }
+tcrv_parent_stop_before_native = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrv_phase }
+tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes OR = { NOT = { has_variable = tca_enabled } has_variable = tcri_disable_requested has_variable = tcrc_abort_requested has_variable = tcr_requested
+ AND = { var:tcrv_phase = 31 NOT = { tcrv_parent_pre_native_context_trigger = yes } } }
+tcrv_no_pending_trigger = yes NOT = { has_variable = tcrv_hold }
+OR = {
+ AND = { NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation }
+  OR = { var:tcrv_phase = 5 var:tcrv_phase = 10 var:tcrv_phase = 20 } }
+ AND = { var:tcrv_phase = 31
+  trigger_if = { limit = { has_variable = tcrp_phase }
+   OR = { var:tcrp_phase = 10 var:tcrp_phase = 20 var:tcrp_phase = 50 }
+   NOT = { has_variable = tcrp_dispatched_generation } NOT = { has_variable = tcrp_dispatched_sequence }
+   tcrv_job_source_actual_trigger = yes
+  } trigger_else = { always = no }
+ }
+}
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrv_phase }
+tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes OR = { NOT = { has_variable = tca_enabled } has_variable = tcri_disable_requested has_variable = tcrc_abort_requested has_variable = tcr_requested
+ AND = { var:tcrv_phase = 31 NOT = { tcrv_parent_pre_native_context_trigger = yes } } }
+tcrv_no_pending_trigger = yes NOT = { has_variable = tcrv_hold }
+OR = {
+ AND = { NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation }
+  OR = { var:tcrv_phase = 5 var:tcrv_phase = 10 var:tcrv_phase = 20 } }
+ AND = { var:tcrv_phase = 31
+  trigger_if = { limit = { has_variable = tcrp_phase }
+   OR = { var:tcrp_phase = 10 var:tcrp_phase = 20 var:tcrp_phase = 50 }
+   NOT = { has_variable = tcrp_dispatched_generation } NOT = { has_variable = tcrp_dispatched_sequence }
+   tcrv_job_source_actual_trigger = yes
+  } trigger_else = { always = no }
+ }
+}
+} trigger_else = { always = no } } if = { limit = { has_variable = tcrp_job_active }
+ tcrp_clear_slot_marker_effect = yes tcr_clear_command_effect = yes remove_variable = tcrp_job_active
+ set_variable = { name = tcrp_phase value = 60 }
+}
+tcrm_invalidate_effect = yes
+tcrv_clear_reference_job_effect = yes
+remove_variable = tcrv_job_payer remove_variable = tcrv_job_source remove_variable = tcrv_job_target
+remove_variable = tcrv_expected_sequence remove_variable = tcrv_parent_job_purpose
+set_variable = { name = tcrv_outcome value = 3 } set_variable = { name = tcrv_phase value = 45 }
+ } } }
+tcrv_parent_blocked_without_mutation = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrv_phase has_variable = tcrp_phase }
+tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes
+var:tcrv_phase = 31 var:tcrp_phase = 50
+tcrv_no_pending_trigger = yes tcrv_job_source_actual_trigger = yes
+NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation }
+NOT = { has_variable = tcrp_dispatched_generation } NOT = { has_variable = tcrp_dispatched_sequence }
+
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrv_phase has_variable = tcrp_phase }
+tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes
+var:tcrv_phase = 31 var:tcrp_phase = 50
+tcrv_no_pending_trigger = yes tcrv_job_source_actual_trigger = yes
+NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation }
+NOT = { has_variable = tcrp_dispatched_generation } NOT = { has_variable = tcrp_dispatched_sequence }
+
+} trigger_else = { always = no } } if = { limit = { has_variable = tcrp_job_active }
+ tcrp_clear_slot_marker_effect = yes tcr_clear_command_effect = yes remove_variable = tcrp_job_active
+ set_variable = { name = tcrp_phase value = 60 }
+}
+tcrm_invalidate_effect = yes
+tcrv_clear_reference_job_effect = yes
+remove_variable = tcrv_job_payer remove_variable = tcrv_job_source remove_variable = tcrv_job_target
+remove_variable = tcrv_expected_sequence remove_variable = tcrv_parent_job_purpose
+set_variable = { name = tcrv_outcome value = 3 } set_variable = { name = tcrv_phase value = 45 }
+ } } }
+tcrv_parent_terminal_failure = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrv_phase has_variable = tcrv_reason }
+tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes var:tcrv_phase = 90 has_variable = tcrv_hold NOT = { has_variable = tcrv_parent_terminal_failure }
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrv_phase has_variable = tcrv_reason }
+tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes var:tcrv_phase = 90 has_variable = tcrv_hold NOT = { has_variable = tcrv_parent_terminal_failure }
+} trigger_else = { always = no } } set_variable = { name = tcrv_parent_terminal_failure value = var:tcrv_reason }
+debug_log = "TCRV_PARENT|UNSUPPORTED_TERMINAL|reason=[GetPlayer.MakeScope.Var('tcrv_reason').GetValue]"
+ } } }
+tcrv_parent_recover_readonly = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrq_epoch has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day has_variable = tcrc_start_gold has_variable = tcrv_parent_recovery_class }
+has_variable = tcrq_pending has_variable = tcrq_event_seen
+tcrq_pending_event_trigger = yes tcro_current_player_owner_trigger = yes
+scope:epoch = var:tcrq_epoch scope:game_paused = yes scope:event_paused = yes scope:helpers_closed = yes
+scope:speed = var:tcrc_original_speed
+current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day gold = var:tcrc_start_gold
+OR = { var:tcrv_parent_recovery_class = 31 var:tcrv_parent_recovery_class = 32 var:tcrv_parent_recovery_class = 33 }
+OR = { NOT = { has_variable = tcr_failed } tcrv_failed_observation_recovery_trigger = yes }
+
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrq_epoch has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day has_variable = tcrc_start_gold has_variable = tcrv_parent_recovery_class }
+has_variable = tcrq_pending has_variable = tcrq_event_seen
+tcrq_pending_event_trigger = yes tcro_current_player_owner_trigger = yes
+scope:epoch = var:tcrq_epoch scope:game_paused = yes scope:event_paused = yes scope:helpers_closed = yes
+scope:speed = var:tcrc_original_speed
+current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day gold = var:tcrc_start_gold
+OR = { var:tcrv_parent_recovery_class = 31 var:tcrv_parent_recovery_class = 32 var:tcrv_parent_recovery_class = 33 }
+OR = { NOT = { has_variable = tcr_failed } tcrv_failed_observation_recovery_trigger = yes }
+
+} trigger_else = { always = no } } tcrv_parent_classify_recovery_effect = yes
+tcrv_recover_failed_observation_effect = yes
+if = { limit = { NOT = { has_variable = tcr_failed } OR = { var:tcrv_parent_recovery_class = 31 var:tcrv_parent_recovery_class = 32 var:tcrv_parent_recovery_class = 33 } }
+ set_variable = { name = tcrv_parent_recovery_readonly value = yes }
+ set_variable = { name = tcrv_parent_recovered_epoch value = var:tcrq_epoch }
+ set_variable = { name = tcrc_event_observed_lifecycle value = var:tcrc_lifecycle }
+ remove_variable = tcrq_pending remove_variable = tcrq_waiting
+ if = { limit = { var:tcrv_parent_recovery_class = 31 }
+  set_variable = { name = tcrc_manager_was_open value = scope:manager_open }
+  remove_variable = tcrc_manager_owned
+  if = { limit = { scope:manager_open = no }
+   set_variable = { name = tcrc_manager_owned value = yes }
+  }
+  tcrm_invalidate_effect = yes
+  tcrv_clear_reference_job_effect = yes
+  remove_variable = tcrv_job_payer remove_variable = tcrv_job_source remove_variable = tcrv_job_target
+  remove_variable = tcrv_expected_sequence remove_variable = tcrv_parent_job_purpose
+  set_variable = { name = tcrv_outcome value = 3 } set_variable = { name = tcrv_phase value = 45 }
+ }
+ # 32 resumes only exact pending receipt acceptance; 33 only receipt cleanup.
+ # Neither path dispatches a native command or retires historical ACK evidence.
+ debug_log = "TCRV_PARENT|RECOVERED_READONLY|class=[GetPlayer.MakeScope.Var('tcrv_parent_recovery_class').GetValue]"
+}
+ } } }
+tcrv_parent_context_conflict = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrv_phase has_variable = tcrp_phase has_variable = tcrv_expected_sequence has_variable = tcrp_dispatched_sequence has_variable = tcrp_dispatched_generation has_variable = tcrv_generation }
+
+tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes
+var:tcrv_phase = 31 var:tcrp_phase = 25
+tcrp_command_active_trigger = yes tcrv_job_source_actual_trigger = yes
+var:tcrp_dispatched_sequence = var:tcrv_expected_sequence
+var:tcrp_dispatched_generation = var:tcrv_generation
+NOT = { tcrv_parent_pre_native_context_trigger = yes }
+NOT = { has_variable = tcrv_hold }
+
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrv_phase has_variable = tcrp_phase has_variable = tcrv_expected_sequence has_variable = tcrp_dispatched_sequence has_variable = tcrp_dispatched_generation has_variable = tcrv_generation }
+
+tcrv_parent_settlement_input_trigger = yes scope:context_allowed = yes
+var:tcrv_phase = 31 var:tcrp_phase = 25
+tcrp_command_active_trigger = yes tcrv_job_source_actual_trigger = yes
+var:tcrp_dispatched_sequence = var:tcrv_expected_sequence
+var:tcrp_dispatched_generation = var:tcrv_generation
+NOT = { tcrv_parent_pre_native_context_trigger = yes }
+NOT = { has_variable = tcrv_hold }
+
+} trigger_else = { always = no } } 
+set_variable = { name = tcrv_reason value = 12 }
+tcrv_hold_effect = yes
+debug_log = "TCRV_PARENT|CONTEXT_CHANGED_AFTER_AUTHORIZATION|journal=retained"
+ } } }

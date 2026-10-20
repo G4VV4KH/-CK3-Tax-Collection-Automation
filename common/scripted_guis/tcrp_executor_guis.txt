@@ -1,0 +1,466 @@
+﻿tcrp_opened = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_original_speed }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrp_phase = 10
+scope:paused = yes
+scope:generation = var:tcrp_job_generation
+scope:sequence = var:tcrp_sequence
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+tcrp_source_unchanged_trigger = yes
+var:tcr_expected_slot = { has_tax_collector = yes }
+scope:slot_match = yes
+tcr_enabled_trigger = yes
+tcrv_parent_execution_any_trigger = yes
+scope:speed = var:tcrc_original_speed
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_original_speed }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrp_phase = 10
+scope:paused = yes
+scope:generation = var:tcrp_job_generation
+scope:sequence = var:tcrp_sequence
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+tcrp_source_unchanged_trigger = yes
+var:tcr_expected_slot = { has_tax_collector = yes }
+scope:slot_match = yes
+tcr_enabled_trigger = yes
+tcrv_parent_execution_any_trigger = yes
+scope:speed = var:tcrc_original_speed
+
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrp_phase value = 20 }
+}
+} }
+
+tcrp_authorize_dispatch = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_original_speed }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrp_phase = 20
+scope:paused = yes
+scope:generation = var:tcrp_job_generation
+scope:sequence = var:tcrp_sequence
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+tcrp_source_unchanged_trigger = yes
+var:tcr_expected_slot = { has_tax_collector = yes }
+scope:slot_match = yes
+scope:selected = var:tcr_expected_payer
+scope:exact_selected = yes scope:capacity_available = yes
+
+tcr_enabled_trigger = yes
+tcrv_parent_execution_any_trigger = yes
+scope:speed = var:tcrc_original_speed
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_original_speed }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrp_phase = 20
+scope:paused = yes
+scope:generation = var:tcrp_job_generation
+scope:sequence = var:tcrp_sequence
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+tcrp_source_unchanged_trigger = yes
+var:tcr_expected_slot = { has_tax_collector = yes }
+scope:slot_match = yes
+scope:selected = var:tcr_expected_payer
+scope:exact_selected = yes scope:capacity_available = yes
+
+tcr_enabled_trigger = yes
+tcrv_parent_execution_any_trigger = yes
+scope:speed = var:tcrc_original_speed
+
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrp_dispatched_sequence value = var:tcrp_sequence }
+set_variable = { name = tcrp_dispatched_generation value = var:tcrp_job_generation }
+set_variable = { name = tcrp_phase value = 25 }
+
+}
+} }
+
+tcrp_ready_to_commit = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_original_speed }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrp_phase = 25
+scope:paused = yes
+scope:generation = var:tcrp_job_generation
+scope:sequence = var:tcrp_sequence
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+tcrp_source_unchanged_trigger = yes
+var:tcr_expected_slot = { has_tax_collector = yes }
+scope:slot_match = yes
+scope:selected = var:tcr_expected_payer
+scope:exact_selected = yes scope:capacity_available = yes
+
+OR = { tcr_enabled_trigger = yes tcrv_parent_authorized_permission_trigger = yes }
+tcrv_parent_commit_any_trigger = yes
+scope:speed = var:tcrc_original_speed
+
+} trigger_else = { always = no }
+
+} effect = {
+
+} }
+
+tcrp_verify_transfer = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_original_speed }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrp_phase = 30
+scope:paused = yes
+scope:generation = var:tcrp_job_generation
+scope:sequence = var:tcrp_sequence
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+tcrp_native_ack_complete_trigger = yes
+var:tcr_expected_payer = {
+ is_alive = yes exists = liege liege = root
+ exists = assigned_tax_slot assigned_tax_slot = root.var:tcr_expected_slot
+}
+var:tcr_expected_slot = { any_tax_slot_vassal = { this = root.var:tcr_expected_payer } }
+trigger_if = { limit = { has_variable = tcr_expected_source }
+ var:tcr_expected_source = { NOT = { any_tax_slot_vassal = { this = root.var:tcr_expected_payer } } }
+}
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_original_speed }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrp_phase = 30
+scope:paused = yes
+scope:generation = var:tcrp_job_generation
+scope:sequence = var:tcrp_sequence
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+tcrp_native_ack_complete_trigger = yes
+var:tcr_expected_payer = {
+ is_alive = yes exists = liege liege = root
+ exists = assigned_tax_slot assigned_tax_slot = root.var:tcr_expected_slot
+}
+var:tcr_expected_slot = { any_tax_slot_vassal = { this = root.var:tcr_expected_payer } }
+trigger_if = { limit = { has_variable = tcr_expected_source }
+ var:tcr_expected_source = { NOT = { any_tax_slot_vassal = { this = root.var:tcr_expected_payer } } }
+}
+
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrp_completed_generation value = var:tcrp_job_generation }
+set_variable = { name = tcrp_completed_sequence value = var:tcrp_sequence }
+tcrp_clear_slot_marker_effect = yes
+tcr_clear_command_effect = yes
+remove_variable = tcrp_job_active
+set_variable = { name = tcrp_phase value = 40 }
+
+}
+} }
+
+tcrp_block_capacity = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_original_speed }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrp_phase = 20
+scope:paused = yes
+scope:generation = var:tcrp_job_generation
+scope:sequence = var:tcrp_sequence
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+tcrp_source_unchanged_trigger = yes
+var:tcr_expected_slot = { has_tax_collector = yes }
+scope:slot_match = yes scope:capacity_available = no
+tcr_enabled_trigger = yes
+tcrv_parent_execution_any_trigger = yes
+scope:speed = var:tcrc_original_speed
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_original_speed }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrp_phase = 20
+scope:paused = yes
+scope:generation = var:tcrp_job_generation
+scope:sequence = var:tcrp_sequence
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+tcrp_source_unchanged_trigger = yes
+var:tcr_expected_slot = { has_tax_collector = yes }
+scope:slot_match = yes scope:capacity_available = no
+tcr_enabled_trigger = yes
+tcrv_parent_execution_any_trigger = yes
+scope:speed = var:tcrc_original_speed
+
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrp_blocked_reason value = 1 }
+tcrp_block_without_mutation_effect = yes
+}
+} }
+
+tcrp_block_row = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_original_speed }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrp_phase = 20
+scope:paused = yes
+scope:generation = var:tcrp_job_generation
+scope:sequence = var:tcrp_sequence
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+tcrp_source_unchanged_trigger = yes
+var:tcr_expected_slot = { has_tax_collector = yes }
+scope:slot_match = yes scope:selected = var:tcr_expected_payer scope:row_selectable = no scope:capacity_available = yes
+tcr_enabled_trigger = yes
+tcrv_parent_execution_any_trigger = yes
+scope:speed = var:tcrc_original_speed
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_original_speed }
+trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase }
+has_variable = tcrp_job_active
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrp_job_owner var:tcrp_job_owner = this
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrp_job_generation
+has_variable = tcrp_sequence
+has_variable = tcr_expected_kind var:tcr_expected_kind = 3
+has_variable = tcr_expected_payer exists = var:tcr_expected_payer
+has_variable = tcr_expected_slot exists = var:tcr_expected_slot
+var:tcr_command_generation = var:tcr_active_generation
+var:tcrp_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrp_phase = 20
+scope:paused = yes
+scope:generation = var:tcrp_job_generation
+scope:sequence = var:tcrp_sequence
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+tcrp_source_unchanged_trigger = yes
+var:tcr_expected_slot = { has_tax_collector = yes }
+scope:slot_match = yes scope:selected = var:tcr_expected_payer scope:row_selectable = no scope:capacity_available = yes
+tcr_enabled_trigger = yes
+tcrv_parent_execution_any_trigger = yes
+scope:speed = var:tcrc_original_speed
+
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrp_blocked_reason value = 3 }
+tcrp_block_without_mutation_effect = yes
+}
+} }
+
+tcrp_pause_breach = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending } trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day }
+tcrp_command_active_trigger = yes scope:generation = var:tcrp_job_generation scope:sequence = var:tcrp_sequence scope:paused = no
+} trigger_else = { always = no }
+ }
+effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending } trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day }
+tcrp_command_active_trigger = yes scope:generation = var:tcrp_job_generation scope:sequence = var:tcrp_sequence scope:paused = no
+} trigger_else = { always = no }
+ } set_variable = { name = tcrp_failure_reason value = 1 } tcr_fail_generation_effect = yes } } }
+
+tcrp_date_breach = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending } trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day }
+tcrp_command_active_trigger = yes scope:generation = var:tcrp_job_generation scope:sequence = var:tcrp_sequence NOT = { current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day }
+} trigger_else = { always = no }
+ }
+effect = { if = { limit = {
+ NOT = { has_variable = tcrq_pending } trigger_if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_job_owner has_variable = tcr_active_generation has_variable = tcr_command_generation has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcr_expected_kind has_variable = tcr_expected_payer has_variable = tcr_expected_slot has_variable = tcrp_phase has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day }
+tcrp_command_active_trigger = yes scope:generation = var:tcrp_job_generation scope:sequence = var:tcrp_sequence NOT = { current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day }
+} trigger_else = { always = no }
+ } set_variable = { name = tcrp_failure_reason value = 2 } tcr_fail_generation_effect = yes } } }

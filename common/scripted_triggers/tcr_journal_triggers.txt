@@ -1,0 +1,44 @@
+﻿tcr_enabled_trigger = {
+NOT = { has_variable = tcrq_pending }
+ is_ai = no
+ is_alive = yes
+ government_has_flag = government_is_clan
+ has_variable = tca_enabled
+ NOT = { has_variable = tcri_hold_reason }
+ NOT = { has_variable = tcri_disable_requested }
+}
+tcr_expected_collector_hook_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcr_active_generation
+  NOT = { has_variable = tcr_failed }
+  has_variable = tcr_command_generation
+  has_variable = tcr_expected_kind
+  has_variable = tcr_expected_collector
+  has_variable = tcr_expected_slot
+  exists = scope:tax_collector
+  exists = scope:tax_slot
+ }
+  var:tcr_command_generation = var:tcr_active_generation
+  var:tcr_expected_collector = scope:tax_collector
+  var:tcr_expected_slot = scope:tax_slot
+ }
+ trigger_else = { always = no }
+}
+tcr_expected_payer_hook_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcr_active_generation
+  NOT = { has_variable = tcr_failed }
+  has_variable = tcr_command_generation
+  has_variable = tcr_expected_kind
+  has_variable = tcr_expected_payer
+  has_variable = tcr_expected_slot
+  exists = scope:vassal
+  exists = scope:tax_slot
+ }
+  var:tcr_command_generation = var:tcr_active_generation
+  var:tcr_expected_kind = 3
+  var:tcr_expected_payer = scope:vassal
+ }
+ trigger_else = { always = no }
+ # The caller separately checks whether this is the expected source/destination.
+}

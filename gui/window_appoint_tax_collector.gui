@@ -1,19 +1,13 @@
 ﻿window = {
+ tcrq_appoint_cleanup = {}
 	name = "window_appoint_tax_collector"
-	# TCA_WORKERS_BEGIN
-	alwaystransparent = "[GetVariableSystem.Exists('tca_running')]"
-	tca_appointment_worker = {}
-	# TCA_WORKERS_END
 	parentanchor = "center"
 	size = { 700 1000 }
 	layer = middle
 	allow_outside = yes
 
-	# TCA_CONTENT_BEGIN
-	widget = {
-		size = { 100% 100% }
-		visible = "[Not(GetVariableSystem.Exists('tca_running'))]"
-	# TCA_CONTENT_END
+alwaystransparent = "[Or(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle_active').IsSet,GetScriptedGui('tcro_ordinary_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End))),And(IsGameViewOpen('tax_slot_appoint_tax_collector'),And(GetPlayer.MakeScope.GetVariable('tcre_job_generation').IsSet,And(GetPlayer.MakeScope.GetVariable('tcre_sequence').IsSet,And(GetVariableSystem.HasValue('tcre_window_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcre_job_generation').GetValue)),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcre_sequence').GetValue))))))),And(EqualTo_string(UIntToString(AppointTaxCollectorWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(UIntToString(AppointTaxCollectorWindow.GetTaxSlot.GetID),GetVariableSystem.Get('tcre_native_slot_id')))))))),And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle').IsSet,GetScriptedGui('tcro_ordinary_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)))),And(GetVariableSystem.HasValue('tcrui_appoint_presentation_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrc_lifecycle').GetValue))))),And(EqualTo_string(UIntToString(AppointTaxCollectorWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(UIntToString(AppointTaxCollectorWindow.GetTaxSlot.GetID),GetVariableSystem.Get('tcrui_appoint_presentation_slot'))))))]"
+widget = { name = tcrc_user_content size = { 100% 100% } visible = "[Not(Or(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle_active').IsSet,GetScriptedGui('tcro_ordinary_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End))),And(IsGameViewOpen('tax_slot_appoint_tax_collector'),And(GetPlayer.MakeScope.GetVariable('tcre_job_generation').IsSet,And(GetPlayer.MakeScope.GetVariable('tcre_sequence').IsSet,And(GetVariableSystem.HasValue('tcre_window_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcre_job_generation').GetValue)),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcre_sequence').GetValue))))))),And(EqualTo_string(UIntToString(AppointTaxCollectorWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(UIntToString(AppointTaxCollectorWindow.GetTaxSlot.GetID),GetVariableSystem.Get('tcre_native_slot_id')))))))),And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle').IsSet,GetScriptedGui('tcro_ordinary_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)))),And(GetVariableSystem.HasValue('tcrui_appoint_presentation_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrc_lifecycle').GetValue))))),And(EqualTo_string(UIntToString(AppointTaxCollectorWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(UIntToString(AppointTaxCollectorWindow.GetTaxSlot.GetID),GetVariableSystem.Get('tcrui_appoint_presentation_slot')))))))]"
 	using = Window_Background
 	using = Window_Decoration
 
@@ -503,9 +497,12 @@
 
 		}
 	}
-	# TCA_CONTENT_CLOSE_BEGIN
-	}
-	# TCA_CONTENT_CLOSE_END
+
+}
+tcre_executor_appoint = { }
+tcrf_parent_appoint = {}
+tcrf_ui_foreign_appoint = {}
+tcrc_appointment_cleanup = { }
 }
 
 types AppointTaxCollectorTypes

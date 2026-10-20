@@ -1,0 +1,1734 @@
+﻿tcrc_capture = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+tcr_enabled_trigger = yes has_variable = tcr_requested
+ tcro_can_claim_trigger = yes
+ NOT = { has_variable = tcrc_lifecycle_active }
+ NOT = { has_variable = tcr_active_generation }
+ NOT = { has_variable = tcr_failed }
+ NOT = { has_variable = tcri_disable_requested }
+ scope:single_player = yes
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+tcr_enabled_trigger = yes has_variable = tcr_requested
+ tcro_can_claim_trigger = yes
+ NOT = { has_variable = tcrc_lifecycle_active }
+ NOT = { has_variable = tcr_active_generation }
+ NOT = { has_variable = tcr_failed }
+ NOT = { has_variable = tcri_disable_requested }
+ scope:single_player = yes
+
+}
+tcrc_admit_event_effect = yes
+}
+} }
+
+tcrc_event_observe = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_event_requested
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+}
+has_variable = tcrc_lifecycle_active
+ tcro_current_player_owner_trigger = yes
+ NOT = { has_variable = tcrc_event_released }
+trigger_if = { limit = {
+ exists = scope:event_owner exists = scope:event_lifecycle
+ has_variable = tcrc_lifecycle has_variable = tcrc_event_requested
+ }
+ scope:event_owner = this
+ scope:event_lifecycle = var:tcrc_lifecycle
+ var:tcrc_event_requested = var:tcrc_lifecycle
+ } trigger_else = { always = no }
+NOT = { has_variable = tcrc_event_observed_lifecycle }
+scope:event_paused = yes scope:game_paused = yes
+scope:single_player = yes
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_event_requested
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+}
+has_variable = tcrc_lifecycle_active
+ tcro_current_player_owner_trigger = yes
+ NOT = { has_variable = tcrc_event_released }
+trigger_if = { limit = {
+ exists = scope:event_owner exists = scope:event_lifecycle
+ has_variable = tcrc_lifecycle has_variable = tcrc_event_requested
+ }
+ scope:event_owner = this
+ scope:event_lifecycle = var:tcrc_lifecycle
+ var:tcrc_event_requested = var:tcrc_lifecycle
+ } trigger_else = { always = no }
+NOT = { has_variable = tcrc_event_observed_lifecycle }
+scope:event_paused = yes scope:game_paused = yes
+scope:single_player = yes
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+
+} trigger_else = { always = no }
+
+}
+
+set_variable = { name = tcrc_event_observed_lifecycle value = var:tcrc_lifecycle }
+set_variable = { name = tcrc_original_speed value = scope:speed }
+set_variable = { name = tcrc_original_manual_pause value = scope:manual }
+set_variable = { name = tcrc_manager_was_open value = scope:manager_open }
+remove_variable = tcrc_manager_owned
+if = { limit = { scope:manager_open = no } set_variable = { name = tcrc_manager_owned value = yes } }
+tcrc_capture_payers_effect = yes
+if = { limit = { has_variable = tcrc_abort_requested }
+ set_variable = { name = tcrc_phase value = 80 }
+} else = { set_variable = { name = tcrc_phase value = 15 } }
+debug_log = "TCRC|PAUSE_OBSERVED|date=[GetCurrentDate.GetString]|year=[GetPlayer.MakeScope.Var('tcrc_life_year').GetValue]|month=[GetPlayer.MakeScope.Var('tcrc_life_month').GetValue]|day=[GetPlayer.MakeScope.Var('tcrc_life_day').GetValue]"
+
+}
+} }
+
+tcrc_event_bad_date = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_event_requested
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+}
+has_variable = tcrc_lifecycle_active
+ tcro_current_player_owner_trigger = yes
+ NOT = { has_variable = tcrc_event_released }
+trigger_if = { limit = {
+ exists = scope:event_owner exists = scope:event_lifecycle
+ has_variable = tcrc_lifecycle has_variable = tcrc_event_requested
+ }
+ scope:event_owner = this
+ scope:event_lifecycle = var:tcrc_lifecycle
+ var:tcrc_event_requested = var:tcrc_lifecycle
+ } trigger_else = { always = no }
+NOT = { has_variable = tcrc_event_observed_lifecycle }
+NOT = { has_variable = tcr_failed }
+scope:event_paused = yes scope:game_paused = yes
+NOT = { trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+ }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_event_requested
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+}
+has_variable = tcrc_lifecycle_active
+ tcro_current_player_owner_trigger = yes
+ NOT = { has_variable = tcrc_event_released }
+trigger_if = { limit = {
+ exists = scope:event_owner exists = scope:event_lifecycle
+ has_variable = tcrc_lifecycle has_variable = tcrc_event_requested
+ }
+ scope:event_owner = this
+ scope:event_lifecycle = var:tcrc_lifecycle
+ var:tcrc_event_requested = var:tcrc_lifecycle
+ } trigger_else = { always = no }
+NOT = { has_variable = tcrc_event_observed_lifecycle }
+NOT = { has_variable = tcr_failed }
+scope:event_paused = yes scope:game_paused = yes
+NOT = { trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+ }
+
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrc_block_reason value = 12 } tcrc_block_effect = yes
+}
+} }
+
+tcrc_event_permission = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+}
+tcrc_event_pause_trigger = yes
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+
+} trigger_else = { always = no }
+
+} }
+
+tcrc_context_ready = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 15
+scope:context_clear = yes
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 15
+scope:context_clear = yes
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrc_phase value = 20 }
+}
+} }
+
+tcrc_plan = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 20
+scope:context_clear = yes
+NOT = { has_variable = tcr_active_generation }
+has_variable = tcr_requested
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 20
+scope:context_clear = yes
+NOT = { has_variable = tcr_active_generation }
+has_variable = tcr_requested
+} trigger_else = { always = no }
+
+}
+
+tcr_begin_generation_effect = yes
+tcrc_capture_generation_baseline_effect = yes
+tcr_build_collector_plan_effect = yes
+tcrc_preflight_effect = yes
+
+}
+} }
+
+tcrc_next = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_collector_plan_generation
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+
+var:tcrc_phase = 30
+has_variable = tcr_active_generation
+has_variable = tcr_collector_plan_ready
+var:tcr_collector_plan_generation = var:tcr_active_generation
+NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcr_requested }
+scope:context_clear = yes
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_collector_plan_generation
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+
+var:tcrc_phase = 30
+has_variable = tcr_active_generation
+has_variable = tcr_collector_plan_ready
+var:tcr_collector_plan_generation = var:tcr_active_generation
+NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcr_requested }
+scope:context_clear = yes
+
+} trigger_else = { always = no }
+
+}
+tcrc_queue_next_effect = yes
+}
+} }
+
+tcrc_job_done = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_expected_sequence
+has_variable = tcrc_job_collector
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcre_completed_generation
+has_variable = tcre_completed_sequence
+has_variable = tcre_phase
+has_variable = tcre_sequence
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+
+var:tcrc_phase = 31
+has_variable = tcr_active_generation
+NOT = { has_variable = tcre_job_active }
+OR = { var:tcre_phase = 40 var:tcre_phase = 41 }
+var:tcre_completed_generation = var:tcr_active_generation
+var:tcre_completed_sequence = var:tcrc_expected_sequence
+var:tcre_sequence = var:tcrc_expected_sequence
+var:tcrc_job_collector = { is_tax_collector_of = root tax_slot = root.var:tcrc_job_slot }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_expected_sequence
+has_variable = tcrc_job_collector
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcre_completed_generation
+has_variable = tcre_completed_sequence
+has_variable = tcre_phase
+has_variable = tcre_sequence
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+
+var:tcrc_phase = 31
+has_variable = tcr_active_generation
+NOT = { has_variable = tcre_job_active }
+OR = { var:tcre_phase = 40 var:tcre_phase = 41 }
+var:tcre_completed_generation = var:tcr_active_generation
+var:tcre_completed_sequence = var:tcrc_expected_sequence
+var:tcre_sequence = var:tcrc_expected_sequence
+var:tcrc_job_collector = { is_tax_collector_of = root tax_slot = root.var:tcrc_job_slot }
+
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrc_phase value = 30 }
+}
+} }
+
+tcrc_begin_payers = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+var:tcrc_phase = 35
+has_variable = tcr_active_generation
+has_variable = tcrc_attainable_ready
+NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+NOT = { has_variable = tcr_requested }
+NOT = { tcrb_settled_trigger = yes }
+scope:helper_closed = yes
+scope:context_clear = yes
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+var:tcrc_phase = 35
+has_variable = tcr_active_generation
+has_variable = tcrc_attainable_ready
+NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+NOT = { has_variable = tcr_requested }
+NOT = { tcrb_settled_trigger = yes }
+scope:helper_closed = yes
+scope:context_clear = yes
+
+} trigger_else = { always = no }
+
+}
+tcrb_begin_mandatory_effect = yes
+}
+} }
+
+tcrc_payers_done = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+var:tcrc_phase = 35
+has_variable = tcr_active_generation
+NOT = { has_variable = tcre_job_active }
+tcrb_settled_trigger = yes
+NOT = { has_variable = tcr_requested }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+var:tcrc_phase = 35
+has_variable = tcr_active_generation
+NOT = { has_variable = tcre_job_active }
+tcrb_settled_trigger = yes
+NOT = { has_variable = tcr_requested }
+
+} trigger_else = { always = no }
+
+}
+tcrc_account_payer_progress_effect = yes
+set_variable = { name = tcrc_last_mandatory_outcome value = var:tcrb_outcome }
+if = { limit = { var:tcrb_outcome = 3 }
+ set_variable = { name = tcrc_mandatory_deferred value = yes }
+ set_variable = { name = tcrc_mandatory_deferred_reason value = var:tcrb_deferred_reason }
+} else = {
+ remove_variable = tcrc_mandatory_deferred
+ remove_variable = tcrc_mandatory_deferred_reason
+}
+tcrv_parent_after_mandatory_effect = yes
+}
+} }
+
+tcrc_verify = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+ NOT = { has_variable = tcrs_active }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_collector_plan_generation
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+
+var:tcrc_phase = 40
+has_variable = tcr_active_generation
+has_variable = tcr_collector_plan_ready
+var:tcr_collector_plan_generation = var:tcr_active_generation
+NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcr_requested }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+ NOT = { has_variable = tcrs_active }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_collector_plan_generation
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+
+var:tcrc_phase = 40
+has_variable = tcr_active_generation
+has_variable = tcr_collector_plan_ready
+var:tcr_collector_plan_generation = var:tcr_active_generation
+NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcr_requested }
+
+} trigger_else = { always = no }
+
+}
+tcrc_verify_plan_effect = yes
+}
+} }
+
+tcrc_replan_retire = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+ NOT = { has_variable = tcrs_active }
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcrc_start_gold
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+
+has_variable = tcr_requested has_variable = tcr_active_generation
+OR = { var:tcrc_phase = 30 var:tcrc_phase = 35 var:tcrc_phase = 40 }
+NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcrp_job_active }
+NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+NOT = { has_variable = tcr_command_generation }
+tcrc_payer_replan_quiescent_trigger = yes
+gold = var:tcrc_start_gold
+scope:helper_closed = yes
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+ NOT = { has_variable = tcrs_active }
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcrc_start_gold
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+
+has_variable = tcr_requested has_variable = tcr_active_generation
+OR = { var:tcrc_phase = 30 var:tcrc_phase = 35 var:tcrc_phase = 40 }
+NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcrp_job_active }
+NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+NOT = { has_variable = tcr_command_generation }
+tcrc_payer_replan_quiescent_trigger = yes
+gold = var:tcrc_start_gold
+scope:helper_closed = yes
+
+} trigger_else = { always = no }
+
+}
+tcrc_retire_dirty_generation_effect = yes
+}
+} }
+
+tcrc_replan_cancel_unissued = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+ NOT = { has_variable = tcrs_active }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcre_job_generation
+has_variable = tcre_phase
+has_variable = tcre_sequence
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+
+has_variable = tcr_requested var:tcrc_phase = 31
+scope:replan_observed = yes has_variable = tcre_job_active
+has_variable = tcr_active_generation has_variable = tcr_command_generation
+has_variable = tcre_job_generation has_variable = tcre_sequence has_variable = tcre_phase
+var:tcre_job_generation = var:tcr_active_generation
+var:tcr_command_generation = var:tcr_active_generation
+var:tcre_sequence = scope:sequence
+OR = { var:tcre_phase = 10 var:tcre_phase = 20 }
+NOT = { has_variable = tcre_dispatched_sequence }
+scope:native_dispatched = no
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+ NOT = { has_variable = tcrs_active }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcre_job_generation
+has_variable = tcre_phase
+has_variable = tcre_sequence
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+
+has_variable = tcr_requested var:tcrc_phase = 31
+scope:replan_observed = yes has_variable = tcre_job_active
+has_variable = tcr_active_generation has_variable = tcr_command_generation
+has_variable = tcre_job_generation has_variable = tcre_sequence has_variable = tcre_phase
+var:tcre_job_generation = var:tcr_active_generation
+var:tcr_command_generation = var:tcr_active_generation
+var:tcre_sequence = scope:sequence
+OR = { var:tcre_phase = 10 var:tcre_phase = 20 }
+NOT = { has_variable = tcre_dispatched_sequence }
+scope:native_dispatched = no
+
+} trigger_else = { always = no }
+
+}
+tcrc_abort_clear_job_effect = yes set_variable = { name = tcrc_phase value = 30 }
+}
+} }
+
+tcrc_replan_after_settled_collector = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+ NOT = { has_variable = tcrs_active }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcrc_expected_sequence
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcre_completed_generation
+has_variable = tcre_completed_sequence
+has_variable = tcre_phase
+has_variable = tcre_sequence
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+
+has_variable = tcr_requested var:tcrc_phase = 31
+has_variable = tcr_active_generation
+NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcr_command_generation }
+has_variable = tcre_completed_generation has_variable = tcre_completed_sequence
+has_variable = tcrc_expected_sequence has_variable = tcre_sequence
+OR = { var:tcre_phase = 40 var:tcre_phase = 41 }
+var:tcre_completed_generation = var:tcr_active_generation
+var:tcre_completed_sequence = var:tcrc_expected_sequence
+var:tcre_sequence = var:tcrc_expected_sequence
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+ NOT = { has_variable = tcrs_active }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcrc_expected_sequence
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcre_completed_generation
+has_variable = tcre_completed_sequence
+has_variable = tcre_phase
+has_variable = tcre_sequence
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+
+has_variable = tcr_requested var:tcrc_phase = 31
+has_variable = tcr_active_generation
+NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcr_command_generation }
+has_variable = tcre_completed_generation has_variable = tcre_completed_sequence
+has_variable = tcrc_expected_sequence has_variable = tcre_sequence
+OR = { var:tcre_phase = 40 var:tcre_phase = 41 }
+var:tcre_completed_generation = var:tcr_active_generation
+var:tcre_completed_sequence = var:tcrc_expected_sequence
+var:tcre_sequence = var:tcrc_expected_sequence
+
+} trigger_else = { always = no }
+
+}
+# Exact job completion is already recorded. A later manual dismissal or
+# reassignment is retained in the next snapshot, not rolled back or rejected.
+set_variable = { name = tcrc_phase value = 30 }
+}
+} }
+
+tcrc_ui_restored = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_completed_generation
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_last_verified_generation
+has_variable = tcrc_lifecycle
+has_variable = tcrc_manager_was_open
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+
+var:tcrc_phase = 50
+NOT = { has_variable = tcr_active_generation }
+NOT = { has_variable = tcr_requested }
+has_variable = tcrc_last_verified_generation
+var:tcr_completed_generation = var:tcrc_last_verified_generation
+scope:helper_closed = yes scope:manager_open = var:tcrc_manager_was_open
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_completed_generation
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_last_verified_generation
+has_variable = tcrc_lifecycle
+has_variable = tcrc_manager_was_open
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+}
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no }
+
+var:tcrc_phase = 50
+NOT = { has_variable = tcr_active_generation }
+NOT = { has_variable = tcr_requested }
+has_variable = tcrc_last_verified_generation
+var:tcr_completed_generation = var:tcrc_last_verified_generation
+scope:helper_closed = yes scope:manager_open = var:tcrc_manager_was_open
+
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrc_phase value = 60 }
+}
+} }
+
+tcrc_coalesced_before_release = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+OR = { var:tcrc_phase = 50 var:tcrc_phase = 60 }
+has_variable = tcr_requested NOT = { has_variable = tcr_active_generation }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+has_variable = tcrc_lifecycle scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed } tcr_enabled_trigger = yes
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+OR = { var:tcrc_phase = 50 var:tcrc_phase = 60 }
+has_variable = tcr_requested NOT = { has_variable = tcr_active_generation }
+
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrc_phase value = 20 }
+}
+} }
+
+tcrc_breach = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+}
+tcrc_breach_armed_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+OR = { scope:core_paused = no NOT = { scope:speed = var:tcrc_original_speed } }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+}
+tcrc_breach_armed_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+OR = { scope:core_paused = no NOT = { scope:speed = var:tcrc_original_speed } }
+
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrc_block_reason value = 9 }
+tcrc_block_effect = yes
+}
+} }
+
+tcrc_timeout = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_lifecycle
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_lifecycle
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+
+}
+tcrc_optional_timeout_effect = yes
+}
+} }
+
+tcrc_adopt_failure = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+ NOT = { has_variable = tcrs_active }
+trigger_if = { limit = {
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcr_failed NOT = { var:tcrc_phase = 90 }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+ NOT = { has_variable = tcrs_active }
+trigger_if = { limit = {
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcr_failed NOT = { var:tcrc_phase = 90 }
+
+} trigger_else = { always = no }
+
+}
+if = { limit = { NOT = { has_variable = tcrc_block_reason } }
+ set_variable = { name = tcrc_block_reason value = 13 }
+}
+set_variable = { name = tcrc_phase value = 90 }
+}
+} }
+
+tcrc_abort_begin = { scope = character is_valid = {
+# COLLECTOR_COMPOSITE_LEASE_GUARD
+NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcrf_receipt_pending }
+NOT = { has_variable = tcrs_active }
+
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_lifecycle
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcri_disable_requested
+NOT = { has_variable = tcrc_abort_requested }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+# COLLECTOR_COMPOSITE_LEASE_GUARD
+NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcrf_receipt_pending }
+NOT = { has_variable = tcrs_active }
+
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_lifecycle
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcri_disable_requested
+NOT = { has_variable = tcrc_abort_requested }
+
+} trigger_else = { always = no }
+
+}
+tcrc_begin_abort_effect = yes
+}
+} }
+
+tcrc_abort_undispatched = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcr_expected_collector
+has_variable = tcr_expected_slot
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcre_job_generation
+has_variable = tcre_phase
+has_variable = tcre_sequence
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcrc_abort_requested has_variable = tcri_disable_requested
+scope:abort_observed = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 80
+has_variable = tcre_job_active
+has_variable = tcr_active_generation
+var:tcre_job_generation = var:tcr_active_generation
+var:tcr_command_generation = var:tcr_active_generation
+var:tcre_sequence = scope:sequence
+OR = { var:tcre_phase = 10 var:tcre_phase = 20 }
+NOT = { has_variable = tcre_dispatched_sequence }
+scope:native_dispatched = no
+var:tcr_expected_slot = { has_tax_collector = no }
+var:tcr_expected_collector = { is_tax_collector = no }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcr_expected_collector
+has_variable = tcr_expected_slot
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcre_job_generation
+has_variable = tcre_phase
+has_variable = tcre_sequence
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcrc_abort_requested has_variable = tcri_disable_requested
+scope:abort_observed = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 80
+has_variable = tcre_job_active
+has_variable = tcr_active_generation
+var:tcre_job_generation = var:tcr_active_generation
+var:tcr_command_generation = var:tcr_active_generation
+var:tcre_sequence = scope:sequence
+OR = { var:tcre_phase = 10 var:tcre_phase = 20 }
+NOT = { has_variable = tcre_dispatched_sequence }
+scope:native_dispatched = no
+var:tcr_expected_slot = { has_tax_collector = no }
+var:tcr_expected_collector = { is_tax_collector = no }
+
+} trigger_else = { always = no }
+
+}
+tcrc_abort_clear_job_effect = yes
+}
+} }
+
+tcrc_abort_settle_hire = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcr_expected_collector
+has_variable = tcr_hired_ack
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcre_hired_generation_ack
+has_variable = tcre_hired_sequence_ack
+has_variable = tcre_job_generation
+has_variable = tcre_phase
+has_variable = tcre_sequence
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcrc_abort_requested has_variable = tcri_disable_requested
+scope:abort_observed = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 80
+has_variable = tcre_job_active has_variable = tcr_active_generation
+var:tcre_job_generation = var:tcr_active_generation
+var:tcr_command_generation = var:tcr_active_generation
+var:tcre_sequence = scope:sequence
+OR = { var:tcre_phase = 25 var:tcre_phase = 30 }
+scope:native_dispatched = yes
+has_variable = tcr_hired_ack var:tcr_hired_ack = var:tcr_active_generation
+has_variable = tcre_hired_sequence_ack var:tcre_hired_sequence_ack = var:tcre_sequence
+has_variable = tcre_hired_generation_ack var:tcre_hired_generation_ack = var:tcr_active_generation
+var:tcr_expected_collector = { is_tax_collector_of = root tax_slot = root.var:tcr_expected_slot }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcr_expected_collector
+has_variable = tcr_hired_ack
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+has_variable = tcre_hired_generation_ack
+has_variable = tcre_hired_sequence_ack
+has_variable = tcre_job_generation
+has_variable = tcre_phase
+has_variable = tcre_sequence
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcrc_abort_requested has_variable = tcri_disable_requested
+scope:abort_observed = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 80
+has_variable = tcre_job_active has_variable = tcr_active_generation
+var:tcre_job_generation = var:tcr_active_generation
+var:tcr_command_generation = var:tcr_active_generation
+var:tcre_sequence = scope:sequence
+OR = { var:tcre_phase = 25 var:tcre_phase = 30 }
+scope:native_dispatched = yes
+has_variable = tcr_hired_ack var:tcr_hired_ack = var:tcr_active_generation
+has_variable = tcre_hired_sequence_ack var:tcre_hired_sequence_ack = var:tcre_sequence
+has_variable = tcre_hired_generation_ack var:tcre_hired_generation_ack = var:tcr_active_generation
+var:tcr_expected_collector = { is_tax_collector_of = root tax_slot = root.var:tcr_expected_slot }
+
+} trigger_else = { always = no }
+
+}
+tcrc_abort_clear_job_effect = yes
+}
+} }
+
+tcrc_abort_verify = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcrc_abort_requested has_variable = tcri_disable_requested
+scope:abort_observed = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 80
+has_variable = tcrc_snapshot_taken
+NOT = { has_variable = tcre_job_active }
+tcrb_abort_quiescent_trigger = yes tcrv_parent_quiescent_trigger = yes
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcrc_abort_requested has_variable = tcri_disable_requested
+scope:abort_observed = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 80
+has_variable = tcrc_snapshot_taken
+NOT = { has_variable = tcre_job_active }
+tcrb_abort_quiescent_trigger = yes tcrv_parent_quiescent_trigger = yes
+
+} trigger_else = { always = no }
+
+}
+tcrc_abort_consistency_effect = yes
+}
+} }
+
+tcrc_abort_ui_restored = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_abort_verified
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_manager_was_open
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcrc_abort_requested has_variable = tcri_disable_requested
+scope:abort_observed = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 81
+var:tcrc_abort_verified = var:tcrc_lifecycle
+NOT = { has_variable = tcr_active_generation } NOT = { has_variable = tcre_job_active }
+scope:helper_closed = yes scope:manager_open = var:tcrc_manager_was_open
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_abort_verified
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_manager_was_open
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+tcro_current_player_owner_trigger = yes
+scope:lifecycle = var:tcrc_lifecycle
+has_variable = tcrc_abort_requested has_variable = tcri_disable_requested
+scope:abort_observed = yes
+tcrc_event_pause_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+var:tcrc_phase = 81
+var:tcrc_abort_verified = var:tcrc_lifecycle
+NOT = { has_variable = tcr_active_generation } NOT = { has_variable = tcre_job_active }
+scope:helper_closed = yes scope:manager_open = var:tcrc_manager_was_open
+
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrc_phase value = 82 }
+}
+} }
+
+tcrc_failure_prepare = { scope = character is_valid = {
+# COLLECTOR_COMPOSITE_LEASE_GUARD
+NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcrf_receipt_pending }
+NOT = { has_variable = tcrs_active }
+
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_event_requested
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+ tcro_current_player_owner_trigger = yes
+ NOT = { has_variable = tcrc_event_released }
+trigger_if = { limit = {
+ exists = scope:event_owner exists = scope:event_lifecycle
+ has_variable = tcrc_lifecycle has_variable = tcrc_event_requested
+ }
+ scope:event_owner = this
+ scope:event_lifecycle = var:tcrc_lifecycle
+ var:tcrc_event_requested = var:tcrc_lifecycle
+ } trigger_else = { always = no }
+var:tcrc_phase = 90
+has_variable = tcr_failed
+scope:event_paused = yes scope:game_paused = yes
+scope:helper_closed = yes scope:failure_observed = yes
+NOT = { has_variable = tcrc_failure_exit_ready }
+
+} trigger_else = { always = no }
+
+} effect = {
+if = { limit = {
+# COLLECTOR_COMPOSITE_LEASE_GUARD
+NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcrf_receipt_pending }
+NOT = { has_variable = tcrs_active }
+
+ NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_event_requested
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+ tcro_current_player_owner_trigger = yes
+ NOT = { has_variable = tcrc_event_released }
+trigger_if = { limit = {
+ exists = scope:event_owner exists = scope:event_lifecycle
+ has_variable = tcrc_lifecycle has_variable = tcrc_event_requested
+ }
+ scope:event_owner = this
+ scope:event_lifecycle = var:tcrc_lifecycle
+ var:tcrc_event_requested = var:tcrc_lifecycle
+ } trigger_else = { always = no }
+var:tcrc_phase = 90
+has_variable = tcr_failed
+scope:event_paused = yes scope:game_paused = yes
+scope:helper_closed = yes scope:failure_observed = yes
+NOT = { has_variable = tcrc_failure_exit_ready }
+
+} trigger_else = { always = no }
+
+}
+tcrc_prepare_failure_exit_effect = yes
+}
+} }
+
+tcrc_event_release_permission = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+scope:event_paused = yes scope:game_paused = yes scope:single_player = yes
+OR = {
+AND = {
+trigger_if = { limit = {
+has_variable = tcr_completed_generation
+has_variable = tcrc_event_requested
+has_variable = tcrc_last_verified_generation
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+ tcro_current_player_owner_trigger = yes
+ NOT = { has_variable = tcrc_event_released }
+trigger_if = { limit = {
+ exists = scope:event_owner exists = scope:event_lifecycle
+ has_variable = tcrc_lifecycle has_variable = tcrc_event_requested
+ }
+ scope:event_owner = this
+ scope:event_lifecycle = var:tcrc_lifecycle
+ var:tcrc_event_requested = var:tcrc_lifecycle
+ } trigger_else = { always = no }
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+tcr_enabled_trigger = yes
+tcrc_event_pause_trigger = yes var:tcrc_phase = 60
+NOT = { has_variable = tcr_requested }
+NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcr_active_generation }
+NOT = { has_variable = tcr_command_generation }
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+var:tcr_completed_generation = var:tcrc_last_verified_generation
+
+} trigger_else = { always = no }
+
+}
+AND = {
+trigger_if = { limit = {
+has_variable = tcrc_abort_verified
+has_variable = tcrc_event_requested
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+ tcro_current_player_owner_trigger = yes
+ NOT = { has_variable = tcrc_event_released }
+trigger_if = { limit = {
+ exists = scope:event_owner exists = scope:event_lifecycle
+ has_variable = tcrc_lifecycle has_variable = tcrc_event_requested
+ }
+ scope:event_owner = this
+ scope:event_lifecycle = var:tcrc_lifecycle
+ var:tcrc_event_requested = var:tcrc_lifecycle
+ } trigger_else = { always = no }
+trigger_if = { limit = {
+ has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+}
+ current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+} trigger_else = { always = no }
+tcrc_event_pause_trigger = yes
+var:tcrc_phase = 82 var:tcrc_abort_verified = var:tcrc_lifecycle
+has_variable = tcrc_abort_requested has_variable = tcri_disable_requested
+NOT = { has_variable = tcr_active_generation }
+NOT = { has_variable = tcr_command_generation }
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+
+} trigger_else = { always = no }
+
+}
+AND = {
+trigger_if = { limit = {
+has_variable = tcrc_event_requested
+has_variable = tcrc_failure_exit_ready
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+}
+has_variable = tcrc_lifecycle_active
+ tcro_current_player_owner_trigger = yes
+ NOT = { has_variable = tcrc_event_released }
+trigger_if = { limit = {
+ exists = scope:event_owner exists = scope:event_lifecycle
+ has_variable = tcrc_lifecycle has_variable = tcrc_event_requested
+ }
+ scope:event_owner = this
+ scope:event_lifecycle = var:tcrc_lifecycle
+ var:tcrc_event_requested = var:tcrc_lifecycle
+ } trigger_else = { always = no }
+var:tcrc_phase = 90 has_variable = tcr_failed
+var:tcrc_failure_exit_ready = var:tcrc_lifecycle
+NOT = { has_variable = tcr_active_generation }
+NOT = { has_variable = tcr_command_generation }
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+
+} trigger_else = { always = no }
+
+}
+}
+
+} }

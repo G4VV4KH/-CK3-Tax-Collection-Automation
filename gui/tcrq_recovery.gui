@@ -1,0 +1,123 @@
+﻿window = { name = tcrq_recovery_driver size = { 1 1 } alwaystransparent = yes
+widget = { size = { 1 1 } alwaystransparent = yes
+state = { name = tcrq_bootstrap_idle alpha = 1 }
+state = { name = tcrq_bootstrap_check trigger_when = "[And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrq_pending').IsSet,GetPlayer.MakeScope.GetVariable('tcrq_epoch').IsSet)),Not(GetPlayer.MakeScope.GetVariable('tcrq_bootstrap_ready').IsSet))]" duration = 0 alpha = 1
+ on_finish = "[PdxGuiWidget.TriggerAnimation(Select_CString(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrq_pending').IsSet,GetPlayer.MakeScope.GetVariable('tcrq_epoch').IsSet)),Not(GetPlayer.MakeScope.GetVariable('tcrq_bootstrap_ready').IsSet)),'tcrq_bootstrap_do','tcrq_bootstrap_idle'))]" }
+state = { name = tcrq_bootstrap_do duration = 0 alpha = 1
+ on_finish = "[GetVariableSystem.Set('tcrx_reload_owned',Select_CString(GetVariableSystem.HasValue('tcrx_owned',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_component').GetValueWithDefault('(CFixedPoint)-1')))))))),Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_component').GetValueWithDefault('(CFixedPoint)-1'))))))),''))]"
+ on_finish = "[GetVariableSystem.Clear('tcrx_owned')]"
+ on_finish = "[GetVariableSystem.Clear('tcrx_dispatch_token')]"
+ on_finish = "[GetVariableSystem.Set('tcrx_reload_source_owned',Select_CString(GetVariableSystem.HasValue('tcrb_source_owned_token',Concatenate('tcrv:',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_generation').GetValueWithDefault('(CFixedPoint)-1'))))))))),Concatenate('tcrv:',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_generation').GetValueWithDefault('(CFixedPoint)-1')))))))),''))]"
+ on_finish = "[GetVariableSystem.Set('tcrx_reload_source_id',GetVariableSystem.Get('tcrb_source_slot_id'))]"
+ on_finish = "[GetVariableSystem.Set('tcrx_reload_preview_owned',Select_CString(GetVariableSystem.HasValue('tcrb_preview_owned_token',Concatenate('tcrv:',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_generation').GetValueWithDefault('(CFixedPoint)-1'))))))))),Concatenate('tcrv:',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_generation').GetValueWithDefault('(CFixedPoint)-1')))))))),''))]"
+ on_finish = "[GetVariableSystem.Set('tcrx_reload_preview_id',GetVariableSystem.Get('tcrb_preview_payer_id'))]"
+ on_finish = "[GetVariableSystem.Clear('tcrb_abort_observed_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrb_preview_owned_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrb_preview_payer_id')]"
+ on_finish = "[GetVariableSystem.Clear('tcrb_replan_observed_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrb_source_owned_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrb_source_slot_id')]"
+ on_finish = "[GetVariableSystem.Clear('tcrb_ui_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrc_abort_observed_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrc_event_option_sent')]"
+ on_finish = "[GetVariableSystem.Clear('tcrc_failure_closed_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrc_failure_foreign_appoint')]"
+ on_finish = "[GetVariableSystem.Clear('tcrc_failure_foreign_preview')]"
+ on_finish = "[GetVariableSystem.Clear('tcrc_failure_foreign_source')]"
+ on_finish = "[GetVariableSystem.Clear('tcrc_replan_observed_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrc_watch_token')]"
+on_finish = "[GetVariableSystem.Clear('tcrf_manager_token')]"
+on_finish = "[GetVariableSystem.Clear('tcrf_preview_token')]"
+on_finish = "[GetVariableSystem.Clear('tcrf_select_token')]"
+on_finish = "[GetVariableSystem.Clear('tcrf_ui_yield_cleaned')]"
+on_finish = "[GetVariableSystem.Clear('tcrf_ui_foreign_appoint')]"
+on_finish = "[GetVariableSystem.Clear('tcrf_ui_foreign_source')]"
+on_finish = "[GetVariableSystem.Clear('tcrf_ui_foreign_preview')]"
+ on_finish = "[GetVariableSystem.Clear('tcre_authorized_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcre_dispatched_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcre_manager_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcre_native_slot_id')]"
+ on_finish = "[GetVariableSystem.Clear('tcre_pause_failure_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcre_selected_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcre_verify_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcre_window_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrm_manager_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrm_preview_open_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrm_selection_request_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrm_source_open_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcro_watch_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrp_authorized_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrp_cleared_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrp_date_failure_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrp_dispatched_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrp_manager_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrp_native_slot_id')]"
+ on_finish = "[GetVariableSystem.Clear('tcrp_pause_failure_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrp_selected_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrp_verify_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrp_window_token')]"
+ on_finish = "[GetVariableSystem.Clear('tcrq_event_cancel_sent')]"
+ on_finish = "[GetVariableSystem.Clear('tcrq_watch_token')]"
+ on_finish = "[GetVariableSystem.Set('tcrq_bootstrap_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue)))))]"
+ on_finish = "[GetScriptedGui('tcrq_bootstrap').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('epoch',MakeScopeValue(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue)).AddScope('keys_cleared',MakeScopeBool(GetVariableSystem.HasValue('tcrq_bootstrap_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue))))))).AddScope('manual',MakeScopeBool(IsManuallyPaused)).AddScope('speed',MakeScopeValue(IntToFixedPoint(GetCurrentGameSpeed))).AddScope('game_paused',MakeScopeBool(IsGamePaused)).AddScope('event_paused',MakeScopeBool(IsPausedByEvent)).AddScope('helpers_closed',MakeScopeBool(And(Not(IsGameViewOpen('tax_slot_appoint_tax_collector')),And(Not(IsGameViewOpen('tax_slot_vassals')),Not(IsGameViewOpen('tax_slot_assign_vassal')))))).AddScope('manager_open',MakeScopeBool(IsGameViewOpen('manage_tax_slots'))).AddScope('watch_matches',MakeScopeBool(GetVariableSystem.HasValue('tcrq_watch_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue))))))).End)]"
+}
+}
+widget = { size = { 1 1 } alwaystransparent = yes
+state = { name = tcrq_watch_idle alpha = 1 }
+state = { name = tcrq_watch_cancel trigger_when = "[Not(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrq_pending').IsSet,GetPlayer.MakeScope.GetVariable('tcrq_epoch').IsSet)),GetPlayer.MakeScope.GetVariable('tcrq_bootstrap_ready').IsSet))]" duration = 0 alpha = 1 on_finish = "[PdxGuiWidget.TriggerAnimation('tcrq_watch_idle')]" }
+state = { name = tcrq_watch_start trigger_when = "[And(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrq_pending').IsSet,GetPlayer.MakeScope.GetVariable('tcrq_epoch').IsSet)),GetPlayer.MakeScope.GetVariable('tcrq_bootstrap_ready').IsSet),Not(GetVariableSystem.HasValue('tcrq_watch_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue)))))))]" duration = 0 alpha = 1
+ on_start = "[GetVariableSystem.Set('tcrq_watch_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue)))))]"
+ on_finish = "[PdxGuiWidget.TriggerAnimation('tcrq_watch_timer')]" }
+state = { name = tcrq_watch_timer duration = 20 alpha = 1
+ on_finish = "[PdxGuiWidget.TriggerAnimation(Select_CString(And(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrq_pending').IsSet,GetPlayer.MakeScope.GetVariable('tcrq_epoch').IsSet)),GetPlayer.MakeScope.GetVariable('tcrq_bootstrap_ready').IsSet),GetScriptedGui('tcrq_bound').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('epoch',MakeScopeValue(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue)).AddScope('keys_cleared',MakeScopeBool(GetVariableSystem.HasValue('tcrq_bootstrap_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue))))))).AddScope('manual',MakeScopeBool(IsManuallyPaused)).AddScope('speed',MakeScopeValue(IntToFixedPoint(GetCurrentGameSpeed))).AddScope('game_paused',MakeScopeBool(IsGamePaused)).AddScope('event_paused',MakeScopeBool(IsPausedByEvent)).AddScope('helpers_closed',MakeScopeBool(And(Not(IsGameViewOpen('tax_slot_appoint_tax_collector')),And(Not(IsGameViewOpen('tax_slot_vassals')),Not(IsGameViewOpen('tax_slot_assign_vassal')))))).AddScope('manager_open',MakeScopeBool(IsGameViewOpen('manage_tax_slots'))).AddScope('watch_matches',MakeScopeBool(GetVariableSystem.HasValue('tcrq_watch_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue))))))).End)),'tcrq_watch_bound','tcrq_watch_idle'))]" }
+state = { name = tcrq_watch_bound duration = 0 alpha = 1 on_finish = "[GetScriptedGui('tcrq_bound').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('epoch',MakeScopeValue(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue)).AddScope('keys_cleared',MakeScopeBool(GetVariableSystem.HasValue('tcrq_bootstrap_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue))))))).AddScope('manual',MakeScopeBool(IsManuallyPaused)).AddScope('speed',MakeScopeValue(IntToFixedPoint(GetCurrentGameSpeed))).AddScope('game_paused',MakeScopeBool(IsGamePaused)).AddScope('event_paused',MakeScopeBool(IsPausedByEvent)).AddScope('helpers_closed',MakeScopeBool(And(Not(IsGameViewOpen('tax_slot_appoint_tax_collector')),And(Not(IsGameViewOpen('tax_slot_vassals')),Not(IsGameViewOpen('tax_slot_assign_vassal')))))).AddScope('manager_open',MakeScopeBool(IsGameViewOpen('manage_tax_slots'))).AddScope('watch_matches',MakeScopeBool(GetVariableSystem.HasValue('tcrq_watch_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrq_epoch').GetValue))))))).End)]" }
+}
+}
+types TcrqRecoveryTypes {
+ type tcrq_appoint_cleanup = widget { size = { 1 1 } alwaystransparent = yes
+  state = { name = tcrs_recovery_close_idle alpha = 1 }
+  state = { name = tcrs_recovery_close_check trigger_when = "[And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrq_pending').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrq_bootstrap_ready').IsSet,And(IsGamePaused,And(IsPausedByEvent,And(Not(IsPauseMenuShown),And(Not(IsInteractionConfirmationWindowOpen),And(Not(IsMapInteractionConfirmationWindowOpen),And(Not(GameIsMultiplayer),And(IsGameViewOpen('tax_slot_appoint_tax_collector'),And(EqualTo_string(UIntToString(AppointTaxCollectorWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(AppointTaxCollectorWindow.GetTaxSlot.Custom('tcrs_recovery_appoint_slot'),'1'))))))))))))]" duration = 0 alpha = 1
+   on_finish = "[PdxGuiWidget.TriggerAnimation(Select_CString(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrq_pending').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrq_bootstrap_ready').IsSet,And(IsGamePaused,And(IsPausedByEvent,And(Not(IsPauseMenuShown),And(Not(IsInteractionConfirmationWindowOpen),And(Not(IsMapInteractionConfirmationWindowOpen),And(Not(GameIsMultiplayer),And(IsGameViewOpen('tax_slot_appoint_tax_collector'),And(EqualTo_string(UIntToString(AppointTaxCollectorWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(AppointTaxCollectorWindow.GetTaxSlot.Custom('tcrs_recovery_appoint_slot'),'1')))))))))))),'tcrs_recovery_close_do','tcrs_recovery_close_idle'))]" }
+  state = { name = tcrs_recovery_close_do duration = 0 alpha = 1
+   on_start = "[AppointTaxCollectorWindow.Close]" }
+ }
+ type tcrq_source_cleanup = widget { size = { 1 1 } }
+}
+
+types TcrxRecoveryTypes {
+ type tcrx_recovery_source_cleanup = widget { size = { 1 1 } alwaystransparent = yes
+  state = { name = tcrx_reload_close_idle alpha = 1 }
+  state = { name = tcrx_reload_close_check alpha = 1
+   trigger_when = "[And(GetPlayer.IsValid,And(IsGameViewOpen('tax_slot_vassals'),And(And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(TaxSlotVassalWindow.GetTaxSlot.Custom('tcrx_destination_slot'),'1')),GetScriptedGui('tcrx_recovery_close_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target',MakeScopeBool(And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(TaxSlotVassalWindow.GetTaxSlot.Custom('tcrx_destination_slot'),'1')))).AddScope('game_paused',MakeScopeBool(IsGamePaused)).AddScope('event_paused',MakeScopeBool(IsPausedByEvent)).AddScope('context_allowed',MakeScopeBool(And(Not(IsPauseMenuShown),And(Not(IsInteractionConfirmationWindowOpen),And(Not(IsMapInteractionConfirmationWindowOpen),Not(GameIsMultiplayer)))))).AddScope('owned_before_bootstrap',MakeScopeBool(GetVariableSystem.HasValue('tcrx_reload_owned',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_component').GetValueWithDefault('(CFixedPoint)-1')))))))))).End))))]" duration = 0
+   on_finish = "[PdxGuiWidget.TriggerAnimation(Select_CString(And(GetPlayer.IsValid,And(IsGameViewOpen('tax_slot_vassals'),And(And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(TaxSlotVassalWindow.GetTaxSlot.Custom('tcrx_destination_slot'),'1')),GetScriptedGui('tcrx_recovery_close_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target',MakeScopeBool(And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(TaxSlotVassalWindow.GetTaxSlot.Custom('tcrx_destination_slot'),'1')))).AddScope('game_paused',MakeScopeBool(IsGamePaused)).AddScope('event_paused',MakeScopeBool(IsPausedByEvent)).AddScope('context_allowed',MakeScopeBool(And(Not(IsPauseMenuShown),And(Not(IsInteractionConfirmationWindowOpen),And(Not(IsMapInteractionConfirmationWindowOpen),Not(GameIsMultiplayer)))))).AddScope('owned_before_bootstrap',MakeScopeBool(GetVariableSystem.HasValue('tcrx_reload_owned',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_component').GetValueWithDefault('(CFixedPoint)-1')))))))))).End)))),'tcrx_reload_close_do','tcrx_reload_close_idle'))]"
+  }
+  state = { name = tcrx_reload_close_do alpha = 1 duration = 0
+   on_start = "[TaxSlotVassalWindow.Close]"
+  }
+ }
+}
+
+types TcrxHandoffRecoveryTypes {
+
+ type tcrx_handoff_source_cleanup = widget { size = { 1 1 } alwaystransparent = yes
+  state = { name = tcrx_handoff_source_idle alpha = 1 }
+  state = { name = tcrx_handoff_source_check alpha = 1 duration = 0
+   trigger_when = "[And(GetPlayer.IsValid,And(IsGameViewOpen('tax_slot_vassals'),GetScriptedGui('tcrx_handoff_close_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('helper_matches',MakeScopeBool(And(GetVariableSystem.HasValue('tcrx_reload_source_owned',Concatenate('tcrv:',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_generation').GetValueWithDefault('(CFixedPoint)-1'))))))))),And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetID),GetVariableSystem.Get('tcrx_reload_source_id')),EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)))))).AddScope('game_paused',MakeScopeBool(IsGamePaused)).AddScope('event_paused',MakeScopeBool(IsPausedByEvent)).AddScope('context_allowed',MakeScopeBool(And(Not(IsPauseMenuShown),And(Not(IsInteractionConfirmationWindowOpen),And(Not(IsMapInteractionConfirmationWindowOpen),Not(GameIsMultiplayer)))))).End)))]"
+   on_finish = "[PdxGuiWidget.TriggerAnimation(Select_CString(And(GetPlayer.IsValid,And(IsGameViewOpen('tax_slot_vassals'),GetScriptedGui('tcrx_handoff_close_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('helper_matches',MakeScopeBool(And(GetVariableSystem.HasValue('tcrx_reload_source_owned',Concatenate('tcrv:',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_generation').GetValueWithDefault('(CFixedPoint)-1'))))))))),And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetID),GetVariableSystem.Get('tcrx_reload_source_id')),EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)))))).AddScope('game_paused',MakeScopeBool(IsGamePaused)).AddScope('event_paused',MakeScopeBool(IsPausedByEvent)).AddScope('context_allowed',MakeScopeBool(And(Not(IsPauseMenuShown),And(Not(IsInteractionConfirmationWindowOpen),And(Not(IsMapInteractionConfirmationWindowOpen),Not(GameIsMultiplayer)))))).End))),'tcrx_handoff_source_do','tcrx_handoff_source_idle'))]"
+  }
+  state = { name = tcrx_handoff_source_do alpha = 1 duration = 0
+   on_start = "[TaxSlotVassalWindow.Close]"
+  }
+ }
+
+ type tcrx_handoff_preview_cleanup = widget { size = { 1 1 } alwaystransparent = yes
+  state = { name = tcrx_handoff_preview_idle alpha = 1 }
+  state = { name = tcrx_handoff_preview_check alpha = 1 duration = 0
+   trigger_when = "[And(GetPlayer.IsValid,And(IsGameViewOpen('tax_slot_assign_vassal'),GetScriptedGui('tcrx_handoff_close_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('helper_matches',MakeScopeBool(And(GetVariableSystem.HasValue('tcrx_reload_preview_owned',Concatenate('tcrv:',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_generation').GetValueWithDefault('(CFixedPoint)-1'))))))))),And(EqualTo_string(UIntToString(TaxSlotAssignVassalWindow.GetVassal.GetID),GetVariableSystem.Get('tcrx_reload_preview_id')),EqualTo_string(UIntToString(TaxSlotAssignVassalWindow.GetVassal.GetLiege.GetID),UIntToString(GetPlayer.GetID)))))).AddScope('game_paused',MakeScopeBool(IsGamePaused)).AddScope('event_paused',MakeScopeBool(IsPausedByEvent)).AddScope('context_allowed',MakeScopeBool(And(Not(IsPauseMenuShown),And(Not(IsInteractionConfirmationWindowOpen),And(Not(IsMapInteractionConfirmationWindowOpen),Not(GameIsMultiplayer)))))).End)))]"
+   on_finish = "[PdxGuiWidget.TriggerAnimation(Select_CString(And(GetPlayer.IsValid,And(IsGameViewOpen('tax_slot_assign_vassal'),GetScriptedGui('tcrx_handoff_close_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('helper_matches',MakeScopeBool(And(GetVariableSystem.HasValue('tcrx_reload_preview_owned',Concatenate('tcrv:',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrv_generation').GetValueWithDefault('(CFixedPoint)-1'))))))))),And(EqualTo_string(UIntToString(TaxSlotAssignVassalWindow.GetVassal.GetID),GetVariableSystem.Get('tcrx_reload_preview_id')),EqualTo_string(UIntToString(TaxSlotAssignVassalWindow.GetVassal.GetLiege.GetID),UIntToString(GetPlayer.GetID)))))).AddScope('game_paused',MakeScopeBool(IsGamePaused)).AddScope('event_paused',MakeScopeBool(IsPausedByEvent)).AddScope('context_allowed',MakeScopeBool(And(Not(IsPauseMenuShown),And(Not(IsInteractionConfirmationWindowOpen),And(Not(IsMapInteractionConfirmationWindowOpen),Not(GameIsMultiplayer)))))).End))),'tcrx_handoff_preview_do','tcrx_handoff_preview_idle'))]"
+  }
+  state = { name = tcrx_handoff_preview_do alpha = 1 duration = 0
+   on_start = "[TaxSlotAssignVassalWindow.Close]"
+  }
+ }
+}

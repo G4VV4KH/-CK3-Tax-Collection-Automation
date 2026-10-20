@@ -1,0 +1,4 @@
+﻿l_polish:
+ tcrui_recalculating_title:0 "Trwa przeliczanie poboru podatków…"
+ tcrui_recalculating_description:0 "Po zakończeniu przeliczania zostanie przywrócony poprzedni stan pauzy."
+ tcrui_disable_automation:0 "Wyłącz automatyzację"

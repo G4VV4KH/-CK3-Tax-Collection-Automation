@@ -1,0 +1,6 @@
+﻿l_korean:
+ tcrc_event_title:0 "세금 징수를 다시 계산하는 중입니다"
+ tcrc_event_desc:0 "세금 징수 재계산이 끝나면 이전 일시 정지 상태로 돌아갑니다."
+ tcrc_event_complete:0 "재계산 완료"
+ tcrc_event_cancel:0 "자동화 중단"
+ tcrc_event_failed:0 "검증 실패로 자동화가 중단되었습니다"

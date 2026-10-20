@@ -1,0 +1,23 @@
+﻿# Consume an old save's already scheduled callback once. No rescheduling and
+# no month-based retry/block clearing exists in the new runtime.
+tca_monthly_tick = { effect = { remove_variable = tca_loop_pending } }
+
+
+on_player_character_change = { on_actions = { tcri_player_changed } }
+tcri_player_changed = { effect = {
+ if = { limit = { tcr_enabled_trigger = yes } tcr_request_effect = yes }
+} }
+on_government_change = { on_actions = { tcri_government_changed } }
+tcri_government_changed = { effect = {
+ if = { limit = { tcr_enabled_trigger = yes } tcr_request_effect = yes }
+} }
+on_join_court = { on_actions = { tcri_court_joined } }
+tcri_court_joined = { effect = {
+ if = { limit = { exists = scope:new_employer }
+  scope:new_employer = { tcri_retry_vacancy_effect = yes }
+ }
+} }
+on_16th_birthday = { on_actions = { tcri_candidate_adult } }
+tcri_candidate_adult = { effect = {
+ if = { limit = { exists = liege } liege = { tcri_retry_vacancy_effect = yes } }
+} }

@@ -1,0 +1,112 @@
+﻿
+tcrx_identity_trigger = {
+ trigger_if = { limit = { has_variable = tcrx_owner has_variable = tcrx_lifecycle
+  has_variable = tcrx_generation has_variable = tcrx_component has_variable = tcrx_phase
+  has_variable = tcrx_target has_variable = tcrx_count
+ }
+  tcrs_lease_trigger = yes has_variable = tcrs_pending
+  var:tcrx_owner = this var:tcrx_lifecycle = var:tcrs_lifecycle
+  var:tcrx_generation = var:tcrs_generation var:tcrx_component = var:tcrs_sequence
+ } trigger_else = { always = no }
+}
+tcrx_ui_trigger = {
+ tcrx_identity_trigger = yes
+ has_variable = tcrx_active NOT = { has_variable = tcrq_pending }
+ scope:paused = yes scope:speed = var:tcrc_original_speed
+ scope:component = var:tcrx_component scope:lifecycle = var:tcrx_lifecycle
+ scope:generation = var:tcrx_generation scope:context_allowed = yes
+}
+tcrx_ordinary_trigger = {
+ tcrx_ui_trigger = yes tcr_enabled_trigger = yes
+ NOT = { has_variable = tcri_disable_requested } NOT = { has_variable = tcrc_abort_requested }
+ NOT = { has_variable = tcr_requested } NOT = { has_variable = tcrs_rollback_requested }
+ NOT = { has_variable = tcrx_cancel } NOT = { has_variable = tcrx_error }
+}
+tcrx_member_trigger = {
+ trigger_if = { limit = { has_variable = tcrx_member_owner has_variable = tcrx_member_lifecycle
+  has_variable = tcrx_member_generation has_variable = tcrx_member_component
+  has_variable = tcrx_member_ordinal has_variable = tcrx_source has_variable = tcrx_target
+ }
+  var:tcrx_member_owner = root
+  var:tcrx_member_lifecycle = root.var:tcrx_lifecycle
+  var:tcrx_member_generation = root.var:tcrx_generation
+  var:tcrx_member_component = root.var:tcrx_component
+  var:tcrx_target = root.var:tcrx_target
+  tcrs_original_payer_trigger = yes var:tcrx_source = var:tcrs_payer_original_slot
+  save_temporary_scope_as = tcrx_member
+  root = { is_target_in_variable_list = { name = tcrx_payers target = scope:tcrx_member } }
+ } trigger_else = { always = no }
+}
+tcrx_expected_hook_trigger = {
+ trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_dispatched
+  exists = scope:vassal exists = scope:tax_slot
+ }
+  tcrx_identity_trigger = yes var:tcrx_phase = 30
+  save_temporary_scope_as = tcrx_hook_owner
+  trigger_if = { limit = {
+   is_target_in_variable_list = { name = tcrx_payers target = scope:vassal }
+   scope:vassal = {
+    has_variable = tcrx_member_owner has_variable = tcrx_member_lifecycle
+    has_variable = tcrx_member_generation has_variable = tcrx_member_component
+    has_variable = tcrx_source has_variable = tcrx_target
+   }
+  }
+   scope:vassal = {
+   var:tcrx_member_owner = scope:tcrx_hook_owner
+   var:tcrx_member_lifecycle = scope:tcrx_hook_owner.var:tcrx_lifecycle
+   var:tcrx_member_generation = scope:tcrx_hook_owner.var:tcrx_generation
+   var:tcrx_member_component = scope:tcrx_hook_owner.var:tcrx_component
+   }
+   OR = { scope:tax_slot = var:tcrx_target scope:tax_slot = scope:vassal.var:tcrx_source }
+  } trigger_else = { always = no }
+ } trigger_else = { always = no }
+}
+tcrx_all_acked_trigger = {
+ NOT = { any_in_list = { variable = tcrx_payers
+  NOT = { trigger_if = { limit = { tcrx_member_trigger = yes
+   has_variable = tcrx_assigned_ack has_variable = tcrx_removed_ack
+   }
+   var:tcrx_assigned_ack = root.var:tcrx_component
+   var:tcrx_removed_ack = root.var:tcrx_component
+   assigned_tax_slot = var:tcrx_target
+  } trigger_else = { always = no } }
+ } }
+}
+# Mechanical rollback provenance deliberately does not require economic success.
+tcrx_mechanical_receipt_trigger = {
+ trigger_if = { limit = {
+  tcrx_member_trigger = yes has_variable = tcrx_mechanical_outcome
+ }
+  root = { has_variable = tcrx_dispatched }
+  assigned_tax_slot = var:tcrx_target
+ } trigger_else = { always = no }
+}
+tcrx_sealed_receipt_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrx_seal_owner has_variable = tcrx_seal_lifecycle
+  has_variable = tcrx_seal_generation has_variable = tcrx_seal_component
+  has_variable = tcrx_seal_source has_variable = tcrx_seal_target
+  has_variable = tcrx_seal_before_gold has_variable = tcrx_seal_before_reference
+  has_variable = tcrx_seal_preview has_variable = tcrx_seal_actual_gold
+  has_variable = tcrx_seal_actual_reference has_variable = tcrx_seal_assigned_ack
+  has_variable = tcrx_seal_removed_ack has_variable = tcrx_seal_total_before
+  has_variable = tcrx_seal_total_after
+ }
+ tcrv_parent_member_trigger = yes
+ var:tcrx_seal_owner = root var:tcrx_seal_lifecycle = root.var:tcrc_lifecycle
+ var:tcrx_seal_generation > 0 var:tcrx_seal_component > 0
+ var:tcrc_payer_revision = 1 var:tcrc_payer_receipt_producer = 38
+ var:tcrc_payer_receipt_schema = 3
+ var:tcrc_payer_receipt_source = var:tcrx_seal_source
+ var:tcrc_payer_receipt_target = var:tcrx_seal_target
+ var:tcrc_payer_initial_slot = var:tcrx_seal_source
+ var:tcrc_payer_expected_slot = var:tcrx_seal_target
+ var:tcrx_seal_assigned_ack = var:tcrx_seal_component
+ var:tcrx_seal_removed_ack = var:tcrx_seal_component
+ var:tcrx_seal_actual_gold > var:tcrx_seal_before_gold
+ var:tcrx_seal_actual_reference = var:tcrx_seal_preview
+ var:tcrx_seal_preview > var:tcrx_seal_before_gold
+ var:tcrx_seal_preview > var:tcrx_seal_before_reference
+ var:tcrx_seal_total_after >= var:tcrx_seal_total_before
+ } trigger_else = { always = no }
+}

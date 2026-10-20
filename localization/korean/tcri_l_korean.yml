@@ -1,0 +1,5 @@
+﻿l_korean:
+ tcri_automation_label:0 "세금 징수 자동화"
+ tcri_automation_tooltip:0 "활성화할 때, 세금 징수원 자리가 비었을 때 또는 배정되지 않은 납세자가 생겼을 때 세금 징수를 다시 계산합니다. 재계산 중에는 게임 시간이 일시 정지되며, 안전하게 완료되면 이전 일시 정지 상태로 돌아갑니다."
+ tcri_automation_working:0 "세금 징수를 다시 계산하는 중…"
+ tcri_automation_held:0 "세금 자동화 일시 중지: 복구 또는 검증이 필요합니다."

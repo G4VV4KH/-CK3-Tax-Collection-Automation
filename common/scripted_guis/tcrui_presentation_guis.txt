@@ -1,0 +1,8 @@
+﻿# Visual ownership only: do not use this predicate to authorize game commands.
+tcrui_owned_presentation = {
+ scope = character
+ is_valid = {
+  has_variable = tcrc_lifecycle_active
+  tcro_owned_trigger = yes
+ }
+}

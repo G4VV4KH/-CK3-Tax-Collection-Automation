@@ -1,0 +1,795 @@
+﻿tcrf_continue_permission = { scope = character is_valid = { tcrf_continue_trigger = yes } }
+tcrf_parent_permission = { scope = character is_valid = { tcrf_parent_permission_trigger = yes } }
+tcrf_parent_step = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+tcrf_capability_trigger = yes tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes has_variable = tcrc_lifecycle_active
+has_variable = tcr_active_generation var:tcrc_phase = 33
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+scope:paused = yes scope:speed = var:tcrc_original_speed
+NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+scope:helpers_closed = yes
+
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+tcrf_capability_trigger = yes tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes has_variable = tcrc_lifecycle_active
+has_variable = tcr_active_generation var:tcrc_phase = 33
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+scope:paused = yes scope:speed = var:tcrc_original_speed
+NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+scope:helpers_closed = yes
+
+} trigger_else = { always = no }
+ }
+tcrf_parent_choose_effect = yes
+} } }
+tcrf_floor = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 10 scope:slot_is_target = yes exists = scope:collector scope:collector = var:tcrf_old
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 10 scope:slot_is_target = yes exists = scope:collector scope:collector = var:tcrf_old
+} trigger_else = { always = no }
+ }
+set_variable = { name = tcrf_floor value = scope:gold }
+set_variable = { name = tcrf_total_floor value = scope:total }
+if = { limit = { NOT = { has_variable = tcrf_parent_initial_floor } }
+ set_variable = { name = tcrf_parent_initial_floor value = scope:total }
+ set_variable = { name = tcrf_parent_last_total value = scope:total }
+}
+set_variable = { name = tcrf_phase value = 12 }
+} } }
+tcrf_opened = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 12 scope:slot_is_target = yes
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 12 scope:slot_is_target = yes
+} trigger_else = { always = no }
+ }
+set_variable = { name = tcrf_phase value = 20 }
+} } }
+tcrf_preview_observe = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_preview_nonce
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes
+NOT = { has_variable = tcrf_preview_observed } scope:preview_nonce = var:tcrf_preview_nonce
+
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_preview_nonce
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes
+NOT = { has_variable = tcrf_preview_observed } scope:preview_nonce = var:tcrf_preview_nonce
+
+} trigger_else = { always = no }
+ }
+set_variable = { name = tcrf_preview_observed value = var:tcrf_preview_nonce }
+} } }
+tcrf_preview_closed = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_fired_count
+has_variable = tcrf_generation
+has_variable = tcrf_hired_count
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_preview_nonce
+has_variable = tcrf_preview_observed
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 NOT = { has_variable = tcrf_pending }
+var:tcrf_preview_observed = var:tcrf_preview_nonce scope:preview_nonce = var:tcrf_preview_nonce
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+var:tcrf_fired_count = 0 var:tcrf_hired_count = 0
+scope:preview_absent = yes
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_fired_count
+has_variable = tcrf_generation
+has_variable = tcrf_hired_count
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_preview_nonce
+has_variable = tcrf_preview_observed
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 NOT = { has_variable = tcrf_pending }
+var:tcrf_preview_observed = var:tcrf_preview_nonce scope:preview_nonce = var:tcrf_preview_nonce
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+var:tcrf_fired_count = 0 var:tcrf_hired_count = 0
+scope:preview_absent = yes
+} trigger_else = { always = no }
+ }
+# COLLECTOR_USER_UI_YIELD: invalidate queued pre-fire SG before retiring the job.
+change_variable = { name = tcrf_preview_nonce add = 1 }
+set_variable = { name = tcrf_parent_skip_optional_lifecycle value = var:tcrc_lifecycle }
+set_variable = { name = tcrf_ui_yield_lifecycle value = var:tcrc_lifecycle }
+set_variable = { name = tcrf_ui_yield_generation value = var:tcr_active_generation }
+set_variable = { name = tcrf_ui_yield_sequence value = var:tcrf_sequence }
+set_variable = { name = tcrf_ui_yield_manager_initial value = var:tcrc_manager_was_open }
+remove_variable = tcrc_manager_owned
+set_variable = { name = tcrf_phase value = 73 }
+set_variable = { name = tcrf_deferred_reason value = 7 }
+debug_log = "TCRF|USER_UI_YIELD|sequence=[GetPlayer.MakeScope.Var('tcrf_sequence').GetValue]"
+
+} } }
+tcrf_preview_replaced = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_fired_count
+has_variable = tcrf_generation
+has_variable = tcrf_hired_count
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_preview_nonce
+has_variable = tcrf_preview_observed
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 NOT = { has_variable = tcrf_pending }
+var:tcrf_preview_observed = var:tcrf_preview_nonce scope:preview_nonce = var:tcrf_preview_nonce
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+var:tcrf_fired_count = 0 var:tcrf_hired_count = 0
+scope:preview_other = yes
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_fired_count
+has_variable = tcrf_generation
+has_variable = tcrf_hired_count
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_preview_nonce
+has_variable = tcrf_preview_observed
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 NOT = { has_variable = tcrf_pending }
+var:tcrf_preview_observed = var:tcrf_preview_nonce scope:preview_nonce = var:tcrf_preview_nonce
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+var:tcrf_fired_count = 0 var:tcrf_hired_count = 0
+scope:preview_other = yes
+} trigger_else = { always = no }
+ }
+# COLLECTOR_USER_UI_YIELD: invalidate queued pre-fire SG before retiring the job.
+change_variable = { name = tcrf_preview_nonce add = 1 }
+set_variable = { name = tcrf_parent_skip_optional_lifecycle value = var:tcrc_lifecycle }
+set_variable = { name = tcrf_ui_yield_lifecycle value = var:tcrc_lifecycle }
+set_variable = { name = tcrf_ui_yield_generation value = var:tcr_active_generation }
+set_variable = { name = tcrf_ui_yield_sequence value = var:tcrf_sequence }
+set_variable = { name = tcrf_ui_yield_manager_initial value = var:tcrc_manager_was_open }
+remove_variable = tcrc_manager_owned
+set_variable = { name = tcrf_phase value = 73 }
+set_variable = { name = tcrf_deferred_reason value = 7 }
+debug_log = "TCRF|USER_UI_YIELD|sequence=[GetPlayer.MakeScope.Var('tcrf_sequence').GetValue]"
+
+} } }
+tcrf_list_begin = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes scope:list_ready = yes
+NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+NOT = { has_variable = tcrf_list_pass } scope:count >= 0
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes scope:list_ready = yes
+NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+NOT = { has_variable = tcrf_list_pass } scope:count >= 0
+} trigger_else = { always = no }
+ }
+set_variable = { name = tcrf_list_pass value = 1 }
+set_variable = { name = tcrf_list_count value = scope:count }
+set_variable = { name = tcrf_list_cursor value = 0 }
+set_variable = { name = tcrf_list_target_found value = 0 }
+set_variable = { name = tcrf_list_target_selectable value = 0 }
+clear_variable_list = tcrf_list_candidates
+
+} } }
+tcrf_list_changed = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_list_count
+has_variable = tcrf_list_pass
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes scope:list_ready = yes
+NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+OR = { var:tcrf_list_pass = 1 var:tcrf_list_pass = 2 }
+scope:count != var:tcrf_list_count
+
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_list_count
+has_variable = tcrf_list_pass
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes scope:list_ready = yes
+NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+OR = { var:tcrf_list_pass = 1 var:tcrf_list_pass = 2 }
+scope:count != var:tcrf_list_count
+
+} trigger_else = { always = no }
+ }
+set_variable = { name = tcrf_phase value = 71 } set_variable = { name = tcrf_deferred_reason value = 6 }
+} } }
+tcrf_list_row = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_list_count
+has_variable = tcrf_list_cursor
+has_variable = tcrf_list_pass
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes scope:list_ready = yes
+NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+OR = { var:tcrf_list_pass = 1 var:tcrf_list_pass = 2 }
+scope:count = var:tcrf_list_count scope:index = var:tcrf_list_cursor
+var:tcrf_list_cursor < var:tcrf_list_count exists = scope:candidate
+
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_list_count
+has_variable = tcrf_list_cursor
+has_variable = tcrf_list_pass
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes scope:list_ready = yes
+NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+OR = { var:tcrf_list_pass = 1 var:tcrf_list_pass = 2 }
+scope:count = var:tcrf_list_count scope:index = var:tcrf_list_cursor
+var:tcrf_list_cursor < var:tcrf_list_count exists = scope:candidate
+
+} trigger_else = { always = no }
+ }
+save_scope_as = tcrf_list_ruler
+if = { limit = { var:tcrf_list_pass = 1 }
+ if = { limit = { any_in_list = { variable = tcrf_list_candidates this = scope:candidate } }
+  set_variable = { name = tcrf_phase value = 71 } set_variable = { name = tcrf_deferred_reason value = 6 }
+ } else = {
+  add_to_variable_list = { name = tcrf_list_candidates target = scope:candidate }
+  scope:candidate = {
+   set_variable = { name = tcrf_list_owner value = scope:tcrf_list_ruler }
+   set_variable = { name = tcrf_list_lifecycle value = scope:tcrf_list_ruler.var:tcrf_lifecycle }
+   set_variable = { name = tcrf_list_sequence value = scope:tcrf_list_ruler.var:tcrf_sequence }
+   set_variable = { name = tcrf_list_index value = scope:index }
+   set_variable = { name = tcrf_list_selectable value = scope:selectable }
+  }
+  if = { limit = { scope:candidate = var:tcrf_new }
+   set_variable = { name = tcrf_list_target_found value = 1 }
+   if = { limit = { scope:selectable = yes } set_variable = { name = tcrf_list_target_selectable value = 1 } }
+  }
+  change_variable = { name = tcrf_list_cursor add = 1 }
+ }
+} else = {
+ if = { limit = { scope:candidate = { tcrf_list_row_record_trigger = yes } }
+  change_variable = { name = tcrf_list_cursor add = 1 }
+ } else = { set_variable = { name = tcrf_phase value = 71 } set_variable = { name = tcrf_deferred_reason value = 6 } }
+}
+
+} } }
+tcrf_list_complete = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_list_count
+has_variable = tcrf_list_cursor
+has_variable = tcrf_list_pass
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes scope:list_ready = yes
+NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+OR = { var:tcrf_list_pass = 1 var:tcrf_list_pass = 2 }
+scope:count = var:tcrf_list_count var:tcrf_list_cursor = var:tcrf_list_count
+
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_list_count
+has_variable = tcrf_list_cursor
+has_variable = tcrf_list_pass
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes scope:list_ready = yes
+NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+OR = { var:tcrf_list_pass = 1 var:tcrf_list_pass = 2 }
+scope:count = var:tcrf_list_count var:tcrf_list_cursor = var:tcrf_list_count
+
+} trigger_else = { always = no }
+ }
+if = { limit = { var:tcrf_list_pass = 1 }
+ set_variable = { name = tcrf_list_pass value = 2 } set_variable = { name = tcrf_list_cursor value = 0 }
+} else = {
+ set_variable = { name = tcrf_list_pass value = 3 }
+ if = { limit = { var:tcrf_list_target_found = 0 }
+  set_variable = { name = tcrf_phase value = 71 } set_variable = { name = tcrf_deferred_reason value = 4 }
+ } else_if = { limit = { var:tcrf_list_target_selectable = 0 }
+  set_variable = { name = tcrf_phase value = 71 } set_variable = { name = tcrf_deferred_reason value = 5 }
+ }
+ # These receipts concern the currently displayed native list, not global eligibility.
+ debug_log = "TCRF|NATIVE_LIST_COMPLETE|count=[GetPlayer.MakeScope.Var('tcrf_list_count').GetValue]|found=[GetPlayer.MakeScope.Var('tcrf_list_target_found').GetValue]|selectable=[GetPlayer.MakeScope.Var('tcrf_list_target_selectable').GetValue]"
+}
+
+} } }
+tcrf_fire_queue = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_preview_nonce
+has_variable = tcrf_preview_observed
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes
+scope:preview_nonce = var:tcrf_preview_nonce var:tcrf_preview_observed = var:tcrf_preview_nonce
+scope:selected = var:tcrf_new scope:selected_is_target = yes
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_preview_nonce
+has_variable = tcrf_preview_observed
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+var:tcrf_phase = 20 scope:slot_is_target = yes
+scope:preview_nonce = var:tcrf_preview_nonce var:tcrf_preview_observed = var:tcrf_preview_nonce
+scope:selected = var:tcrf_new scope:selected_is_target = yes
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+
+} trigger_else = { always = no }
+ }
+tcrf_check_topology_effect = yes
+if = { limit = { NOT = { has_variable = tcrf_topology_invalid } scope:gold >= var:tcrf_floor }
+ set_variable = { name = tcrf_preview value = scope:gold }
+ set_variable = { name = tcrf_authorized_sequence value = var:tcrf_sequence }
+ set_variable = { name = tcrf_pending value = yes }
+ set_variable = { name = tcrf_phase value = 25 }
+ fire_tax_collector = var:tcrf_old
+ if = { limit = { var:tcrf_fired_count = 1 var:tcrf_slot = { has_tax_collector = no } var:tcrf_old = { is_tax_collector = no } }
+  var:tcrf_new = { save_scope_as = tcre_desired_collector }
+  var:tcrf_slot = { save_scope_as = tcre_desired_slot }
+  tcre_queue_vacancy_effect = yes
+  if = { limit = { has_variable = tcre_job_active var:tcre_phase = 10 } set_variable = { name = tcrf_vacancy_sequence value = var:tcre_sequence } }
+  else = { tcrf_fail_effect = yes }
+ } else = { tcrf_fail_effect = yes }
+} else = { set_variable = { name = tcrf_phase value = 71 } set_variable = { name = tcrf_deferred_reason value = 2 } }
+
+} } }
+tcrf_actual = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_old = { is_tax_collector = no }
+var:tcrf_new = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_phase = 30 has_variable = tcrf_pending
+scope:slot_is_target = yes exists = scope:collector scope:collector = var:tcrf_new
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+tcrf_target_confirmed_trigger = yes
+
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_old = { is_tax_collector = no }
+var:tcrf_new = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_phase = 30 has_variable = tcrf_pending
+scope:slot_is_target = yes exists = scope:collector scope:collector = var:tcrf_new
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+tcrf_target_confirmed_trigger = yes
+
+} trigger_else = { always = no }
+ }
+tcrf_check_topology_effect = yes
+if = { limit = { NOT = { has_variable = tcrf_topology_invalid } scope:gold = var:tcrf_preview scope:gold >= var:tcrf_floor scope:total >= var:tcrf_total_floor scope:total >= var:tcrf_parent_initial_floor scope:total >= var:tcrf_parent_last_total }
+ set_variable = { name = tcrf_actual value = scope:gold }
+ set_variable = { name = tcrf_actual_total value = scope:total }
+ set_variable = { name = tcrf_phase value = 40 }
+} else = { tcrf_fail_effect = yes }
+
+} } }
+tcrf_defer = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+NOT = { has_variable = tcrf_pending }
+OR = { var:tcrf_phase = 10 var:tcrf_phase = 12 var:tcrf_phase = 20 }
+OR = { has_variable = tcri_disable_requested has_variable = tcr_requested }
+
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+NOT = { has_variable = tcrf_pending }
+OR = { var:tcrf_phase = 10 var:tcrf_phase = 12 var:tcrf_phase = 20 }
+OR = { has_variable = tcri_disable_requested has_variable = tcr_requested }
+
+} trigger_else = { always = no }
+ }
+set_variable = { name = tcrf_phase value = 71 } set_variable = { name = tcrf_deferred_reason value = 3 }
+} } }
+tcrf_deferred_done = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_phase = 71 scope:helpers_closed = yes NOT = { has_variable = tcrf_pending }
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_phase = 71 scope:helpers_closed = yes NOT = { has_variable = tcrf_pending }
+} trigger_else = { always = no }
+ }
+remove_variable = tcrf_active
+set_variable = { name = tcrf_phase value = 72 }
+} } }
+tcrf_settle = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_old = { is_tax_collector = no }
+var:tcrf_new = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_phase = 40 scope:helpers_closed = yes
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_new
+has_variable = tcrf_old
+has_variable = tcrf_phase
+has_variable = tcrf_sequence
+}
+tcrf_identity_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+var:tcrf_old = { is_tax_collector = no }
+var:tcrf_new = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_phase = 40 scope:helpers_closed = yes
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+
+} trigger_else = { always = no }
+ }
+tcrf_check_topology_effect = yes
+if = { limit = { NOT = { has_variable = tcrf_topology_invalid } }
+ set_variable = { name = tcrf_phase value = 70 }
+ set_variable = { name = tcrf_settled_sequence value = var:tcrf_sequence }
+ set_variable = { name = tcrf_receipt_schema value = 1 }
+ set_variable = { name = tcrf_receipt_producer value = 33 }
+ set_variable = { name = tcrf_receipt_pending value = yes }
+set_variable = { name = tcrf_receipt_owner value = var:tcrf_owner }
+set_variable = { name = tcrf_receipt_lifecycle value = var:tcrf_lifecycle }
+set_variable = { name = tcrf_receipt_generation value = var:tcrf_generation }
+set_variable = { name = tcrf_receipt_sequence value = var:tcrf_sequence }
+set_variable = { name = tcrf_receipt_old value = var:tcrf_old }
+set_variable = { name = tcrf_receipt_new value = var:tcrf_new }
+set_variable = { name = tcrf_receipt_slot value = var:tcrf_slot }
+ remove_variable = tcrf_active
+} else = { tcrf_fail_effect = yes }
+
+} } }
+tcrf_parent_commit = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_sequence
+}
+tcrf_receipt_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+scope:helpers_closed = yes
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_original_speed
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_sequence
+}
+tcrf_receipt_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed scope:lifecycle = var:tcrf_lifecycle scope:generation = var:tcrf_generation scope:sequence = var:tcrf_sequence
+scope:helpers_closed = yes
+} trigger_else = { always = no }
+ }
+tcrf_parent_commit_effect = yes
+} } }
+tcrf_parent_dirty = { scope = character is_valid = { trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+tcrf_capability_trigger = yes tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes has_variable = tcrc_lifecycle_active
+has_variable = tcr_active_generation var:tcrc_phase = 33
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+scope:paused = yes scope:speed = var:tcrc_original_speed
+has_variable = tcr_requested NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+scope:helpers_closed = yes tcr_enabled_trigger = yes
+
+} trigger_else = { always = no }
+ } effect = { if = { limit = { trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_original_speed
+has_variable = tcrc_phase
+}
+tcrf_capability_trigger = yes tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes has_variable = tcrc_lifecycle_active
+has_variable = tcr_active_generation var:tcrc_phase = 33
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrf_failed }
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+scope:paused = yes scope:speed = var:tcrc_original_speed
+has_variable = tcr_requested NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+scope:helpers_closed = yes tcr_enabled_trigger = yes
+
+} trigger_else = { always = no }
+ }
+tcrc_retire_dirty_generation_effect = yes
+} } }

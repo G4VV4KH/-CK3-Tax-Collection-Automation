@@ -1,0 +1,41 @@
+﻿
+# The helper belongs to this classified batch: exact native target/owner, the
+# still-owned pause event, and either durable selection-stage observation or
+# the exact pre-bootstrap volatile ownership token for the initial open gap.
+tcrx_recovery_close_permission = { scope = character is_valid = {
+ trigger_if = { limit = {
+  has_variable = tcrq_pending has_variable = tcrq_bootstrap_ready
+  has_variable = tcrq_event_seen has_variable = tcrq_epoch has_variable = tcrq_class
+  has_variable = tcrq_loaded_lifecycle has_variable = tcrc_event_requested
+  has_variable = tcrx_active has_variable = tcrx_phase
+ }
+  tcrx_recovery_identity_trigger = yes tcrq_pending_event_trigger = yes
+  var:tcrq_class = 43
+  var:tcrq_loaded_lifecycle = var:tcrc_lifecycle
+  var:tcrc_event_requested = var:tcrc_lifecycle
+  scope:target = yes scope:game_paused = yes scope:event_paused = yes
+  scope:context_allowed = yes
+  OR = {
+   AND = { var:tcrx_phase >= 20 var:tcrx_phase <= 80 }
+   AND = { var:tcrx_phase = 10 scope:owned_before_bootstrap = yes }
+  }
+ } trigger_else = { always = no }
+} }
+
+# Only an exact helper owned before native Load can be closed. These tokens
+# are copied before recovery bootstrap clears the ordinary provider tokens.
+tcrx_handoff_close_permission = { scope = character is_valid = {
+ trigger_if = { limit = {
+  has_variable = tcrq_pending has_variable = tcrq_bootstrap_ready
+  has_variable = tcrq_event_seen has_variable = tcrq_epoch has_variable = tcrq_class
+  has_variable = tcrq_loaded_lifecycle has_variable = tcrc_event_requested
+  has_variable = tcrc_lifecycle
+ }
+  tcrx_recovery_handoff_trigger = yes tcrq_pending_event_trigger = yes
+  var:tcrq_class = 43
+  var:tcrq_loaded_lifecycle = var:tcrc_lifecycle
+  var:tcrc_event_requested = var:tcrc_lifecycle
+  scope:helper_matches = yes scope:game_paused = yes scope:event_paused = yes
+  scope:context_allowed = yes
+ } trigger_else = { always = no }
+} }

@@ -1,0 +1,32 @@
+﻿tcrs_continue_permission = {
+ scope = character is_valid = { tcrs_continue_trigger = yes }
+}
+tcrs_collector_step = {
+ scope = character
+ is_valid = { tcrs_lease_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed
+  has_variable = tcrs_pending tcrs_quiescent_trigger = yes
+  OR = {
+   AND = { has_variable = tcrs_rollback_requested NOT = { has_variable = tcrs_restoration_started } }
+   AND = { NOT = { has_variable = tcrs_rollback_requested } var:tcrs_phase = 30 }
+   var:tcrs_phase = 60
+  }
+ }
+ effect = { if = { limit = { tcrs_lease_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed
+  has_variable = tcrs_pending tcrs_quiescent_trigger = yes
+ }
+  if = { limit = { has_variable = tcrs_rollback_requested NOT = { has_variable = tcrs_restoration_started } }
+   tcrs_begin_rollback_effect = yes
+   # The GUI predicate remains true across phase30 -> phase60. Queue the
+   # first restore in this same script callback instead of waiting for a
+   # false/true UI edge. The native appointment still uses its own executor.
+   tcrs_queue_next_effect = yes
+  } else_if = { limit = { OR = {
+   AND = { NOT = { has_variable = tcrs_rollback_requested } var:tcrs_phase = 30 }
+   var:tcrs_phase = 60
+  } }
+   tcrs_queue_next_effect = yes
+  }
+ } }
+}

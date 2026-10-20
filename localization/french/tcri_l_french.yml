@@ -1,0 +1,5 @@
+﻿l_french:
+ tcri_automation_label:0 "Automatiser la perception des impôts"
+ tcri_automation_tooltip:0 "Recalcule la perception des impôts lors de l’activation, lorsqu’un poste de percepteur est vacant ou qu’un contribuable n’est pas affecté. Le recalcul met le jeu en pause et rétablit l’état de pause précédent une fois terminé en toute sécurité."
+ tcri_automation_working:0 "Recalcul de la perception des impôts…"
+ tcri_automation_held:0 "Automatisation fiscale suspendue : une récupération ou une vérification est nécessaire."

@@ -1,0 +1,4 @@
+﻿l_spanish:
+ tcrui_recalculating_title:0 "Recalculando la recaudación de impuestos…"
+ tcrui_recalculating_description:0 "El estado de pausa anterior se restaurará cuando termine el recálculo."
+ tcrui_disable_automation:0 "Desactivar automatización"

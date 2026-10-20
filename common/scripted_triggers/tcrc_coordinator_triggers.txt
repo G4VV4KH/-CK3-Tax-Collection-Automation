@@ -1,0 +1,117 @@
+﻿tcrc_event_pause_trigger = {
+NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcrc_event_observed_lifecycle
+has_variable = tcrc_event_requested
+has_variable = tcrc_lifecycle
+}
+ tcro_current_player_owner_trigger = yes
+ has_variable = tcrc_lifecycle_active
+ var:tcrc_event_requested = var:tcrc_lifecycle
+ var:tcrc_event_observed_lifecycle = var:tcrc_lifecycle
+ NOT = { has_variable = tcrc_event_released }
+} trigger_else = { always = no }
+
+}
+# Observe the native owned event first. In phase10 neither the captured speed
+# nor an authenticated pause exists yet; absence is not a pause/speed breach.
+# This also admits Off settlement, independently from the enabled preference.
+tcrc_breach_armed_trigger = {
+trigger_if = { limit = {
+has_variable = tcrc_event_observed_lifecycle
+has_variable = tcrc_event_requested
+has_variable = tcrc_lifecycle
+has_variable = tcrc_phase
+}
+ tcro_current_player_owner_trigger = yes
+ has_variable = tcrc_lifecycle_active
+ has_variable = tcrc_original_speed
+ var:tcrc_event_requested = var:tcrc_lifecycle
+ var:tcrc_event_observed_lifecycle = var:tcrc_lifecycle
+ NOT = { has_variable = tcrc_event_released }
+ NOT = { has_variable = tcr_failed }
+ OR = {
+  var:tcrc_phase = 15 var:tcrc_phase = 20 var:tcrc_phase = 30
+  var:tcrc_phase = 31 var:tcrc_phase = 34 var:tcrc_phase = 33 var:tcrc_phase = 35 var:tcrc_phase = 37 var:tcrc_phase = 40
+  var:tcrc_phase = 50 var:tcrc_phase = 60 var:tcrc_phase = 80
+  var:tcrc_phase = 81 var:tcrc_phase = 82
+ }
+} trigger_else = { always = no }
+
+}
+# Add this to executor mutation admission when integrated. Native UI safety must
+# additionally be checked in the owning window: these are engine state guards.
+tcrc_native_mutation_allowed_trigger = { OR = { AND = { trigger_if = { limit = {
+has_variable = tcr_expected_collector
+has_variable = tcr_expected_slot
+has_variable = tcrc_phase
+has_variable = tcre_phase
+}
+ tcr_enabled_trigger = yes
+ tcro_current_player_owner_trigger = yes
+ tcrc_event_pause_trigger = yes
+ has_variable = tcrc_lifecycle_active
+ var:tcrc_phase = 31
+ NOT = { has_variable = tcri_disable_requested }
+ NOT = { has_variable = tcrc_abort_requested }
+ NOT = { has_variable = tcr_failed }
+ # Dirty plans cannot open/select/authorize another command. An already
+ # authorized exact phase25 command may still commit once and settle.
+ trigger_if = { limit = { has_variable = tcr_requested }
+  trigger_if = { limit = { has_variable = tcre_phase has_variable = tcr_expected_slot has_variable = tcr_expected_collector }
+   var:tcre_phase = 25
+   var:tcr_expected_slot = { has_tax_collector = no }
+   var:tcr_expected_collector = { is_tax_collector = no }
+  }
+  trigger_else = { always = no }
+ }
+} trigger_else = { always = no } } tcrf_continue_trigger = yes tcrs_continue_trigger = yes } }
+tcrc_payer_native_mutation_allowed_trigger = {
+trigger_if = { limit = {
+has_variable = tcrc_phase
+}
+ tcr_enabled_trigger = yes
+ tcro_current_player_owner_trigger = yes
+ tcrc_event_pause_trigger = yes
+ has_variable = tcrc_lifecycle_active
+ has_variable = tcr_active_generation
+ var:tcrc_phase = 35
+ NOT = { has_variable = tcri_disable_requested }
+ NOT = { has_variable = tcrc_abort_requested }
+ NOT = { has_variable = tcr_failed }
+} trigger_else = { always = no }
+
+}
+tcrc_payer_replan_quiescent_trigger = {
+ NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+ NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcr_command_generation }
+ trigger_if = { limit = { has_variable = tcrb_generation has_variable = tcr_active_generation }
+  trigger_if = { limit = { var:tcrb_generation = var:tcr_active_generation }
+   OR = { tcrb_replan_quiescent_trigger = yes tcrb_settled_trigger = yes }
+  }
+ }
+}
+tcrc_cancel_settle_allowed_trigger = {
+trigger_if = { limit = {
+has_variable = tcr_start_day
+has_variable = tcr_start_month
+has_variable = tcr_start_year
+has_variable = tcrc_phase
+}
+ tcro_current_player_owner_trigger = yes
+ tcrc_event_pause_trigger = yes
+ has_variable = tcrc_lifecycle_active
+ has_variable = tcri_disable_requested
+ has_variable = tcrc_abort_requested
+ var:tcrc_phase = 80
+ NOT = { has_variable = tcr_failed }
+ NOT = { has_variable = tcri_hold_reason }
+ trigger_if = { limit = {
+  has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day
+ }
+  current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+ } trigger_else = { always = no }
+} trigger_else = { always = no }
+
+}

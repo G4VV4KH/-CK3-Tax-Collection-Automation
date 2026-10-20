@@ -1,0 +1,12 @@
+﻿tcrf_target_slot = { type = all
+text = { trigger = {
+ trigger_if = { limit = { has_variable = tcrf_slot_owner has_variable = tcrf_slot_lifecycle has_variable = tcrf_slot_sequence exists = var:tcrf_slot_owner }
+  var:tcrf_slot_owner = {
+   trigger_if = { limit = { has_variable = tcrf_slot has_variable = tcrf_lifecycle has_variable = tcrf_sequence }
+    var:tcrf_slot = prev var:tcrf_lifecycle = prev.var:tcrf_slot_lifecycle var:tcrf_sequence = prev.var:tcrf_slot_sequence
+   } trigger_else = { always = no }
+  }
+ } trigger_else = { always = no }
+} localization_key = tcrf_identity_yes }
+text = { fallback = yes localization_key = tcrf_identity_no }
+}

@@ -1,0 +1,374 @@
+﻿# Experimental component executor. The full economic transaction is accepted
+# only by tcrs_accept_effect after collector AND taxpayer native readback.
+tcrs_fail_effect = {
+ set_variable = { name = tcrs_failed value = yes }
+ debug_log = "TCRS|FAILED_PENDING|phase=[GetPlayer.MakeScope.Var('tcrs_phase').GetValue]"
+}
+tcrs_prepare_effect = {
+ # Existing free-candidate replacements precede closed permutations.
+ if = { limit = {
+  tcr_enabled_trigger = yes tcrc_event_pause_trigger = yes
+  NOT = { has_variable = tcrs_active }
+  trigger_if = { limit = { has_variable = tcrs_attempted_lifecycle }
+   var:tcrs_attempted_lifecycle != var:tcrc_lifecycle
+  }
+  NOT = { has_variable = tcri_disable_requested }
+  NOT = { has_variable = tcr_requested }
+  NOT = { has_variable = tcr_failed }
+  tcrs_quiescent_trigger = yes
+  NOT = { any_unassigned_taxpayers = { always = yes } }
+ }
+  save_scope_as = tcrs_owner
+  tcr_build_collector_plan_effect = yes
+  remove_variable = tcrs_seed remove_variable = tcrs_cursor
+  remove_variable = tcrs_closed remove_variable = tcrs_invalid
+  clear_variable_list = tcrs_original_collectors
+  set_variable = { name = tcrs_count value = 0 }
+  every_in_list = { variable = tcap_selected_collectors
+   if = { limit = {
+    NOT = { scope:tcrs_owner = { has_variable = tcrs_seed } }
+    is_tax_collector_of = scope:tcrs_owner
+    has_variable = tcr_plan_slot
+    NOT = { tax_slot = var:tcr_plan_slot }
+   }
+    save_scope_as = tcrs_candidate
+    scope:tcrs_owner = {
+     set_variable = { name = tcrs_seed value = scope:tcrs_candidate }
+     set_variable = { name = tcrs_cursor value = scope:tcrs_candidate }
+    }
+   }
+  }
+  if = { limit = { has_variable = tcrs_cursor }
+   # Bounded functional-graph walk. No native mutations occur in this phase.
+   while = { limit = {
+    var:tcrs_count < 32 NOT = { has_variable = tcrs_closed }
+    NOT = { has_variable = tcrs_invalid }
+   }
+    var:tcrs_cursor = {
+     save_scope_as = tcrs_candidate
+     if = { limit = {
+      is_tax_collector_of = scope:tcrs_owner
+      has_variable = tcr_plan_slot has_variable = tcr_plan_generation
+      var:tcr_plan_generation = scope:tcrs_owner.var:tcr_active_generation
+      scope:tcrs_owner = {
+       any_in_list = { variable = tcap_selected_collectors this = scope:tcrs_candidate }
+       NOT = { any_in_list = { variable = tcrs_original_collectors this = scope:tcrs_candidate } }
+       any_tax_slot = { this = scope:tcrs_candidate.var:tcr_plan_slot }
+      }
+      var:tcr_plan_slot = { has_tax_collector = yes exists = tax_collector }
+     }
+      set_variable = { name = tcrs_original_slot value = tax_slot }
+      set_variable = { name = tcrs_target_slot value = var:tcr_plan_slot }
+      var:tcr_plan_slot = { tax_collector = { save_scope_as = tcrs_next } }
+      scope:tcrs_owner = {
+       add_to_variable_list = { name = tcrs_original_collectors target = scope:tcrs_candidate }
+       change_variable = { name = tcrs_count add = 1 }
+       if = { limit = { scope:tcrs_next = var:tcrs_seed } set_variable = { name = tcrs_closed value = yes } }
+       else = { set_variable = { name = tcrs_cursor value = scope:tcrs_next } }
+      }
+     } else = { scope:tcrs_owner = { set_variable = { name = tcrs_invalid value = yes } } }
+    }
+   }
+  }
+  if = { limit = {
+   has_variable = tcrs_closed NOT = { has_variable = tcrs_invalid }
+   var:tcrs_count >= 2 var:tcrs_count <= 32
+  }
+   if = { limit = { has_variable = tcrs_sequence } change_variable = { name = tcrs_sequence add = 1 } }
+   else = { set_variable = { name = tcrs_sequence value = 1 } }
+   set_variable = { name = tcrs_owner value = this }
+   set_variable = { name = tcrs_generation value = var:tcr_active_generation }
+   set_variable = { name = tcrs_lifecycle value = var:tcrc_lifecycle }
+   set_variable = { name = tcrs_attempted_lifecycle value = var:tcrc_lifecycle }
+   set_variable = { name = tcrs_active value = yes }
+   set_variable = { name = tcrs_phase value = 10 }
+   set_variable = { name = tcrc_phase value = 34 }
+   remove_variable = tcrs_pending remove_variable = tcrs_failed
+   remove_variable = tcrs_rollback_requested remove_variable = tcrs_native_floor
+   remove_variable = tcrs_command_collector remove_variable = tcrs_command_slot
+   remove_variable = tcrs_vacancy_sequence remove_variable = tcrs_restoration_started
+   clear_variable_list = tcrs_all_collectors
+   clear_variable_list = tcrs_slots
+   set_variable = { name = tcrs_original_collector_count value = 0 }
+   set_variable = { name = tcrs_original_slot_count value = 0 }
+   every_in_list = { variable = tcrs_original_collectors
+    set_variable = { name = tcrs_record_owner value = scope:tcrs_owner }
+    set_variable = { name = tcrs_record_sequence value = scope:tcrs_owner.var:tcrs_sequence }
+   }
+   every_tax_collector = {
+    save_scope_as = tcrs_collector
+    set_variable = { name = tcrs_unrelated_slot value = tax_slot }
+    scope:tcrs_owner = {
+     add_to_variable_list = { name = tcrs_all_collectors target = scope:tcrs_collector }
+     change_variable = { name = tcrs_original_collector_count add = 1 }
+    }
+   }
+   every_tax_slot = {
+    save_scope_as = tcrs_slot
+    scope:tcrs_owner = {
+     add_to_variable_list = { name = tcrs_slots target = scope:tcrs_slot }
+     change_variable = { name = tcrs_original_slot_count add = 1 }
+    }
+   }
+   tcrs_prepare_payers_effect = yes
+   debug_log = "TCRS|PREPARED|count=[GetPlayer.MakeScope.Var('tcrs_count').GetValue]"
+  } else = { set_variable = { name = tcrc_phase value = 35 } }
+ } else = { set_variable = { name = tcrc_phase value = 35 } }
+}
+tcrs_check_collectors_effect = {
+ save_scope_as = tcrs_owner
+ remove_variable = tcrs_topology_bad
+ set_variable = { name = tcrs_actual_slot_count value = 0 }
+ set_variable = { name = tcrs_actual_collector_count value = 0 }
+ every_tax_slot = {
+  save_scope_as = tcrs_scan_slot
+  scope:tcrs_owner = {
+   change_variable = { name = tcrs_actual_slot_count add = 1 }
+   if = { limit = { NOT = { any_in_list = { variable = tcrs_slots this = scope:tcrs_scan_slot } } }
+    set_variable = { name = tcrs_topology_bad value = yes }
+   }
+  }
+ }
+ every_tax_collector = {
+  save_scope_as = tcrs_scan_collector
+  scope:tcrs_owner = {
+   change_variable = { name = tcrs_actual_collector_count add = 1 }
+   if = { limit = { NOT = { any_in_list = { variable = tcrs_all_collectors this = scope:tcrs_scan_collector } } }
+    set_variable = { name = tcrs_topology_bad value = yes }
+   }
+  }
+ }
+ every_in_list = { variable = tcrs_all_collectors
+  save_scope_as = tcrs_scan_collector
+  if = { limit = {
+   NOT = { scope:tcrs_owner = { any_in_list = { variable = tcrs_original_collectors this = scope:tcrs_scan_collector } } }
+   NOT = { is_tax_collector_of = scope:tcrs_owner tax_slot = var:tcrs_unrelated_slot }
+  } scope:tcrs_owner = { set_variable = { name = tcrs_topology_bad value = yes } } }
+ }
+ every_in_list = { variable = tcrs_original_collectors
+  if = { limit = { OR = {
+   is_alive = no
+   NOT = { var:tcrs_record_owner = scope:tcrs_owner var:tcrs_record_sequence = scope:tcrs_owner.var:tcrs_sequence }
+   AND = {
+    is_tax_collector = yes
+    NOT = { is_tax_collector_of = scope:tcrs_owner OR = { tax_slot = var:tcrs_original_slot tax_slot = var:tcrs_target_slot } }
+   }
+  } } scope:tcrs_owner = { set_variable = { name = tcrs_topology_bad value = yes } } }
+ }
+ if = { limit = { var:tcrs_actual_slot_count != var:tcrs_original_slot_count } set_variable = { name = tcrs_topology_bad value = yes } }
+}
+tcrs_fired_hook_effect = {
+ if = { limit = { tcrs_expected_fired_hook_trigger = yes }
+  change_variable = { name = tcrs_fired_count add = 1 }
+  scope:tax_collector = {
+   set_variable = { name = tcrs_fired_sequence value = scope:liege.var:tcrs_sequence }
+  }
+ }
+}
+tcrs_authorize_effect = {
+ if = { limit = {
+  tcrs_lease_trigger = yes var:tcrs_phase = 10
+  tcr_enabled_trigger = yes NOT = { has_variable = tcri_disable_requested }
+  NOT = { has_variable = tcr_requested }
+  has_variable = tcrs_native_floor
+  tcrs_quiescent_trigger = yes
+ }
+  tcrs_check_collectors_effect = yes
+  save_scope_as = tcrs_owner
+  every_in_list = { variable = tcrs_original_collectors
+   if = { limit = { NOT = { is_tax_collector_of = scope:tcrs_owner tax_slot = var:tcrs_original_slot } }
+    scope:tcrs_owner = { set_variable = { name = tcrs_topology_bad value = yes } }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrs_topology_bad } }
+   set_variable = { name = tcrs_pending value = yes }
+   set_variable = { name = tcrs_phase value = 20 }
+   set_variable = { name = tcrs_fired_count value = 0 }
+   every_in_list = { variable = tcrs_original_collectors
+    save_scope_as = tcrs_fire_target
+    tax_slot = { save_scope_as = tcrs_fire_target_slot }
+    scope:tcrs_owner = {
+     set_variable = { name = tcrs_fire_collector value = scope:tcrs_fire_target }
+     set_variable = { name = tcrs_fire_slot value = scope:tcrs_fire_target_slot }
+     fire_tax_collector = scope:tcrs_fire_target
+    }
+   }
+   remove_variable = tcrs_fire_collector remove_variable = tcrs_fire_slot
+   if = { limit = { var:tcrs_fired_count = var:tcrs_count }
+    set_variable = { name = tcrs_phase value = 30 }
+    debug_log = "TCRS|FIRED_COMPONENT|count=[GetPlayer.MakeScope.Var('tcrs_fired_count').GetValue]"
+   } else = { tcrs_fail_effect = yes }
+  } else = { tcrs_request_rollback_effect = yes }
+ }
+}
+tcrs_queue_next_effect = {
+ if = { limit = {
+  tcrs_lease_trigger = yes has_variable = tcrs_pending
+  OR = { var:tcrs_phase = 30 var:tcrs_phase = 60 }
+  tcrs_quiescent_trigger = yes
+ }
+  save_scope_as = tcrs_owner
+  tcrs_check_collectors_effect = yes
+  if = { limit = { has_variable = tcrs_command_collector }
+   if = { limit = { NOT = {
+    has_variable = tcre_completed_generation has_variable = tcre_completed_sequence
+    var:tcre_completed_generation = var:tcrs_generation
+    var:tcre_completed_sequence = var:tcrs_vacancy_sequence
+    var:tcrs_command_collector = { is_tax_collector_of = scope:tcrs_owner tax_slot = scope:tcrs_owner.var:tcrs_command_slot }
+   } } set_variable = { name = tcrs_topology_bad value = yes } }
+  }
+  if = { limit = { NOT = { has_variable = tcrs_topology_bad } }
+   remove_variable = tcrs_command_collector remove_variable = tcrs_command_slot
+   every_in_list = { variable = tcrs_original_collectors
+    if = { limit = { NOT = { scope:tcrs_owner = { has_variable = tcrs_command_collector } } }
+     if = { limit = { scope:tcrs_owner.var:tcrs_phase = 30 } var:tcrs_target_slot = { save_scope_as = tcrs_next_slot } }
+     else = { var:tcrs_original_slot = { save_scope_as = tcrs_next_slot } }
+     if = { limit = { NOT = { is_tax_collector_of = scope:tcrs_owner tax_slot = scope:tcrs_next_slot } }
+      save_scope_as = tcrs_next_collector
+      scope:tcrs_owner = {
+       set_variable = { name = tcrs_command_collector value = scope:tcrs_next_collector }
+       set_variable = { name = tcrs_command_slot value = scope:tcrs_next_slot }
+      }
+     }
+    }
+   }
+   if = { limit = { has_variable = tcrs_command_collector }
+    if = { limit = {
+     var:tcrs_command_collector = { is_tax_collector = no is_alive = yes }
+     var:tcrs_command_slot = { has_tax_collector = no }
+    }
+     var:tcrs_command_collector = { save_scope_as = tcre_desired_collector }
+     var:tcrs_command_slot = { save_scope_as = tcre_desired_slot }
+     tcre_queue_vacancy_effect = yes
+     if = { limit = { has_variable = tcre_job_active var:tcre_phase = 10 }
+      set_variable = { name = tcrs_vacancy_sequence value = var:tcre_sequence }
+     } else = { tcrs_fail_effect = yes }
+    } else = { tcrs_fail_effect = yes }
+   } else_if = { limit = { var:tcrs_phase = 30 }
+    set_variable = { name = tcrs_phase value = 40 }
+    set_variable = { name = tcrc_phase value = 35 }
+    tcrm_invalidate_effect = yes
+    debug_log = "TCRS|COLLECTORS_READY"
+   } else = {
+    set_variable = { name = tcrs_phase value = 85 }
+    debug_log = "TCRS|COLLECTORS_RESTORED"
+   }
+  } else = { tcrs_fail_effect = yes }
+ }
+}
+tcrs_request_rollback_effect = {
+ if = { limit = { has_variable = tcrs_active }
+  set_variable = { name = tcrs_rollback_requested value = yes }
+  if = { limit = { NOT = { has_variable = tcrs_pending } }
+   remove_variable = tcrs_active
+   set_variable = { name = tcrs_phase value = 90 }
+   set_variable = { name = tcrc_phase value = 35 }
+  }
+ }
+}
+tcrs_begin_rollback_effect = {
+ if = { limit = {
+  tcrs_lease_trigger = yes has_variable = tcrs_pending
+  has_variable = tcrs_rollback_requested
+  NOT = { has_variable = tcrs_restoration_started }
+  tcrs_quiescent_trigger = yes
+ }
+  tcrs_check_collectors_effect = yes
+  if = { limit = { NOT = { has_variable = tcrs_topology_bad } }
+   save_scope_as = tcrs_owner
+   set_variable = { name = tcrs_restoration_started value = yes }
+   set_variable = { name = tcrs_phase value = 60 }
+   set_variable = { name = tcrc_phase value = 34 }
+   set_variable = { name = tcrs_fired_count value = 0 }
+   every_in_list = { variable = tcrs_original_collectors
+    if = { limit = {
+     is_tax_collector_of = scope:tcrs_owner
+     NOT = { tax_slot = var:tcrs_original_slot }
+    }
+     save_scope_as = tcrs_fire_target
+     tax_slot = { save_scope_as = tcrs_fire_target_slot }
+     scope:tcrs_owner = {
+      set_variable = { name = tcrs_fire_collector value = scope:tcrs_fire_target }
+      set_variable = { name = tcrs_fire_slot value = scope:tcrs_fire_target_slot }
+      fire_tax_collector = scope:tcrs_fire_target
+     }
+    }
+   }
+   remove_variable = tcrs_fire_collector remove_variable = tcrs_fire_slot
+   remove_variable = tcrs_command_collector remove_variable = tcrs_command_slot
+   remove_variable = tcrs_vacancy_sequence
+  } else = { tcrs_fail_effect = yes }
+ }
+}
+tcrs_accept_effect = {
+ if = { limit = {
+  tcrs_lease_trigger = yes var:tcrs_phase = 40
+  has_variable = tcrs_pending tcrs_quiescent_trigger = yes
+  NOT = { has_variable = tcrs_rollback_requested }
+  has_variable = tcrs_native_floor has_variable = tcrs_native_actual
+  var:tcrs_native_actual >= var:tcrs_native_floor
+ }
+  tcrs_check_collectors_effect = yes
+  save_scope_as = tcrs_owner
+  every_in_list = { variable = tcrs_original_collectors
+   if = { limit = { NOT = { is_tax_collector_of = scope:tcrs_owner tax_slot = var:tcrs_target_slot } }
+    scope:tcrs_owner = { set_variable = { name = tcrs_topology_bad value = yes } }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrs_topology_bad } }
+   every_in_list = { variable = tcrs_original_collectors
+    save_scope_as = tcrs_accepted_collector
+    set_variable = { name = tcrc_plan_owner value = scope:tcrs_owner }
+    set_variable = { name = tcrc_plan_generation value = scope:tcrs_owner.var:tcrs_generation }
+    set_variable = { name = tcrc_plan_slot value = var:tcrs_target_slot }
+    # Update precisely these accepted pairs, not a global rebaseline.
+    set_variable = { name = tcrc_original_collector_slot value = var:tcrs_target_slot }
+    var:tcrs_target_slot = { set_variable = { name = tcrc_planned_collector value = scope:tcrs_accepted_collector } }
+   }
+   set_variable = { name = tcrs_accepted_sequence value = var:tcrs_sequence }
+   remove_variable = tcrs_pending remove_variable = tcrs_active
+   set_variable = { name = tcrs_phase value = 90 }
+   debug_log = "TCRS|ACCEPTED"
+  } else = { tcrs_fail_effect = yes }
+ }
+}
+tcrs_finish_rollback_effect = {
+ if = { limit = {
+  tcrs_lease_trigger = yes var:tcrs_phase = 85
+  has_variable = tcrs_pending tcrs_quiescent_trigger = yes
+  has_variable = tcrs_native_floor has_variable = tcrs_native_actual
+  var:tcrs_native_actual >= var:tcrs_native_floor
+ }
+  tcrs_check_collectors_effect = yes
+  save_scope_as = tcrs_owner
+  every_in_list = { variable = tcrs_original_collectors
+   if = { limit = { NOT = { is_tax_collector_of = scope:tcrs_owner tax_slot = var:tcrs_original_slot } }
+    scope:tcrs_owner = { set_variable = { name = tcrs_topology_bad value = yes } }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrs_topology_bad } }
+   set_variable = { name = tcrs_rolled_back_sequence value = var:tcrs_sequence }
+   remove_variable = tcrs_pending remove_variable = tcrs_active
+   set_variable = { name = tcrs_phase value = 90 }
+   set_variable = { name = tcrc_phase value = 40 }
+   # Reload recovery restores the original economic state; it does not finish
+   # an allocation plan whose mandatory payer adapter may never have started.
+   # Cancel this exact recovered generation through the ordinary verified
+   # abort/UI/event-release path, preserving the user's enabled checkbox.
+   if = { limit = {
+    tcr_enabled_trigger = yes
+    trigger_if = { limit = {
+     has_variable = tcrs_recovery_sequence has_variable = tcrs_recovery_epoch
+     has_variable = tcrq_epoch
+    }
+     var:tcrs_recovery_sequence = var:tcrs_sequence
+     var:tcrs_recovery_epoch = var:tcrq_epoch
+    } trigger_else = { always = no }
+   }
+    set_variable = { name = tcri_disable_requested value = yes }
+    tcrc_begin_abort_effect = yes
+   }
+   debug_log = "TCRS|ROLLED_BACK"
+  } else = { tcrs_fail_effect = yes }
+ }
+}

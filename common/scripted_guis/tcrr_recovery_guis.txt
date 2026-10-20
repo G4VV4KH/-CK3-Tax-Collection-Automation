@@ -1,0 +1,33 @@
+﻿tcrr_request_recovery = { scope = character is_valid = {
+has_variable = tcrr_snapshot_open
+has_variable = tcr_active_generation
+has_variable = tcrr_generation
+var:tcrr_generation = var:tcr_active_generation
+has_variable = tcrr_owner
+var:tcrr_owner = this
+NOT = { has_variable = tcrr_recovery_requested }
+scope:generation = var:tcrr_generation
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} effect = { if = { limit = {
+has_variable = tcrr_snapshot_open
+has_variable = tcr_active_generation
+has_variable = tcrr_generation
+var:tcrr_generation = var:tcr_active_generation
+has_variable = tcrr_owner
+var:tcrr_owner = this
+NOT = { has_variable = tcrr_recovery_requested }
+scope:generation = var:tcrr_generation
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+}
+set_variable = { name = tcrr_recovery_requested value = yes }
+set_variable = { name = tcrr_recovery_owner value = this }
+set_variable = { name = tcrr_recovery_generation value = var:tcrr_generation }
+set_variable = { name = tcrr_recovery_cursor value = var:tcrr_started_count }
+if = { limit = { has_variable = tcrr_recovery_token }
+ change_variable = { name = tcrr_recovery_token add = 1 }
+} else = { set_variable = { name = tcrr_recovery_token value = 1 } }
+remove_variable = tcrr_recovery_candidate
+remove_variable = tcrr_recovery_slot
+remove_variable = tcrr_native_preflight_sequence
+
+} } }

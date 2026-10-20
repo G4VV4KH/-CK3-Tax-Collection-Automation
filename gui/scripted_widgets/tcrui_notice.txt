@@ -1,0 +1,1 @@
+﻿gui/tcrui_notice.gui = tcrui_notice

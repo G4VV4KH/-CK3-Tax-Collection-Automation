@@ -1,0 +1,2 @@
+﻿l_spanish:
+ tcro_owner_hold_notice:0 "La automatización fiscal está suspendida tras cambiar el personaje del jugador o cargar una operación en curso. Se conservan la operación del gobernante anterior y su control de la pausa; no se dan órdenes para el nuevo gobernante ni se reanuda el juego automáticamente."

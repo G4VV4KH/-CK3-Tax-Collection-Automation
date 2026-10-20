@@ -1,113 +1,35 @@
 # Tax Collection Automation — developer guide
 
-Version 0.1.2 targets CK3 1.20.0.4. See [README](README.md) for installation,
-player instructions, compatibility and known limitations.
+Public release 0.3.0 targets CK3 1.20.1.1 and exports the gameplay implementation of 0.3.0-dev.8. README is the player-facing description.
 
-## Runtime structure
+## Goal and policy
 
-- `common/scripted_guis/` connects the checkbox and native interface workers to
-  the mod's scripted state.
-- `common/scripted_effects/`, `common/scripted_triggers/` and
-  `common/script_values/` manage candidates, taxpayer comparisons and exchange
-  recovery.
-- `common/on_action/` schedules monthly reviews and handles supported player
-  and government transitions.
-- `gui/` contains the controller and the extensions to native tax windows.
-- `localization/` contains the mod's player-facing text.
+Gold income is the optimization objective. This is not a configurable appointment or jurisdiction-layout assistant. The player selects tax decrees; the mod chooses collectors and taxpayers under the native eligibility and capacity rules. Collector ranking uses decree-specific priorities and aptitude. Taxpayer moves use observed native gold previews. These heuristics do not prove a global optimum.
 
-Opt-in belongs to the current player character. A pending monthly request does
-not start a second pass while one is already in progress. Disabling automation
-stops new work and lets an unfinished pair exchange restore its participants.
-Completed appointments and allocations remain ordinary game state.
+## Why the interface must participate
 
-Collector appointments use the native candidate list, legality checks and
-aptitude score. Taxpayer destinations are compared using the native gold
-preview. Equal scores keep the existing appointment or assignment. The mod
-preserves the player's tax decrees.
+The required tax appointment/assignment commands and complete final-income calculations are not all available as ordinary script effects and values. Native window models supply legal candidates, jurisdiction state and live tax previews; native GUI commands perform mutations. Reading a model outside its valid window or before refresh can return stale data. The controller therefore owns a bounded interaction pass, pauses game time, validates each command's target and waits for provider readiness. This is the reason for visible pauses and temporarily unavailable manual tax controls compared with Council Assignment Automation and Court Automation.
 
-The controller uses CK3's native GUI commands for appointments and taxpayer
-assignment. Window-local data must be read inside the corresponding native
-window; the tax manager publishes its current owner for global guards. Callback
-guards verify the expected player, active pass and native target.
+Window ownership, pass generation, player identity and transaction journals separate stale callbacks from current work. Off requests cancellation and rollback/cleanup rather than abandoning an in-flight write. Completion and safe cancellation restore the previous pause/speed state. The mod does not assume that a missing response means a write succeeded.
 
-## Panel controls and exchanges
+## When reconciliation runs
 
-An already-open tax panel is retained after a review. A panel opened solely for
-background work is closed afterward. Manual tax controls, including decree
-selection, are locked while a pass or recovery is running. The automation
-checkbox remains available. The lock is separate from the saved opt-in flag.
+Explicit enablement starts a review. Changes to vacancy or unassigned-taxpayer identities and selected-decree callbacks can request another. Court arrival/adulthood only retry vacancy handling. There is no recurring monthly full scan or promise to replace every incumbent whenever aptitude changes. The legacy monthly callback consumes old work without rescheduling itself.
 
-CK3's **Automatically assign vassals to jurisdictions** setting is independent
-of this mod's checkbox. The mod can appoint collectors and allocate taxpayers
-with either native setting. Before committing a pair exchange, it saves the
-native automatic-assignment and pause settings, pauses the game and temporarily
-turns native automatic assignment off. It restores the saved settings after
-completion or recovery.
+Serving collectors and assigned taxpayers can be rearranged. Taxpayer transfer batches associated with collector reassignment use a freshly validated complete matrix; paths without that guarantee retain individual execution. Collector appointments still use native appointment commands. Candidate lists and legal destinations remain native. User-selected tax decrees are not automatically replaced.
 
-A persistent exchange journal records the participants, original jurisdictions,
-collectors, decrees and control settings. Completion is checked against actual
-native assignments. If changed jurisdiction conditions prevent recovery, the
-journal remains blocked and the player receives a warning.
+## Performance and recovery
 
-The algorithm performs direct improvements and profitable pair exchanges. It
-does not solve larger cycles or rearrange taxpayers solely to create a vacancy
-for an unassigned taxpayer. Pair planning supports the eight vanilla decrees
-and single-player campaigns. Unknown third-party decrees are skipped. Recovery
-after succession or a player-character switch is not guaranteed.
+DEV7 reduced a targeted repeated regression scenario from 19/18/19 seconds to 7/7/7 seconds by batching safe taxpayer transfer commands and reusing ready source windows. This is a scenario-specific measurement, not a promised runtime for every realm. Final DEV8 adds load recovery and a bounded wait for stalled read-only optional previews. After a bounded wait without progress, optional taxpayer rearrangement can be deferred only when the assignment and income invariants allow safe completion. Actual-write completion checks are never skipped.
 
-## Compatibility work
+Unfinished legacy 0.1.x exchange state is held rather than silently interpreted as a new transaction. Players should finish such work with the old version before upgrading, retaining a save backup. Generic recovery after every possible interrupted transaction, succession or character switch is not guaranteed.
 
-The mod replaces these native interface files:
+## Source-bound verification
 
-- `gui/window_manage_tax_slots.gui`
-- `gui/window_appoint_tax_collector.gui`
-- `gui/window_tax_slot_assign_vassal.gui`
-- `gui/window_tax_slot_vassals.gui`
-- `gui/shared/dialogs.gui`
+The DEV8 acceptance on CK3 1.20.1.1 contains 33 fresh assertions: 15 exact-save load/recovery, 9 intentionally withheld read-only callback checks and 9 normal fire-all/enable/disable checks. The owner subsequently confirmed in-game operation and requested publication. The final lightweight performance review made no gameplay changes. The publication record links these immutable local reports and the source-to-GAME comparison.
 
-Marked additions distinguish the mod's extensions from the upstream interface.
-Review them against the actual target game's files when updating for a new CK3
-version. Changing load order does not merge another mod's edits to these files.
-Do not broaden the owned collector-confirmation handler to unrelated dialogs.
+All nine game languages are checked statically for key/variant coverage, valid syntax, substitutions and applicable regex compatibility. Localization and publication-copy corrections do not change the accepted gameplay files. GAME-PROD inherits the DEV8 native evidence after comparison; there is no redundant export-only engine run.
 
-The shared confirmation popup also exists before a campaign has loaded.
-Gate the entire automation worker's visibility with `GetPlayer.IsValid`. A
-boolean `And` inside a state condition is insufficient: its arguments can still
-evaluate game-only callbacks with no active player. Frontend preset overwrite
-and save deletion must remain ordinary native confirmations.
+## Compatibility and contributions
 
-## Validation and publication
-
-Use disposable native CK3 campaigns with independent profiles, saves and logs.
-Exercise the actual production checkbox and native commands. Relevant checks
-include an open tax panel, collector vacancies, monthly scheduling, disabled
-stability, profitable exchanges, cancellation, control restoration and real
-save/load recovery. Also exercise main-menu preset overwrite and save deletion,
-and unrelated confirmations inside a loaded campaign. Bind evidence to the complete tested runtime and harness;
-static checks alone do not establish native behavior.
-
-Hidden native runs do not establish visual layout, clipping or manual pointer
-interaction. Keep those checks separate. Preserve failed attempts and record
-the limits of inherited evidence. Never include personal campaign saves, local
-logs, machine paths or private test profiles in a public source export.
-
-Keep the editable player description in `publishing/description.en.md` and
-regenerate README/store variants from that source. Runtime changes require a
-new verified candidate. Publication-only prose changes preserve the existing
-runtime and its scoped evidence. Confirm all supported languages, platform
-identities, archive contents and delivered bytes before claiming a publication
-complete. Preserve the artwork and code attribution in the player description.
-
-## Release 0.1.2
-
-This update fixes a crash when a shared confirmation opens before a campaign
-has loaded, including game-rule preset overwrite and save deletion. The guard
-prevents the collector-confirmation worker from accessing absent campaign UI
-state. Collector selection, gold comparisons, tax decrees and saved opt-in
-behavior are unchanged.
-
-The current player description uses the reviewed family catalog, grouped into
-standalone mods and compatibility patches. Keep canonical copy, generated
-descriptions and release fields synchronized without modifying frozen older
-packs. Artwork and the authentic gallery are reused from the approved release;
-their bytes and provenance remain unchanged.
+The five vanilla GUI overrides and two native tax-definition files are listed in README. Custom tcr* GUI/script modules implement the controller and native bridge. Changes to gameplay or callback ordering require the project's isolated native CK3 testing workflow. Publication metadata and translated strings use the shared publication contract. Reports should include the game/mod version, mod list, affected save and the tax-panel state; do not commit private saves or machine-specific paths to this repository.

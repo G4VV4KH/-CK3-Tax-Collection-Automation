@@ -1,1 +1,0 @@
-﻿gui/tca_automation.gui = tca_controller

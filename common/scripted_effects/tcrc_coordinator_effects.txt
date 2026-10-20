@@ -1,0 +1,532 @@
+﻿# One lifecycle can contain multiple coalesced generations under the same pause.
+# No monthly scheduling and no native mutation in the planner or this journal.
+tcrc_admit_event_effect = {
+ if = { limit = {
+  tcr_enabled_trigger = yes has_variable = tcr_requested
+  tcro_can_claim_trigger = yes
+  NOT = { has_variable = tcrc_lifecycle_active }
+  NOT = { has_variable = tcr_active_generation }
+  NOT = { has_variable = tcr_failed }
+  NOT = { has_variable = tcri_disable_requested }
+ }
+  if = { limit = { has_variable = tcrc_lifecycle }
+   change_variable = { name = tcrc_lifecycle add = 1 }
+  } else = { set_variable = { name = tcrc_lifecycle value = 1 } }
+  set_variable = { name = tcrc_lifecycle_active value = yes }
+  set_variable = { name = tcrc_phase value = 10 }
+  set_variable = { name = tcrc_step value = 0 }
+  set_variable = { name = tcrc_lifecycle_added_count value = 0 }
+  set_variable = { name = tcrc_life_year value = current_year }
+  set_variable = { name = tcrc_life_month value = current_month }
+  set_variable = { name = tcrc_life_day value = current_day }
+  set_variable = { name = tcrc_start_gold value = gold }
+  remove_variable = tcrc_payers_accounted_generation
+  remove_variable = tcrc_snapshot_taken
+  remove_variable = tcrc_abort_requested remove_variable = tcrc_abort_verified
+  remove_variable = tcrc_event_observed_lifecycle remove_variable = tcrc_event_released
+  remove_variable = tcrc_event_release_kind remove_variable = tcrc_last_verified_generation
+  remove_variable = tcrc_failure_exit_ready
+  remove_variable = tcrc_original_speed remove_variable = tcrc_original_manual_pause
+  remove_variable = tcrc_manager_was_open remove_variable = tcrc_manager_owned
+  remove_variable = tcrc_owns_pause remove_variable = tcrc_pause_reserved
+  tcro_claim_effect = yes
+  # Reserve metadata now; native callbacks may still be committing membership.
+  tcrv_parent_reserve_effect = yes
+  if = { limit = { tcro_current_player_owner_trigger = yes }
+   set_variable = { name = tcrc_event_requested value = var:tcrc_lifecycle }
+   save_scope_as = event_owner
+   save_scope_value_as = { name = event_lifecycle value = var:tcrc_lifecycle }
+   debug_log = "TCRC|REQUEST_EVENT|date=[GetCurrentDate.GetString]|year=[GetPlayer.MakeScope.Var('tcrc_life_year').GetValue]|month=[GetPlayer.MakeScope.Var('tcrc_life_month').GetValue]|day=[GetPlayer.MakeScope.Var('tcrc_life_day').GetValue]"
+   trigger_event = tcrc.1
+  }
+ }
+}
+
+tcrc_block_effect = {
+ tcr_fail_generation_effect = yes
+ set_variable = { name = tcrc_phase value = 90 }
+ debug_log = "TCRC|BLOCKED|reason=[GetPlayer.MakeScope.Var('tcrc_block_reason').GetValue]"
+}
+tcrc_preflight_effect = {
+ remove_variable = tcrc_block_reason
+ if = { limit = { NOT = { has_variable = tcr_collector_plan_ready } }
+  set_variable = { name = tcrc_block_reason value = 1 }
+ } else = {
+  tcrc_build_attainable_plan_effect = yes
+  save_scope_as = tcrc_owner
+  every_in_list = { variable = tcrc_attainable_collectors
+   save_scope_as = tcrc_candidate
+   if = { limit = { OR = {
+    NOT = { has_variable = tcrc_plan_slot }
+    NOT = { has_variable = tcrc_plan_generation }
+    var:tcrc_plan_generation != scope:tcrc_owner.var:tcr_active_generation
+   } }
+    scope:tcrc_owner = { set_variable = { name = tcrc_block_reason value = 4 } }
+   } else_if = { limit = { NOT = { scope:tcrc_owner = {
+      any_tax_slot = { this = scope:tcrc_candidate.var:tcrc_plan_slot }
+   } } }
+    scope:tcrc_owner = { set_variable = { name = tcrc_block_reason value = 4 } }
+   } else_if = { limit = { NOT = { AND = {
+     is_tax_collector_of = scope:tcrc_owner tax_slot = var:tcrc_plan_slot
+   } } }
+    if = { limit = { var:tcrc_plan_slot = { has_tax_collector = yes } }
+     scope:tcrc_owner = { set_variable = { name = tcrc_block_reason value = 5 } }
+    } else_if = { limit = { is_tax_collector = yes }
+     scope:tcrc_owner = { set_variable = { name = tcrc_block_reason value = 6 } }
+    }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrc_attainable_ready } }
+   set_variable = { name = tcrc_block_reason value = 4 }
+  }
+ }
+ if = { limit = { has_variable = tcrc_block_reason }
+  tcrc_block_effect = yes
+ } else = { set_variable = { name = tcrc_phase value = 30 } }
+}
+tcrc_capture_payers_effect = {
+ # The owned pause is already observed by the GUI, after the native command returns.
+ # Initial capture also serves early Off; subsequent generations keep this ledger.
+ if = { limit = { NOT = { has_variable = tcrc_snapshot_taken } }
+  tcrv_parent_init_effect = yes
+  set_variable = { name = tcrc_snapshot_taken value = yes }
+  tcrc_capture_generation_baseline_effect = yes
+ }
+}
+# Generation verification baseline is replaceable only after exact settlement.
+# Immutable lifecycle date, wallet and pause ownership are deliberately untouched.
+tcrc_capture_generation_baseline_effect = {
+ tcrv_parent_admit_generation_unassigned_effect = yes
+ set_variable = { name = tcrc_baseline_added_count value = var:tcrc_lifecycle_added_count }
+ clear_variable_list = tcrc_original_collectors
+ every_tax_collector = {
+  set_variable = { name = tcrc_original_collector_slot value = tax_slot }
+  root = { add_to_variable_list = { name = tcrc_original_collectors target = prev } }
+ }
+ clear_variable_list = tcrc_original_payers
+ set_variable = { name = tcrc_original_payer_count value = 0 }
+ every_tax_slot = { every_tax_slot_vassal = {
+  set_variable = { name = tcrc_original_payer_slot value = assigned_tax_slot }
+  root = { add_to_variable_list = { name = tcrc_original_payers target = prev }
+   change_variable = { name = tcrc_original_payer_count add = 1 }
+  }
+ } }
+}
+tcrc_account_payer_progress_effect = {
+ if = { limit = {
+  has_variable = tcr_active_generation has_variable = tcrb_generation
+  has_variable = tcrb_lifecycle has_variable = tcrb_added_count
+ }
+  if = { limit = { var:tcrb_generation = var:tcr_active_generation var:tcrb_lifecycle = var:tcrc_lifecycle }
+   if = { limit = { NOT = { has_variable = tcrc_payers_accounted_generation } }
+    change_variable = { name = tcrc_lifecycle_added_count add = var:tcrb_added_count }
+    set_variable = { name = tcrc_payers_accounted_generation value = var:tcr_active_generation }
+   } else_if = { limit = { var:tcrc_payers_accounted_generation != var:tcr_active_generation }
+    change_variable = { name = tcrc_lifecycle_added_count add = var:tcrb_added_count }
+    set_variable = { name = tcrc_payers_accounted_generation value = var:tcr_active_generation }
+   }
+  }
+ }
+}
+tcrc_retire_dirty_generation_effect = {
+ if = { limit = { tcrv_parent_quiescent_trigger = yes }
+
+ # Only called by a guarded settled/quiescent boundary. This is supersession,
+ # not successful completion; no manual collector or payer change is undone.
+ tcrc_account_payer_progress_effect = yes
+ set_variable = { name = tcrc_superseded_generation value = var:tcr_active_generation }
+ tcr_clear_command_effect = yes
+ remove_variable = tcr_active_generation
+ remove_variable = tcr_phase
+ remove_variable = tcr_collector_plan_ready
+ remove_variable = tcrc_attainable_ready
+ remove_variable = tcrc_next_queued
+ set_variable = { name = tcrc_phase value = 20 }
+ debug_log = "TCRC|REPLAN_SETTLED|generation=[GetPlayer.MakeScope.Var('tcrc_superseded_generation').GetValue]|date=[GetCurrentDate.GetString]"
+
+ }
+}
+tcrc_queue_next_effect = {
+ save_scope_as = tcrc_owner
+ remove_variable = tcrc_next_queued
+ every_in_list = { variable = tcrc_attainable_collectors
+  # Mutable first-winner condition belongs in the body; iterator limits may
+  # be evaluated as a snapshot before any queued command changes the guard.
+  if = { limit = {
+   NOT = { scope:tcrc_owner = { has_variable = tcrc_next_queued } }
+   NOT = { AND = { is_tax_collector_of = scope:tcrc_owner tax_slot = var:tcrc_plan_slot } }
+  }
+  save_scope_as = tcre_desired_collector
+  var:tcrc_plan_slot = { save_scope_as = tcre_desired_slot }
+  scope:tcrc_owner = {
+   set_variable = { name = tcrc_next_queued value = yes }
+   set_variable = { name = tcrc_job_collector value = scope:tcre_desired_collector }
+   set_variable = { name = tcrc_job_slot value = scope:tcre_desired_slot }
+   tcre_queue_vacancy_effect = yes
+   set_variable = { name = tcrc_expected_sequence value = var:tcre_sequence }
+   change_variable = { name = tcrc_step add = 1 }
+   if = { limit = { OR = {
+    has_variable = tcre_enqueue_rejected var:tcre_phase = 50
+   } }
+    set_variable = { name = tcrc_block_reason value = 7 }
+    tcrc_block_effect = yes
+   } else = { set_variable = { name = tcrc_phase value = 31 } }
+  }
+  }
+ }
+ if = { limit = { NOT = { has_variable = tcrc_next_queued } }
+  # COLLECTOR_PHASE33_ENTRY
+if = { limit = { tcrf_capability_trigger = yes } set_variable = { name = tcrc_phase value = 33 } } else = { set_variable = { name = tcrc_phase value = 35 } }
+ }
+}
+tcrc_verify_plan_effect = {
+ save_scope_as = tcrc_owner
+ remove_variable = tcrc_verify_failed
+ if = { limit = { tcrv_parent_ledger_identity_trigger = yes }
+  tcrv_parent_check_ledger_effect = yes
+  if = { limit = { has_variable = tcrv_parent_bad } set_variable = { name = tcrc_verify_failed value = yes } }
+ }
+ if = { limit = { NOT = { tcrv_parent_quiescent_trigger = yes } } set_variable = { name = tcrc_verify_failed value = yes } }
+ set_variable = { name = tcrc_verified_count value = 0 }
+ set_variable = { name = tcrc_actual_slot_count value = 0 }
+ set_variable = { name = tcrc_actual_payer_count value = 0 }
+ set_variable = { name = tcrc_actual_unassigned_count value = 0 }
+ set_variable = { name = tcrc_actual_collector_count value = 0 }
+ set_variable = { name = tcrc_expected_payer_count value = var:tcrc_original_payer_count }
+ change_variable = { name = tcrc_expected_payer_count add = var:tcrc_lifecycle_added_count }
+ change_variable = { name = tcrc_expected_payer_count subtract = var:tcrc_baseline_added_count }
+ set_variable = { name = tcrc_verify_gold value = gold }
+ every_tax_slot = {
+  root = { change_variable = { name = tcrc_actual_slot_count add = 1 } }
+  every_tax_slot_vassal = { root = { change_variable = { name = tcrc_actual_payer_count add = 1 } } }
+ }
+ every_tax_collector = { root = { change_variable = { name = tcrc_actual_collector_count add = 1 } } }
+ every_unassigned_taxpayers = { root = { change_variable = { name = tcrc_actual_unassigned_count add = 1 } } }
+ every_in_list = { variable = tcrc_attainable_collectors
+  if = { limit = {
+   is_alive = yes has_variable = tcrc_plan_generation has_variable = tcrc_plan_slot
+   var:tcrc_plan_generation = scope:tcrc_owner.var:tcr_active_generation
+   is_tax_collector_of = scope:tcrc_owner tax_slot = var:tcrc_plan_slot
+  }
+   scope:tcrc_owner = { change_variable = { name = tcrc_verified_count add = 1 } }
+  } else = { scope:tcrc_owner = { set_variable = { name = tcrc_verify_failed value = yes } } }
+ }
+ every_in_list = { variable = tcrc_original_payers
+  if = { limit = { NOT = { tcrv_parent_original_mapping_trigger = yes } }
+   scope:tcrc_owner = { set_variable = { name = tcrc_verify_failed value = yes } }
+  }
+ }
+ if = { limit = {
+  NOT = { has_variable = tcrc_verify_failed }
+  var:tcrc_verified_count = var:tcrc_plan_count
+  var:tcrc_actual_collector_count = var:tcrc_plan_count
+  var:tcrc_actual_slot_count = var:tcrc_plan_slot_count
+  var:tcrc_actual_payer_count = var:tcrc_expected_payer_count
+  tcrb_settled_trigger = yes
+  var:tcrc_actual_unassigned_count = var:tcrb_remaining_count
+  var:tcrc_verify_gold = var:tcrc_start_gold
+ }
+  set_variable = { name = tcr_verified_generation value = var:tcr_active_generation }
+  set_variable = { name = tcrc_last_verified_generation value = var:tcr_active_generation }
+  set_variable = { name = tcrc_verified_year value = current_year }
+  set_variable = { name = tcrc_verified_month value = current_month }
+  set_variable = { name = tcrc_verified_day value = current_day }
+  tcr_complete_generation_effect = yes
+  if = { limit = { has_variable = tcr_requested }
+   # Unexpected callbacks request a fresh snapshot under the already-owned pause.
+   set_variable = { name = tcrc_phase value = 20 }
+  } else = { set_variable = { name = tcrc_phase value = 50 } }
+ } else = {
+  set_variable = { name = tcrc_block_reason value = 8 }
+  tcrc_block_effect = yes
+ }
+}
+tcrc_finish_lifecycle_effect = {
+ set_variable = { name = tcrc_event_released value = var:tcrc_lifecycle }
+ set_variable = { name = tcrc_event_release_kind value = 1 }
+ set_variable = { name = tcrc_completed_lifecycle value = var:tcrc_lifecycle }
+ tcro_release_effect = yes
+ tcri_capture_edge_effect = yes
+ remove_variable = tcrc_lifecycle_active
+ remove_variable = tcrc_owns_pause
+ set_variable = { name = tcrc_phase value = 70 }
+ debug_log = "TCRC|COMPLETE|lifecycle=[GetPlayer.MakeScope.Var('tcrc_lifecycle').GetValue]|generation=[GetPlayer.MakeScope.Var('tcrc_last_verified_generation').GetValue]"
+}
+tcrc_begin_abort_effect = {
+ set_variable = { name = tcrc_abort_requested value = yes }
+ # Off is authoritative even if a stale GUI command was already scheduled.
+ # The executor's repeated enabled check prevents new script authorization.
+ set_variable = { name = tcrc_phase value = 80 }
+ if = { limit = { tcrc_event_pause_trigger = yes NOT = { has_variable = tcrc_snapshot_taken } }
+  tcrc_capture_payers_effect = yes
+ }
+}
+tcrc_abort_clear_job_effect = {
+ tcre_clear_slot_marker_effect = yes
+ tcr_clear_command_effect = yes
+ remove_variable = tcre_job_active
+ set_variable = { name = tcre_phase value = 60 }
+}
+tcrc_abort_consistency_effect = {
+ save_scope_as = tcrc_owner
+ remove_variable = tcrc_abort_inconsistent
+ if = { limit = { tcrv_parent_ledger_identity_trigger = yes }
+  tcrv_parent_check_ledger_effect = yes
+  if = { limit = { has_variable = tcrv_parent_bad } set_variable = { name = tcrc_abort_inconsistent value = yes } }
+ }
+ if = { limit = { NOT = { tcrv_parent_quiescent_trigger = yes } } set_variable = { name = tcrc_abort_inconsistent value = yes } }
+ set_variable = { name = tcrc_abort_gold value = gold }
+ set_variable = { name = tcrc_abort_payer_count value = 0 }
+ set_variable = { name = tcrc_abort_expected_payer_count value = var:tcrc_original_payer_count }
+ change_variable = { name = tcrc_abort_expected_payer_count add = var:tcrc_lifecycle_added_count }
+ change_variable = { name = tcrc_abort_expected_payer_count subtract = var:tcrc_baseline_added_count }
+ # A payer pass can be cancelled after some successful one-way assignments.
+ # They are retained; account for them once even before normal adapter completion.
+ if = { limit = { has_variable = tcrb_lifecycle has_variable = tcrb_generation has_variable = tcrb_added_count }
+  if = { limit = { var:tcrb_lifecycle = var:tcrc_lifecycle }
+   if = { limit = { NOT = { has_variable = tcrc_payers_accounted_generation } }
+    change_variable = { name = tcrc_abort_expected_payer_count add = var:tcrb_added_count }
+   } else_if = { limit = { var:tcrc_payers_accounted_generation != var:tcrb_generation }
+    change_variable = { name = tcrc_abort_expected_payer_count add = var:tcrb_added_count }
+   }
+  }
+ }
+ every_tax_slot = { every_tax_slot_vassal = {
+  root = { change_variable = { name = tcrc_abort_payer_count add = 1 } }
+ } }
+ every_in_list = { variable = tcrc_original_payers
+  if = { limit = { NOT = { tcrv_parent_original_mapping_trigger = yes } }
+   scope:tcrc_owner = { set_variable = { name = tcrc_abort_inconsistent value = yes } }
+  }
+ }
+ every_in_list = { variable = tcrc_original_collectors
+  if = { limit = { NOT = { AND = {
+   is_tax_collector_of = scope:tcrc_owner tax_slot = var:tcrc_original_collector_slot
+  } } }
+   scope:tcrc_owner = { set_variable = { name = tcrc_abort_inconsistent value = yes } }
+  }
+ }
+ # This coordinator never fires incumbents. Any completed new hire must still
+ # hold its planned slot; a partial vacancy plan is cancellation, not success.
+ if = { limit = { has_variable = tcr_active_generation }
+ every_in_list = { variable = tcrc_attainable_collectors
+  if = { limit = { has_variable = tcrc_plan_generation
+   var:tcrc_plan_generation = scope:tcrc_owner.var:tcr_active_generation
+   is_tax_collector_of = scope:tcrc_owner
+   NOT = { tax_slot = var:tcrc_plan_slot }
+  }
+   scope:tcrc_owner = { set_variable = { name = tcrc_abort_inconsistent value = yes } }
+  }
+ }
+ }
+ if = { limit = {
+  NOT = { has_variable = tcrc_abort_inconsistent }
+  var:tcrc_abort_gold = var:tcrc_start_gold
+  var:tcrc_abort_payer_count = var:tcrc_abort_expected_payer_count
+  tcrb_abort_quiescent_trigger = yes
+ }
+  # Explicitly cancelled, never route through complete_generation_effect.
+  if = { limit = { has_variable = tcr_active_generation }
+   set_variable = { name = tcrc_cancelled_generation value = var:tcr_active_generation }
+  }
+  tcr_clear_command_effect = yes
+  remove_variable = tcr_active_generation
+  remove_variable = tcr_phase
+  set_variable = { name = tcrc_abort_verified value = var:tcrc_lifecycle }
+  set_variable = { name = tcrc_phase value = 81 }
+ } else = {
+  set_variable = { name = tcrc_block_reason value = 11 }
+  tcrc_block_effect = yes
+ }
+}
+tcrc_finish_abort_effect = {
+ set_variable = { name = tcrc_event_released value = var:tcrc_lifecycle }
+ set_variable = { name = tcrc_event_release_kind value = 2 }
+ set_variable = { name = tcrc_cancelled_lifecycle value = var:tcrc_lifecycle }
+ tcro_release_effect = yes
+ remove_variable = tcrc_lifecycle_active
+ remove_variable = tcrc_owns_pause
+ remove_variable = tcrc_pause_reserved
+ remove_variable = tcri_disable_requested
+ remove_variable = tcrc_abort_requested
+ remove_variable = tcr_requested
+ remove_variable = tcr_failed
+ set_variable = { name = tcrc_phase value = 83 }
+ debug_log = "TCRC|CANCELLED|lifecycle=[GetPlayer.MakeScope.Var('tcrc_lifecycle').GetValue]"
+}
+
+# Only after failed admission has stopped all native work and owned tax helper
+# widgets are closed. These executors never leave a remove/add half-operation.
+# Archive the journal before retiring its execution lease; never label success.
+tcrc_prepare_failure_exit_effect = {
+ if = { limit = { tcrv_parent_quiescent_trigger = yes }
+
+ set_variable = { name = tcrc_failed_lifecycle value = var:tcrc_lifecycle }
+ set_variable = { name = tcrc_failed_actual_state value = 3 }
+ if = { limit = { has_variable = tcr_expected_kind }
+  set_variable = { name = tcrc_failed_command_kind value = var:tcr_expected_kind }
+ }
+ if = { limit = { has_variable = tcre_job_active has_variable = tcre_sequence }
+  set_variable = { name = tcrc_failed_command_sequence value = var:tcre_sequence }
+  if = { limit = { exists = var:tcr_expected_collector exists = var:tcr_expected_slot }
+   if = { limit = { var:tcr_expected_collector = { is_tax_collector_of = root tax_slot = root.var:tcr_expected_slot } }
+    set_variable = { name = tcrc_failed_actual_state value = 1 }
+   } else_if = { limit = {
+    var:tcr_expected_collector = { is_tax_collector = no }
+    var:tcr_expected_slot = { has_tax_collector = no }
+   } set_variable = { name = tcrc_failed_actual_state value = 2 } }
+  }
+ }
+ if = { limit = { has_variable = tcrp_job_active has_variable = tcrp_sequence }
+  set_variable = { name = tcrc_failed_command_sequence value = var:tcrp_sequence }
+  if = { limit = { exists = var:tcr_expected_payer exists = var:tcr_expected_slot }
+   if = { limit = { var:tcr_expected_payer = { exists = assigned_tax_slot assigned_tax_slot = root.var:tcr_expected_slot } }
+    set_variable = { name = tcrc_failed_actual_state value = 1 }
+   } else_if = { limit = { tcrp_source_unchanged_trigger = yes }
+    set_variable = { name = tcrc_failed_actual_state value = 2 }
+   }
+  }
+ }
+ if = { limit = { has_variable = tcr_command_generation }
+  set_variable = { name = tcrc_failed_command_generation value = var:tcr_command_generation }
+ }
+ if = { limit = { has_variable = tcr_expected_collector }
+  set_variable = { name = tcrc_failed_collector value = var:tcr_expected_collector }
+ }
+ if = { limit = { has_variable = tcr_expected_payer }
+  set_variable = { name = tcrc_failed_payer value = var:tcr_expected_payer }
+ }
+ if = { limit = { has_variable = tcr_expected_slot }
+  set_variable = { name = tcrc_failed_slot value = var:tcr_expected_slot }
+ }
+ if = { limit = { has_variable = tcr_expected_source }
+  set_variable = { name = tcrc_failed_source value = var:tcr_expected_source }
+ }
+ if = { limit = { has_variable = tcre_job_active } tcre_clear_slot_marker_effect = yes }
+ if = { limit = { has_variable = tcrp_job_active } tcrp_clear_slot_marker_effect = yes }
+ remove_variable = tca_enabled
+ remove_variable = tcre_job_active remove_variable = tcrp_job_active remove_variable = tcrb_active
+ tcr_clear_command_effect = yes
+ remove_variable = tcr_active_generation remove_variable = tcr_phase
+ remove_variable = tcr_requested
+ set_variable = { name = tcrc_failure_exit_ready value = var:tcrc_lifecycle }
+
+ }
+}
+tcrc_finish_failure_effect = {
+ set_variable = { name = tcrc_event_released value = var:tcrc_lifecycle }
+ set_variable = { name = tcrc_event_release_kind value = 3 }
+ set_variable = { name = tcrc_cancelled_lifecycle value = var:tcrc_lifecycle }
+ tcro_release_effect = yes
+ remove_variable = tcrc_lifecycle_active
+ remove_variable = tcri_disable_requested remove_variable = tcrc_abort_requested
+ set_variable = { name = tcrc_phase value = 91 }
+ debug_log = "TCRC|FAILED_CANCELLED|lifecycle=[GetPlayer.MakeScope.Var('tcrc_lifecycle').GetValue]|date=[GetCurrentDate.GetString]"
+}
+
+# The policy plan remains separate. Admission never evicts an incumbent merely
+# because an optional best-N/reordering improvement has no safe executor yet.
+tcrc_add_attainable_pair_effect = {
+ set_variable = { name = tcrc_plan_slot value = scope:tcrc_target_slot }
+ set_variable = { name = tcrc_plan_owner value = scope:tcrc_owner }
+ set_variable = { name = tcrc_plan_generation value = scope:tcrc_owner.var:tcr_active_generation }
+ save_scope_as = tcrc_attainable_candidate
+ scope:tcrc_target_slot = { set_variable = { name = tcrc_planned_collector value = scope:tcrc_attainable_candidate } }
+ scope:tcrc_owner = {
+  add_to_variable_list = { name = tcrc_attainable_collectors target = scope:tcrc_attainable_candidate }
+  change_variable = { name = tcrc_plan_count add = 1 }
+ }
+}
+tcrc_build_attainable_plan_effect = {
+ save_scope_as = tcrc_owner
+ save_scope_as = tcrcp_owner
+ every_in_list = { variable = tcrc_attainable_collectors
+  remove_variable = tcrc_plan_slot remove_variable = tcrc_plan_generation remove_variable = tcrc_plan_owner
+ }
+ clear_variable_list = tcrc_attainable_collectors
+ clear_variable_list = tcrc_remaining_vacancies
+ every_tax_slot = { remove_variable = tcrc_planned_collector }
+ remove_variable = tcrc_attainable_ready
+ remove_variable = tcrc_attainable_invalid
+ remove_variable = tcrc_optional_deferred
+ set_variable = { name = tcrc_plan_count value = 0 }
+ set_variable = { name = tcrc_original_incumbent_count value = 0 }
+ set_variable = { name = tcrc_remaining_vacancy_count value = 0 }
+ set_variable = { name = tcrc_plan_slot_count value = var:tcrcp_slot_count }
+ every_tax_collector = {
+  save_scope_as = tcrc_incumbent
+  if = { limit = { scope:tcrc_owner = { any_tax_slot = { this = scope:tcrc_incumbent.tax_slot } } }
+   tax_slot = { save_scope_as = tcrc_target_slot }
+   tcrc_add_attainable_pair_effect = yes
+   scope:tcrc_owner = { change_variable = { name = tcrc_original_incumbent_count add = 1 } }
+  } else = { scope:tcrc_owner = { set_variable = { name = tcrc_attainable_invalid value = yes } } }
+ }
+ if = { limit = { var:tcrc_original_incumbent_count = 0 }
+  # Preserve the complete policy matching in the all-vacant stress case.
+  every_in_list = { variable = tcap_selected_collectors
+   var:tcr_plan_slot = { save_scope_as = tcrc_target_slot }
+   tcrc_add_attainable_pair_effect = yes
+  }
+ } else = {
+  # Bounded by actual slots. Strict comparisons preserve traversal ties.
+  every_in_list = { variable = tcrcp_slots
+   scope:tcrc_owner = {
+    remove_variable = tcrc_best_slot
+    remove_variable = tcrc_best_candidate
+    every_in_list = { variable = tcrcp_slots
+     if = { limit = { has_tax_collector = no NOT = { has_variable = tcrc_planned_collector } }
+      save_scope_as = tcrc_slot_choice
+      scope:tcrc_owner = {
+       if = { limit = { NOT = { has_variable = tcrc_best_slot } }
+        set_variable = { name = tcrc_best_slot value = scope:tcrc_slot_choice }
+       } else_if = { limit = { scope:tcrc_slot_choice.var:tcrcp_policy_priority > var:tcrc_best_slot.var:tcrcp_policy_priority }
+        set_variable = { name = tcrc_best_slot value = scope:tcrc_slot_choice }
+       }
+      }
+     }
+    }
+    if = { limit = { has_variable = tcrc_best_slot }
+     every_in_list = { variable = tcrcp_candidates
+      save_scope_as = tcrc_candidate_choice
+      if = { limit = { is_tax_collector = no tcrcp_candidate_eligible_trigger = yes
+       NOT = { scope:tcrc_owner = { any_in_list = { variable = tcrc_attainable_collectors this = scope:tcrc_candidate_choice } } }
+      }
+       scope:tcrc_owner = {
+        if = { limit = { NOT = { has_variable = tcrc_best_candidate } }
+         set_variable = { name = tcrc_best_candidate value = scope:tcrc_candidate_choice }
+        } else_if = { limit = { scope:tcrc_candidate_choice.var:tcrcp_aptitude > var:tcrc_best_candidate.var:tcrcp_aptitude }
+         set_variable = { name = tcrc_best_candidate value = scope:tcrc_candidate_choice }
+        }
+       }
+      }
+     }
+     if = { limit = { has_variable = tcrc_best_candidate }
+      var:tcrc_best_slot = { save_scope_as = tcrc_target_slot }
+      var:tcrc_best_candidate = { tcrc_add_attainable_pair_effect = yes }
+     }
+    }
+   }
+  }
+ }
+ every_in_list = { variable = tcap_selected_collectors
+  save_scope_as = tcrc_candidate_choice
+  if = { limit = { scope:tcrc_owner = { any_in_list = { variable = tcrc_attainable_collectors this = scope:tcrc_candidate_choice } } }
+   if = { limit = { var:tcrc_plan_slot != var:tcr_plan_slot }
+    scope:tcrc_owner = { set_variable = { name = tcrc_optional_deferred value = yes } }
+   }
+  } else = { scope:tcrc_owner = { set_variable = { name = tcrc_optional_deferred value = yes } } }
+ }
+ every_tax_slot = {
+  if = { limit = { NOT = { has_variable = tcrc_planned_collector } }
+   save_scope_as = tcrc_remaining_slot
+   scope:tcrc_owner = {
+    add_to_variable_list = { name = tcrc_remaining_vacancies target = scope:tcrc_remaining_slot }
+    change_variable = { name = tcrc_remaining_vacancy_count add = 1 }
+   }
+  }
+ }
+ remove_variable = tcrc_best_candidate remove_variable = tcrc_best_slot
+ if = { limit = { NOT = { has_variable = tcrc_attainable_invalid } var:tcrc_plan_count <= var:tcrc_plan_slot_count }
+  set_variable = { name = tcrc_attainable_ready value = yes }
+ }
+}

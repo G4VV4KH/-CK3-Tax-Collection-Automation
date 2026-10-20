@@ -1,0 +1,93 @@
+﻿# Tax Slot Types
+
+clan_tax_slot = {
+	default_obligation = default_tax_collector
+
+	obligations = {
+		strict_taxation_tax_collector
+		iqta_special_rights_tax_collector
+		ghazi_special_rights_tax_collector
+		muqata_special_rights_tax_collector
+		jizya_special_rights_tax_collector
+		deqhan_special_rights_tax_collector
+		maguh_special_rights_tax_collector
+	}
+
+	tax_slot_vassal_limit = {
+		add = {
+			value = 12
+			desc = tax_slot_vassal_level_base_desc
+		}
+	}
+
+	is_valid_tax_collector = {
+		liege ?= scope:liege
+		scope:liege != this
+		is_imprisoned = no
+		is_adult = yes
+		is_incapable = no
+		NOT = { has_character_modifier = fp3_incapable_tax_collector_modifier }
+
+		# Gender has to be allowed to be granted titles to be eligible
+		trigger_if = {
+			limit = {
+				scope:liege.rite = {
+					rite_has_doctrine = doctrine_gender_male_dominated
+				}
+			}
+			is_male = yes
+		}
+		trigger_if = {
+			limit = {
+				scope:liege.rite = {
+					rite_has_doctrine = doctrine_gender_female_dominated
+				}
+			}
+			is_female = yes
+		}
+	}
+
+	aptitude_level_breakpoints = { 20 45 75 110	}
+
+	tax_collector_aptitude = tax_collector_aptitude_score
+
+	on_tax_collector_hired = {
+		scope:tax_collector = {
+			add_character_flag = is_tax_collector
+			if = {
+				limit = {
+					has_opinion_modifier = {
+						target = scope:liege
+						modifier = fired_from_tax_collector_position_opinion
+					}
+				}
+				remove_opinion = {
+					target = scope:liege
+					modifier = fired_from_tax_collector_position_opinion
+				}
+			}
+		}
+	
+		scope:liege = { tcr_hired_hook_effect = yes tcre_hired_sequence_hook_effect = yes tcrf_hired_hook_effect = yes }
+	}
+
+	on_tax_collector_fired = {
+		scope:tax_collector = {
+			remove_character_flag = is_tax_collector
+			if = {
+				limit = {
+					this != scope:liege
+				}
+				add_opinion = {
+					target = scope:liege
+					modifier = fired_from_tax_collector_position_opinion
+				}
+			}
+		}
+	
+		scope:liege = { if = { limit = { tcrs_expected_fired_hook_trigger = yes } tcrs_fired_hook_effect = yes } else_if = { limit = { tcrf_expected_fired_hook_trigger = yes } tcrf_fired_hook_effect = yes } else = { tcr_fired_hook_effect = yes } }
+	}
+
+ on_vassal_assigned = { scope:liege = { if = { limit = { tcrx_expected_hook_trigger = yes } tcrx_assigned_hook_effect = yes } else_if = { limit = { tcrs_expected_payer_hook_trigger = yes } tcrs_payer_assigned_hook_effect = yes } else = { tcr_assigned_hook_effect = yes tcrp_assigned_sequence_hook_effect = yes } } }
+ on_vassal_removed = { scope:liege = { if = { limit = { tcrx_expected_hook_trigger = yes } tcrx_removed_hook_effect = yes } else_if = { limit = { tcrs_expected_payer_hook_trigger = yes } tcrs_payer_removed_hook_effect = yes } else = { tcr_removed_hook_effect = yes tcrp_removed_sequence_hook_effect = yes } } }
+}

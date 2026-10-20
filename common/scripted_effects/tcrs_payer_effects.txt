@@ -1,0 +1,166 @@
+﻿# Immutable whole-component payer map; never substitute an optimistic plan.
+tcrs_prepare_payers_effect = {
+ save_scope_as = tcrs_payer_owner
+ clear_variable_list = tcrs_original_payers
+ set_variable = { name = tcrs_original_payer_count value = 0 }
+ remove_variable = tcrs_native_floor remove_variable = tcrs_native_actual
+ remove_variable = tcrs_payer_error remove_variable = tcrs_restore_payer
+ remove_variable = tcrs_restore_pending remove_variable = tcrs_restore_ready
+ remove_variable = tcrs_restore_dispatch remove_variable = tcrs_restore_ack_assigned
+ remove_variable = tcrs_restore_ack_removed remove_variable = tcrs_payers_restored
+ every_tax_slot = { every_tax_slot_vassal = {
+  save_scope_as = tcrs_payer
+  set_variable = { name = tcrs_payer_owner value = scope:tcrs_payer_owner }
+  set_variable = { name = tcrs_payer_lifecycle value = scope:tcrs_payer_owner.var:tcrs_lifecycle }
+  set_variable = { name = tcrs_payer_sequence value = scope:tcrs_payer_owner.var:tcrs_sequence }
+  set_variable = { name = tcrs_payer_original_slot value = assigned_tax_slot }
+  scope:tcrs_payer_owner = {
+   add_to_variable_list = { name = tcrs_original_payers target = scope:tcrs_payer }
+   change_variable = { name = tcrs_original_payer_count add = 1 }
+  }
+ } }
+}
+
+tcrs_check_payers_effect = {
+ save_scope_as = tcrs_payer_owner
+ remove_variable = tcrs_payer_error
+ set_variable = { name = tcrs_actual_payer_count value = 0 }
+ set_variable = { name = tcrs_recorded_payer_count value = 0 }
+ every_tax_slot = { every_tax_slot_vassal = {
+  save_scope_as = tcrs_payer
+  scope:tcrs_payer_owner = {
+   change_variable = { name = tcrs_actual_payer_count add = 1 }
+   if = { limit = { NOT = {
+    is_target_in_variable_list = { name = tcrs_original_payers target = scope:tcrs_payer }
+   } } set_variable = { name = tcrs_payer_error value = 1 } }
+  }
+ } }
+ every_in_list = { variable = tcrs_original_payers
+  scope:tcrs_payer_owner = { change_variable = { name = tcrs_recorded_payer_count add = 1 } }
+  if = { limit = { NOT = { tcrs_original_payer_trigger = yes } }
+   scope:tcrs_payer_owner = { set_variable = { name = tcrs_payer_error value = 2 } }
+  } else_if = { limit = { NOT = { exists = assigned_tax_slot } }
+   scope:tcrs_payer_owner = { set_variable = { name = tcrs_payer_error value = 3 } }
+  } else = {
+   save_scope_as = tcrs_payer
+   if = { limit = { OR = {
+    NOT = { assigned_tax_slot = { any_tax_slot_vassal = { this = scope:tcrs_payer } } }
+    scope:tcrs_payer_owner = { any_tax_slot = {
+     this != scope:tcrs_payer.assigned_tax_slot
+     any_tax_slot_vassal = { this = scope:tcrs_payer }
+    } }
+   } } scope:tcrs_payer_owner = { set_variable = { name = tcrs_payer_error value = 6 } } }
+   if = { limit = {
+    scope:tcrs_payer_owner = { has_variable = tcrs_payers_restored }
+    assigned_tax_slot != var:tcrs_payer_original_slot
+   } scope:tcrs_payer_owner = { set_variable = { name = tcrs_payer_error value = 7 } } }
+  }
+ }
+ if = { limit = { OR = {
+  var:tcrs_actual_payer_count != var:tcrs_original_payer_count
+  var:tcrs_recorded_payer_count != var:tcrs_original_payer_count
+  any_unassigned_taxpayers = { always = yes }
+ } } set_variable = { name = tcrs_payer_error value = 4 } }
+}
+
+# Reverse exact accepted move order: the previous source has room again.
+# No removal of all taxpayers and no inference from head counts.
+tcrs_choose_restore_payer_effect = {
+ tcrs_check_payers_effect = yes
+ remove_variable = tcrs_restore_payer
+ if = { limit = { NOT = { has_variable = tcrs_payer_error } }
+  every_in_list = { variable = tcrs_original_payers
+   if = { limit = { assigned_tax_slot != var:tcrs_payer_original_slot }
+    # A moved payer must have the optimizer's exact sealed receipt.
+    if = { limit = { OR = {
+     trigger_if = { limit = { tcrv_parent_sealed_receipt_trigger = yes }
+      var:tcrc_payer_lifecycle = scope:tcrs_payer_owner.var:tcrs_lifecycle
+      var:tcrc_payer_receipt_source = var:tcrs_payer_original_slot
+      assigned_tax_slot = var:tcrc_payer_receipt_target
+     } trigger_else = { always = no }
+     tcrx_mechanical_receipt_trigger = yes
+    } }
+     if = { limit = { tcrx_mechanical_receipt_trigger = yes var:tcrc_payer_revision = 0 }
+      # Mechanical order only; no economic receipt or native ACK is invented.
+      set_variable = { name = tcrc_payer_receipt_sequence value = var:tcrx_member_ordinal }
+     }
+     save_scope_as = tcrs_restore_candidate
+     scope:tcrs_payer_owner = {
+      if = { limit = { NOT = { has_variable = tcrs_restore_payer } }
+       set_variable = { name = tcrs_restore_payer value = scope:tcrs_restore_candidate }
+      } else_if = { limit = {
+       scope:tcrs_restore_candidate.var:tcrc_payer_receipt_sequence > var:tcrs_restore_payer.var:tcrc_payer_receipt_sequence
+      } set_variable = { name = tcrs_restore_payer value = scope:tcrs_restore_candidate } }
+     }
+    } else = { scope:tcrs_payer_owner = { set_variable = { name = tcrs_payer_error value = 5 } } }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrs_payer_error } }
+   if = { limit = { has_variable = tcrs_restore_payer }
+    set_variable = { name = tcrs_restore_target value = var:tcrs_restore_payer.var:tcrs_payer_original_slot }
+    set_variable = { name = tcrs_restore_source value = var:tcrs_restore_payer.assigned_tax_slot }
+    if = { limit = { has_variable = tcrs_restore_sequence } change_variable = { name = tcrs_restore_sequence add = 1 } }
+    else = { set_variable = { name = tcrs_restore_sequence value = 1 } }
+    remove_variable = tcrs_restore_dispatch remove_variable = tcrs_restore_ready
+    remove_variable = tcrs_restore_ack_assigned remove_variable = tcrs_restore_ack_removed
+    set_variable = { name = tcrs_restore_pending value = yes }
+    var:tcrs_restore_target = { set_variable = { name = tcrs_restore_owner value = scope:tcrs_payer_owner } }
+   } else = { set_variable = { name = tcrs_payers_restored value = yes } }
+  }
+ }
+}
+
+tcrs_payer_assigned_hook_effect = {
+ if = { limit = { tcrs_expected_payer_hook_trigger = yes scope:tax_slot = var:tcrs_restore_target }
+  set_variable = { name = tcrs_restore_ack_assigned value = var:tcrs_restore_sequence }
+ }
+}
+tcrs_payer_removed_hook_effect = {
+ if = { limit = { tcrs_expected_payer_hook_trigger = yes scope:tax_slot = var:tcrs_restore_source }
+  set_variable = { name = tcrs_restore_ack_removed value = var:tcrs_restore_sequence }
+ }
+}
+tcrs_retire_restore_payer_effect = {
+ if = { limit = { tcrs_restore_receipt_trigger = yes }
+  var:tcrs_restore_payer = {
+   if = { limit = { var:tcrc_payer_revision = 1 }
+    root = { change_variable = { name = tcrv_parent_accepted_count subtract = 1 } }
+   }
+   # Archive recovery separately; do not rewrite the old native receipt.
+   set_variable = { name = tcrs_restored_sequence value = root.var:tcrs_restore_sequence }
+   set_variable = { name = tcrc_payer_expected_slot value = var:tcrs_payer_original_slot }
+   set_variable = { name = tcrc_payer_revision value = 0 }
+  }
+  remove_variable = tcrs_restore_pending remove_variable = tcrs_restore_payer
+  remove_variable = tcrs_restore_ready remove_variable = tcrs_restore_dispatch
+  remove_variable = tcrs_restore_ack_assigned remove_variable = tcrs_restore_ack_removed
+ }
+}
+# Reload may observe the rollback already applied with no live native callback.
+# Archive the observed outcome separately; never manufacture hook ACKs.
+tcrs_payer_recovery_effect = {
+ if = { limit = { tcrs_payer_recovery_safe_trigger = yes }
+  if = { limit = { has_variable = tcrs_restore_pending }
+   if = { limit = {
+    var:tcrs_restore_payer = { assigned_tax_slot = root.var:tcrs_restore_target }
+   }
+    var:tcrs_restore_payer = {
+     if = { limit = { has_variable = tcrc_payer_revision }
+      if = { limit = { var:tcrc_payer_revision = 1 }
+       root = { change_variable = { name = tcrv_parent_accepted_count subtract = 1 } }
+      }
+     }
+     set_variable = { name = tcrs_restored_sequence value = root.var:tcrs_restore_sequence }
+     set_variable = { name = tcrs_restore_recovered_epoch value = root.var:tcrq_epoch }
+     set_variable = { name = tcrc_payer_expected_slot value = var:tcrs_payer_original_slot }
+     set_variable = { name = tcrc_payer_revision value = 0 }
+    }
+   }
+   # If the exact source is still actual, there was no mutation. A fresh
+   # selection is allowed only after reload has discarded all old GUI models.
+   remove_variable = tcrs_restore_pending remove_variable = tcrs_restore_payer
+   remove_variable = tcrs_restore_dispatch remove_variable = tcrs_restore_ready
+   remove_variable = tcrs_restore_ack_assigned remove_variable = tcrs_restore_ack_removed
+  }
+ }
+}

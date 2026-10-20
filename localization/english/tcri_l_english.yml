@@ -1,0 +1,5 @@
+﻿l_english:
+ tcri_automation_label:0 "Automate tax collection"
+ tcri_automation_tooltip:0 "Reconciles tax collection when enabled or when a collector vacancy or an unassigned taxpayer appears. A reconciliation pauses game time and restores the previous pause state when safely complete."
+ tcri_automation_working:0 "Tax collection is being recalculated…"
+ tcri_automation_held:0 "Tax automation paused: recovery or verification is required."

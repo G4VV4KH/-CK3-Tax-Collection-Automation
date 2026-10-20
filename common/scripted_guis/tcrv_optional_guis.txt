@@ -1,0 +1,521 @@
+﻿# Native contribution is authoritative. Tooltip-breakdown values can differ.
+# Keep exact row/context/readiness guards; do not require equality of different getters.
+tcrv_floor = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 5
+tcrv_ordinary_trigger = yes
+scope:manager_exact = yes scope:total >= 0 scope:helpers_closed = yes
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 5
+tcrv_ordinary_trigger = yes
+scope:manager_exact = yes scope:total >= 0 scope:helpers_closed = yes
+} trigger_else = { always = no } }
+
+tcrv_check_ledger_effect = yes
+if = { limit = { has_variable = tcrv_ledger_bad } set_variable = { name = tcrv_reason value = 7 } tcrv_defer_effect = yes }
+else = {
+ set_variable = { name = tcrv_total_floor value = scope:total }
+ if = { limit = { NOT = { has_variable = tcrv_initial_total } } set_variable = { name = tcrv_initial_total value = scope:total } }
+ change_variable = { name = tcrv_pass add = 1 }
+ tcrv_select_recheck_effect = yes
+ set_variable = { name = tcrv_phase value = 10 }
+ tcrm_begin_optional_effect = yes
+}
+
+} } }
+
+tcrv_receive = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrm_generation has_variable = tcrm_mode has_variable = tcrm_owner has_variable = tcrm_phase has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 10
+tcrv_ordinary_trigger = yes
+NOT = { has_variable = tcrm_active }
+has_variable = tcrm_mode var:tcrm_mode = 2
+var:tcrm_owner = this var:tcrm_generation = var:tcrv_generation
+OR = { has_variable = tcrm_no_work has_variable = tcrm_incomplete var:tcrm_phase = 80 }
+
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrm_generation has_variable = tcrm_mode has_variable = tcrm_owner has_variable = tcrm_phase has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 10
+tcrv_ordinary_trigger = yes
+NOT = { has_variable = tcrm_active }
+has_variable = tcrm_mode var:tcrm_mode = 2
+var:tcrm_owner = this var:tcrm_generation = var:tcrv_generation
+OR = { has_variable = tcrm_no_work has_variable = tcrm_incomplete var:tcrm_phase = 80 }
+
+} trigger_else = { always = no } }
+tcrv_receive_matrix_effect = yes
+} } }
+
+tcrv_queue = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrm_epoch has_variable = tcrv_generation has_variable = tcrv_job_before_gold has_variable = tcrv_job_epoch has_variable = tcrv_job_payer has_variable = tcrv_job_preview_gold has_variable = tcrv_job_target has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 20
+tcrv_ordinary_trigger = yes
+scope:helpers_closed = yes
+tcrm_context_valid_trigger = yes var:tcrm_epoch = var:tcrv_job_epoch
+tcrv_job_source_actual_trigger = yes
+tcrv_no_pending_trigger = yes
+var:tcrv_job_payer = { tcrv_payer_unused_in_lifecycle_trigger = yes }
+var:tcrv_job_target = { available_taxpayer_slots > 0 has_tax_collector = yes }
+var:tcrv_job_preview_gold > var:tcrv_job_before_gold
+trigger_if = { limit = { has_variable = tcrv_job_receipt_schema has_variable = tcrv_job_before_reference }
+ var:tcrv_job_receipt_schema = 2 var:tcrv_job_preview_gold > var:tcrv_job_before_reference
+} trigger_else = { always = no }
+NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation }
+
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrm_epoch has_variable = tcrv_generation has_variable = tcrv_job_before_gold has_variable = tcrv_job_epoch has_variable = tcrv_job_payer has_variable = tcrv_job_preview_gold has_variable = tcrv_job_target has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 20
+tcrv_ordinary_trigger = yes
+scope:helpers_closed = yes
+tcrm_context_valid_trigger = yes var:tcrm_epoch = var:tcrv_job_epoch
+tcrv_job_source_actual_trigger = yes
+tcrv_no_pending_trigger = yes
+var:tcrv_job_payer = { tcrv_payer_unused_in_lifecycle_trigger = yes }
+var:tcrv_job_target = { available_taxpayer_slots > 0 has_tax_collector = yes }
+var:tcrv_job_preview_gold > var:tcrv_job_before_gold
+trigger_if = { limit = { has_variable = tcrv_job_receipt_schema has_variable = tcrv_job_before_reference }
+ var:tcrv_job_receipt_schema = 2 var:tcrv_job_preview_gold > var:tcrv_job_before_reference
+} trigger_else = { always = no }
+NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation }
+
+} trigger_else = { always = no } }
+tcrv_queue_effect = yes
+} } }
+
+tcrv_job_ack = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 31
+tcrv_exact_job_completed_trigger = yes tcrv_job_target_actual_trigger = yes
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 31
+tcrv_exact_job_completed_trigger = yes tcrv_job_target_actual_trigger = yes
+} trigger_else = { always = no } }
+set_variable = { name = tcrv_phase value = 40 }
+} } }
+
+tcrv_actual_income = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_job_payer has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 40
+tcrv_exact_job_completed_trigger = yes tcrv_job_target_actual_trigger = yes
+scope:payer = var:tcrv_job_payer scope:row_exact = yes
+has_variable = tcrv_job_preview_gold has_variable = tcrv_job_before_gold
+trigger_if = { limit = { has_variable = tcrv_job_receipt_schema has_variable = tcrv_job_before_reference }
+ var:tcrv_job_receipt_schema = 2 exists = scope:gold exists = scope:reference
+} trigger_else = { always = no }
+
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_job_payer has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 40
+tcrv_exact_job_completed_trigger = yes tcrv_job_target_actual_trigger = yes
+scope:payer = var:tcrv_job_payer scope:row_exact = yes
+has_variable = tcrv_job_preview_gold has_variable = tcrv_job_before_gold
+trigger_if = { limit = { has_variable = tcrv_job_receipt_schema has_variable = tcrv_job_before_reference }
+ var:tcrv_job_receipt_schema = 2 exists = scope:gold exists = scope:reference
+} trigger_else = { always = no }
+
+} trigger_else = { always = no } }
+set_variable = { name = tcrv_actual_gold value = scope:gold }
+set_variable = { name = tcrv_actual_reference value = scope:reference }
+if = { limit = { tcrv_observed_schema2_economics_trigger = yes }
+ set_variable = { name = tcrv_phase value = 41 }
+} else = { set_variable = { name = tcrv_reason value = 8 } tcrv_hold_effect = yes }
+
+} } }
+
+tcrv_total_after = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 41
+tcrv_exact_job_completed_trigger = yes tcrv_job_target_actual_trigger = yes
+scope:manager_exact = yes has_variable = tcrv_actual_gold
+tcrv_observed_schema2_economics_trigger = yes
+has_variable = tcrv_total_floor has_variable = tcrv_initial_total
+
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 41
+tcrv_exact_job_completed_trigger = yes tcrv_job_target_actual_trigger = yes
+scope:manager_exact = yes has_variable = tcrv_actual_gold
+tcrv_observed_schema2_economics_trigger = yes
+has_variable = tcrv_total_floor has_variable = tcrv_initial_total
+
+} trigger_else = { always = no } }
+tcrv_check_ledger_effect = yes
+if = { limit = { NOT = { has_variable = tcrv_ledger_bad } scope:total >= var:tcrv_total_floor scope:total >= var:tcrv_initial_total }
+ tcrv_prepare_pending_effect = yes
+} else = { set_variable = { name = tcrv_reason value = 9 } tcrv_hold_effect = yes }
+
+} } }
+
+tcrv_parent_accept = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 42
+tcrv_parent_can_commit_trigger = yes
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 42
+tcrv_parent_can_commit_trigger = yes
+} trigger_else = { always = no } }
+tcrv_parent_commit_effect = yes
+} } }
+
+tcrv_receipt_cleanup = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 43
+tcrv_can_retire_receipt_trigger = yes scope:helpers_closed = yes
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 43
+tcrv_can_retire_receipt_trigger = yes scope:helpers_closed = yes
+} trigger_else = { always = no } }
+tcrv_parent_cleanup_effect = yes
+} } }
+
+tcrv_cleanup = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 45
+NOT = {
+
+trigger_if = { limit = {
+ has_variable = tcrq_epoch has_variable = tcrq_class has_variable = tcrc_phase
+ has_variable = tcrv_parent_recovery_class has_variable = tcrv_parent_recovered_epoch
+ has_variable = tcrv_phase has_variable = tcrv_outcome
+ has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner
+ has_variable = tcrv_member_count has_variable = tcrv_slot_count
+}
+ has_variable = tcrv_parent_recovery_readonly
+ var:tcrq_class = 31 var:tcrv_parent_recovery_class = 31
+ var:tcrv_parent_recovered_epoch = var:tcrq_epoch
+ var:tcrc_phase = 37 var:tcrv_phase = 45 var:tcrv_outcome = 3
+ tcrv_parent_ledger_identity_trigger = yes
+ trigger_if = { limit = { has_variable = tcrv_parent_accepted_count }
+  var:tcrv_parent_accepted_count > 0
+ } trigger_else = { always = no }
+ NOT = { has_variable = tcrq_pending } NOT = { has_variable = tcrv_hold }
+ NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcrm_active } NOT = { has_variable = tcrb_active }
+ NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+ NOT = { has_variable = tcrs_active } NOT = { has_variable = tcrx_active }
+ NOT = { has_variable = tcr_command_generation } tcrv_no_pending_trigger = yes
+ NOT = { has_variable = tcrv_job_payer } NOT = { has_variable = tcrv_job_source }
+ NOT = { has_variable = tcrv_job_target } NOT = { has_variable = tcrv_expected_sequence }
+ NOT = { has_variable = tcrv_parent_job_purpose }
+ NOT = { any_in_list = { variable = tcrv_parent_members
+  trigger_if = { limit = { has_variable = tcrc_payer_revision }
+   var:tcrc_payer_revision = 1
+   trigger_if = { limit = { has_variable = tcrc_payer_receipt_producer }
+    NOT = { var:tcrc_payer_receipt_producer = 37 }
+   } trigger_else = { always = yes }
+  } trigger_else = { always = no }
+ } }
+} trigger_else = { always = no }
+}
+tcrv_no_pending_trigger = yes scope:helpers_closed = yes NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation } NOT = { has_variable = tcrv_job_payer }
+} trigger_else = { always = no } } effect = { if = { limit = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 45
+NOT = {
+
+trigger_if = { limit = {
+ has_variable = tcrq_epoch has_variable = tcrq_class has_variable = tcrc_phase
+ has_variable = tcrv_parent_recovery_class has_variable = tcrv_parent_recovered_epoch
+ has_variable = tcrv_phase has_variable = tcrv_outcome
+ has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner
+ has_variable = tcrv_member_count has_variable = tcrv_slot_count
+}
+ has_variable = tcrv_parent_recovery_readonly
+ var:tcrq_class = 31 var:tcrv_parent_recovery_class = 31
+ var:tcrv_parent_recovered_epoch = var:tcrq_epoch
+ var:tcrc_phase = 37 var:tcrv_phase = 45 var:tcrv_outcome = 3
+ tcrv_parent_ledger_identity_trigger = yes
+ trigger_if = { limit = { has_variable = tcrv_parent_accepted_count }
+  var:tcrv_parent_accepted_count > 0
+ } trigger_else = { always = no }
+ NOT = { has_variable = tcrq_pending } NOT = { has_variable = tcrv_hold }
+ NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcrm_active } NOT = { has_variable = tcrb_active }
+ NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+ NOT = { has_variable = tcrs_active } NOT = { has_variable = tcrx_active }
+ NOT = { has_variable = tcr_command_generation } tcrv_no_pending_trigger = yes
+ NOT = { has_variable = tcrv_job_payer } NOT = { has_variable = tcrv_job_source }
+ NOT = { has_variable = tcrv_job_target } NOT = { has_variable = tcrv_expected_sequence }
+ NOT = { has_variable = tcrv_parent_job_purpose }
+ NOT = { any_in_list = { variable = tcrv_parent_members
+  trigger_if = { limit = { has_variable = tcrc_payer_revision }
+   var:tcrc_payer_revision = 1
+   trigger_if = { limit = { has_variable = tcrc_payer_receipt_producer }
+    NOT = { var:tcrc_payer_receipt_producer = 37 }
+   } trigger_else = { always = yes }
+  } trigger_else = { always = no }
+ } }
+} trigger_else = { always = no }
+}
+tcrv_no_pending_trigger = yes scope:helpers_closed = yes NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation } NOT = { has_variable = tcrv_job_payer }
+} trigger_else = { always = no } }
+
+tcrv_check_ledger_effect = yes
+if = { limit = { has_variable = tcrv_ledger_bad } set_variable = { name = tcrv_reason value = 10 } tcrv_hold_effect = yes }
+else_if = { limit = { tcr_enabled_trigger = yes NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested } NOT = { has_variable = tcrc_abort_requested } NOT = { has_variable = tcrv_parent_recovery_readonly } OR = { var:tcrv_outcome = 2 has_variable = tcrv_advisory_continue } NOT = { has_variable = tcrv_scan_complete } }
+ set_variable = { name = tcrv_phase value = 5 }
+} else = {
+ tcrv_clear_advisory_effect = yes
+ set_variable = { name = tcrv_settled value = yes }
+ remove_variable = tcrv_active
+ set_variable = { name = tcrv_phase value = 70 }
+}
+
+} } }
+
+# The first optional income floor needs the native manager model before the
+# provider exists. Construct it under the same owned pause; presentation masks
+# and the coordinator's original-manager snapshot remain unchanged.
+tcrv_floor_manager_permission = { scope = character is_valid = { OR = {
+ AND = {
+trigger_if = { limit = { has_variable = tcrv_phase }
+  tcrv_parent_settlement_input_trigger = yes
+  tcrv_ordinary_trigger = yes var:tcrv_phase = 5
+  tcrv_parent_feature_enabled_trigger = yes
+  NOT = { has_variable = tcrv_parent_recovery_readonly }
+  NOT = { has_variable = tcrq_pending }
+  tcrv_no_pending_trigger = yes
+  NOT = { OR = { has_variable = tcrm_active has_variable = tcrb_active
+   has_variable = tcrf_active has_variable = tcre_job_active
+   has_variable = tcrp_job_active has_variable = tcr_command_generation } }
+  scope:context_allowed = yes scope:helpers_closed = yes scope:manager_open = no
+ } trigger_else = { always = no }
+ }
+ AND = {
+trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 45
+tcrv_no_pending_trigger = yes scope:helpers_closed = yes NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation } NOT = { has_variable = tcrv_job_payer }
+} trigger_else = { always = no }
+
+trigger_if = { limit = {
+ has_variable = tcrq_epoch has_variable = tcrq_class has_variable = tcrc_phase
+ has_variable = tcrv_parent_recovery_class has_variable = tcrv_parent_recovered_epoch
+ has_variable = tcrv_phase has_variable = tcrv_outcome
+ has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner
+ has_variable = tcrv_member_count has_variable = tcrv_slot_count
+}
+ has_variable = tcrv_parent_recovery_readonly
+ var:tcrq_class = 31 var:tcrv_parent_recovery_class = 31
+ var:tcrv_parent_recovered_epoch = var:tcrq_epoch
+ var:tcrc_phase = 37 var:tcrv_phase = 45 var:tcrv_outcome = 3
+ tcrv_parent_ledger_identity_trigger = yes
+ trigger_if = { limit = { has_variable = tcrv_parent_accepted_count }
+  var:tcrv_parent_accepted_count > 0
+ } trigger_else = { always = no }
+ NOT = { has_variable = tcrq_pending } NOT = { has_variable = tcrv_hold }
+ NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcrm_active } NOT = { has_variable = tcrb_active }
+ NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+ NOT = { has_variable = tcrs_active } NOT = { has_variable = tcrx_active }
+ NOT = { has_variable = tcr_command_generation } tcrv_no_pending_trigger = yes
+ NOT = { has_variable = tcrv_job_payer } NOT = { has_variable = tcrv_job_source }
+ NOT = { has_variable = tcrv_job_target } NOT = { has_variable = tcrv_expected_sequence }
+ NOT = { has_variable = tcrv_parent_job_purpose }
+ NOT = { any_in_list = { variable = tcrv_parent_members
+  trigger_if = { limit = { has_variable = tcrc_payer_revision }
+   var:tcrc_payer_revision = 1
+   trigger_if = { limit = { has_variable = tcrc_payer_receipt_producer }
+    NOT = { var:tcrc_payer_receipt_producer = 37 }
+   } trigger_else = { always = yes }
+  } trigger_else = { always = no }
+ } }
+} trigger_else = { always = no }
+
+  scope:context_allowed = yes scope:helpers_closed = yes scope:manager_open = no
+  trigger_if = { limit = { has_variable = tcrc_manager_was_open }
+   var:tcrc_manager_was_open = no has_variable = tcrc_manager_owned
+  } trigger_else = { always = no }
+ }
+} } }
+
+# Only the manager-local observer may finish this completed read-only load path.
+# A fresh native total must retain BOTH historical floors; neither is rewritten.
+tcrv_readonly_load_cleanup = { scope = character is_valid = {
+trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 45
+tcrv_no_pending_trigger = yes scope:helpers_closed = yes NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation } NOT = { has_variable = tcrv_job_payer }
+} trigger_else = { always = no }
+
+trigger_if = { limit = {
+ has_variable = tcrq_epoch has_variable = tcrq_class has_variable = tcrc_phase
+ has_variable = tcrv_parent_recovery_class has_variable = tcrv_parent_recovered_epoch
+ has_variable = tcrv_phase has_variable = tcrv_outcome
+ has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner
+ has_variable = tcrv_member_count has_variable = tcrv_slot_count
+}
+ has_variable = tcrv_parent_recovery_readonly
+ var:tcrq_class = 31 var:tcrv_parent_recovery_class = 31
+ var:tcrv_parent_recovered_epoch = var:tcrq_epoch
+ var:tcrc_phase = 37 var:tcrv_phase = 45 var:tcrv_outcome = 3
+ tcrv_parent_ledger_identity_trigger = yes
+ trigger_if = { limit = { has_variable = tcrv_parent_accepted_count }
+  var:tcrv_parent_accepted_count > 0
+ } trigger_else = { always = no }
+ NOT = { has_variable = tcrq_pending } NOT = { has_variable = tcrv_hold }
+ NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcrm_active } NOT = { has_variable = tcrb_active }
+ NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+ NOT = { has_variable = tcrs_active } NOT = { has_variable = tcrx_active }
+ NOT = { has_variable = tcr_command_generation } tcrv_no_pending_trigger = yes
+ NOT = { has_variable = tcrv_job_payer } NOT = { has_variable = tcrv_job_source }
+ NOT = { has_variable = tcrv_job_target } NOT = { has_variable = tcrv_expected_sequence }
+ NOT = { has_variable = tcrv_parent_job_purpose }
+ NOT = { any_in_list = { variable = tcrv_parent_members
+  trigger_if = { limit = { has_variable = tcrc_payer_revision }
+   var:tcrc_payer_revision = 1
+   trigger_if = { limit = { has_variable = tcrc_payer_receipt_producer }
+    NOT = { var:tcrc_payer_receipt_producer = 37 }
+   } trigger_else = { always = yes }
+  } trigger_else = { always = no }
+ } }
+} trigger_else = { always = no }
+
+trigger_if = { limit = {
+ has_variable = tcrv_initial_total has_variable = tcrv_total_floor
+ has_variable = tcrv_slot_count
+ exists = scope:manager_exact exists = scope:manager_open
+ exists = scope:rows exists = scope:total
+}
+ scope:manager_open = yes scope:manager_exact = yes
+ scope:rows = var:tcrv_slot_count scope:rows > 0 scope:total >= 0
+} trigger_else = { always = no }
+
+trigger_if = { limit = { has_variable = tcrv_initial_total has_variable = tcrv_total_floor exists = scope:total }
+ scope:total >= var:tcrv_initial_total scope:total >= var:tcrv_total_floor
+} trigger_else = { always = no }
+} effect = { if = { limit = {
+trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner has_variable = tcrv_phase has_variable = tcrv_wallet }
+tcrv_identity_trigger = yes scope:paused = yes
+scope:speed = var:tcrc_original_speed scope:generation = var:tcrv_generation
+scope:lifecycle = var:tcrv_lifecycle gold = var:tcrv_wallet
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+var:tcrv_phase = 45
+tcrv_no_pending_trigger = yes scope:helpers_closed = yes NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation } NOT = { has_variable = tcrv_job_payer }
+} trigger_else = { always = no }
+
+trigger_if = { limit = {
+ has_variable = tcrq_epoch has_variable = tcrq_class has_variable = tcrc_phase
+ has_variable = tcrv_parent_recovery_class has_variable = tcrv_parent_recovered_epoch
+ has_variable = tcrv_phase has_variable = tcrv_outcome
+ has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_owner
+ has_variable = tcrv_member_count has_variable = tcrv_slot_count
+}
+ has_variable = tcrv_parent_recovery_readonly
+ var:tcrq_class = 31 var:tcrv_parent_recovery_class = 31
+ var:tcrv_parent_recovered_epoch = var:tcrq_epoch
+ var:tcrc_phase = 37 var:tcrv_phase = 45 var:tcrv_outcome = 3
+ tcrv_parent_ledger_identity_trigger = yes
+ trigger_if = { limit = { has_variable = tcrv_parent_accepted_count }
+  var:tcrv_parent_accepted_count > 0
+ } trigger_else = { always = no }
+ NOT = { has_variable = tcrq_pending } NOT = { has_variable = tcrv_hold }
+ NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcrm_active } NOT = { has_variable = tcrb_active }
+ NOT = { has_variable = tcrf_active } NOT = { has_variable = tcrf_pending }
+ NOT = { has_variable = tcrs_active } NOT = { has_variable = tcrx_active }
+ NOT = { has_variable = tcr_command_generation } tcrv_no_pending_trigger = yes
+ NOT = { has_variable = tcrv_job_payer } NOT = { has_variable = tcrv_job_source }
+ NOT = { has_variable = tcrv_job_target } NOT = { has_variable = tcrv_expected_sequence }
+ NOT = { has_variable = tcrv_parent_job_purpose }
+ NOT = { any_in_list = { variable = tcrv_parent_members
+  trigger_if = { limit = { has_variable = tcrc_payer_revision }
+   var:tcrc_payer_revision = 1
+   trigger_if = { limit = { has_variable = tcrc_payer_receipt_producer }
+    NOT = { var:tcrc_payer_receipt_producer = 37 }
+   } trigger_else = { always = yes }
+  } trigger_else = { always = no }
+ } }
+} trigger_else = { always = no }
+
+trigger_if = { limit = {
+ has_variable = tcrv_initial_total has_variable = tcrv_total_floor
+ has_variable = tcrv_slot_count
+ exists = scope:manager_exact exists = scope:manager_open
+ exists = scope:rows exists = scope:total
+}
+ scope:manager_open = yes scope:manager_exact = yes
+ scope:rows = var:tcrv_slot_count scope:rows > 0 scope:total >= 0
+} trigger_else = { always = no }
+
+}
+ tcrv_parent_check_readonly_load_ledger_effect = yes
+ if = { limit = { has_variable = tcrv_ledger_bad }
+  set_variable = { name = tcrv_reason value = 10 } tcrv_hold_effect = yes
+ } else_if = { limit = {
+  OR = { scope:total < var:tcrv_initial_total scope:total < var:tcrv_total_floor }
+ }
+  set_variable = { name = tcrv_reason value = 9 } tcrv_hold_effect = yes
+ } else = {
+  tcrv_clear_advisory_effect = yes
+  set_variable = { name = tcrv_settled value = yes }
+  remove_variable = tcrv_active
+  set_variable = { name = tcrv_phase value = 70 }
+  debug_log = "TCRV_PARENT|READONLY_FRESH_FLOOR_ACCEPTED"
+ }
+} } }

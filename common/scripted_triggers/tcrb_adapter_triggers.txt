@@ -1,0 +1,65 @@
+﻿tcrb_identity_trigger = {
+trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcrb_generation has_variable = tcrb_lifecycle has_variable = tcrb_owner has_variable = tcrc_lifecycle }
+trigger_if = { limit = { has_variable = tcrb_owner has_variable = tcrb_generation has_variable = tcrb_lifecycle has_variable = tcr_active_generation has_variable = tcrc_lifecycle has_variable = tcrb_phase }
+tcro_current_player_owner_trigger = yes
+tcrc_event_pause_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+var:tcrb_owner = this
+var:tcrb_generation = var:tcr_active_generation
+var:tcrb_lifecycle = var:tcrc_lifecycle
+has_variable = tcrc_lifecycle_active
+NOT = { has_variable = tcr_failed }
+
+} trigger_else = { always = no }
+} trigger_else = { always = no }}
+tcrb_provider_allowed_trigger = {
+trigger_if = { limit = { has_variable = tcrb_phase }
+ tcrb_identity_trigger = yes has_variable = tcrb_active
+   tcrc_payer_native_mutation_allowed_trigger = yes
+   tcrc_event_pause_trigger = yes
+ NOT = { has_variable = tcr_requested }
+ var:tcrb_phase = 10
+} trigger_else = { always = no }
+}
+tcrb_execution_allowed_trigger = {
+trigger_if = { limit = { has_variable = tcrb_phase }
+ tcrb_identity_trigger = yes has_variable = tcrb_active
+   tcrc_payer_native_mutation_allowed_trigger = yes
+   tcrc_event_pause_trigger = yes
+ NOT = { has_variable = tcr_requested }
+ var:tcrb_phase = 31
+} trigger_else = { always = no }
+}
+tcrb_settled_trigger = {
+trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcrb_phase has_variable = tcrb_settled_generation has_variable = tcrb_settled_lifecycle has_variable = tcrc_lifecycle }
+ tcrb_identity_trigger = yes
+ has_variable = tcrb_settled
+ var:tcrb_phase = 70
+ var:tcrb_settled_generation = var:tcr_active_generation
+ var:tcrb_settled_lifecycle = var:tcrc_lifecycle
+ NOT = { has_variable = tcrb_active }
+ NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcr_command_generation }
+} trigger_else = { always = no }
+}
+tcrb_abort_quiescent_trigger = {
+trigger_if = { limit = {  }
+ NOT = { has_variable = tcrb_active }
+ NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcr_command_generation }
+ # Parent additionally verifies its original memberships and current counts.
+} trigger_else = { always = no }
+}
+tcrb_replan_quiescent_trigger = {
+trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcrb_phase has_variable = tcrb_replanned_generation has_variable = tcrb_replanned_lifecycle has_variable = tcrc_lifecycle }
+ tcrb_identity_trigger = yes
+ has_variable = tcrb_replanned_generation
+ var:tcrb_replanned_generation = var:tcr_active_generation
+ has_variable = tcrb_replanned_lifecycle
+ var:tcrb_replanned_lifecycle = var:tcrc_lifecycle
+ var:tcrb_phase = 87
+ NOT = { has_variable = tcrb_active }
+ NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcr_command_generation }
+} trigger_else = { always = no }
+}

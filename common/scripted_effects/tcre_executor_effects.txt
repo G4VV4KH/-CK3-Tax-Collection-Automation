@@ -1,0 +1,97 @@
+﻿# Admission consumes saved scopes tcre_desired_collector (character)
+# and tcre_desired_slot (TaxSlot), with ruler as current scope/root.
+# Caller owns plan order, pause acquisition and final whole-plan verification.
+tcre_queue_vacancy_effect = {
+ remove_variable = tcre_enqueue_rejected
+ if = { limit = { has_variable = tcre_job_active }
+  # A pending native command is never overwritten by a second plan item.
+  set_variable = { name = tcre_enqueue_rejected value = 4 }
+ } else_if = { limit = {
+  OR = { tcr_enabled_trigger = yes tcrf_requeue_allowed_trigger = yes tcrs_requeue_allowed_trigger = yes } has_variable = tcr_active_generation
+  NOT = { has_variable = tcr_failed }
+  exists = scope:tcre_desired_collector exists = scope:tcre_desired_slot
+  any_tax_slot = { this = scope:tcre_desired_slot }
+ }
+  tcr_clear_command_effect = yes
+  remove_variable = tcre_deferred_reason
+  remove_variable = tcre_hired_sequence_ack
+  remove_variable = tcre_hired_generation_ack
+  remove_variable = tcre_dispatched_sequence
+  remove_variable = tcre_dispatched_generation
+  if = { limit = { has_variable = tcre_sequence }
+   change_variable = { name = tcre_sequence add = 1 }
+  } else = { set_variable = { name = tcre_sequence value = 1 } }
+  set_variable = { name = tcre_job_generation value = var:tcr_active_generation }
+  if = { limit = {
+   scope:tcre_desired_collector = {
+    is_tax_collector_of = root tax_slot = scope:tcre_desired_slot
+   }
+  }
+   # Already-correct native state is an explicit no-op, not a fake hire ACK.
+   set_variable = { name = tcre_phase value = 41 }
+   set_variable = { name = tcre_completed_generation value = var:tcre_job_generation }
+   set_variable = { name = tcre_completed_sequence value = var:tcre_sequence }
+  } else_if = { limit = { scope:tcre_desired_slot = { has_tax_collector = yes } }
+   set_variable = { name = tcre_phase value = 50 }
+   set_variable = { name = tcre_deferred_reason value = 1 }
+  } else_if = { limit = { scope:tcre_desired_collector = { is_tax_collector = yes } }
+   set_variable = { name = tcre_phase value = 50 }
+   set_variable = { name = tcre_deferred_reason value = 2 }
+  } else_if = { limit = { scope:tcre_desired_collector = { is_alive = no } }
+   set_variable = { name = tcre_phase value = 50 }
+   set_variable = { name = tcre_deferred_reason value = 3 }
+  } else = {
+   set_variable = { name = tcre_job_active value = yes }
+   set_variable = { name = tcre_phase value = 10 }
+   set_variable = { name = tcr_command_generation value = var:tcr_active_generation }
+   set_variable = { name = tcr_expected_kind value = 1 }
+set_variable = { name = tcrq_command_schema value = 1 }
+set_variable = { name = tcrq_source_kind value = 1 }
+   set_variable = { name = tcr_expected_collector value = scope:tcre_desired_collector }
+   set_variable = { name = tcr_expected_slot value = scope:tcre_desired_slot }
+   save_scope_as = tcre_owner
+   scope:tcre_desired_slot = {
+    set_variable = { name = tcre_slot_owner value = scope:tcre_owner }
+    set_variable = { name = tcre_slot_generation value = scope:tcre_owner.var:tcre_job_generation }
+    set_variable = { name = tcre_slot_sequence value = scope:tcre_owner.var:tcre_sequence }
+   }
+  }
+ } else = { set_variable = { name = tcre_enqueue_rejected value = 5 } }
+}
+
+# Required wiring: call after tcr_hired_hook_effect within the native
+# on_tax_collector_hired scope:liege block. This file does not replace that hook.
+tcre_hired_sequence_hook_effect = {
+ if = { limit = {
+  tcr_expected_collector_hook_trigger = yes
+  tcre_command_active_trigger = yes
+  has_variable = tcre_dispatched_sequence has_variable = tcre_dispatched_generation
+ }
+  if = { limit = {
+   var:tcre_phase = 25
+   var:tcre_dispatched_sequence = var:tcre_sequence
+   var:tcre_dispatched_generation = var:tcre_job_generation
+  }
+   set_variable = { name = tcre_hired_sequence_ack value = var:tcre_sequence }
+   set_variable = { name = tcre_hired_generation_ack value = var:tcre_job_generation }
+   set_variable = { name = tcre_phase value = 30 }
+  }
+ }
+}
+
+tcre_clear_slot_marker_effect = {
+ if = { limit = { has_variable = tcr_expected_slot exists = var:tcr_expected_slot }
+  var:tcr_expected_slot = {
+   if = { limit = {
+    has_variable = tcre_slot_owner var:tcre_slot_owner = root
+    has_variable = tcre_slot_generation has_variable = tcre_slot_sequence
+    var:tcre_slot_generation = root.var:tcre_job_generation
+    var:tcre_slot_sequence = root.var:tcre_sequence
+   }
+    remove_variable = tcre_slot_owner
+    remove_variable = tcre_slot_generation
+    remove_variable = tcre_slot_sequence
+   }
+  }
+ }
+}

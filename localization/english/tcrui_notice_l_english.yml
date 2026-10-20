@@ -1,0 +1,4 @@
+﻿l_english:
+ tcrui_recalculating_title:0 "Tax collection is being recalculated…"
+ tcrui_recalculating_description:0 "The previous pause state will be restored when the recalculation ends."
+ tcrui_disable_automation:0 "Disable automation"

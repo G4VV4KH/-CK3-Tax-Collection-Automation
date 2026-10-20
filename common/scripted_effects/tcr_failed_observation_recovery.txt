@@ -1,0 +1,33 @@
+﻿# Called only by the exact load-owned event callback. No native command,
+# event release, pause/speed mutation, receipt acceptance or ledger rewrite.
+tcrv_recover_failed_observation_effect = {
+ if = { limit = { tcrv_failed_observation_recovery_trigger = yes }
+  tcrv_parent_check_ledger_effect = yes
+  tcrv_check_ledger_effect = yes
+  if = { limit = {
+   NOT = { has_variable = tcrv_parent_bad }
+   NOT = { has_variable = tcrv_ledger_bad }
+  }
+   set_variable = { name = tcrc_recovered_failed_lifecycle value = var:tcrc_lifecycle }
+   set_variable = { name = tcrc_recovered_block_reason value = var:tcrc_block_reason }
+   set_variable = { name = tcrc_recovered_failure_epoch value = var:tcrq_epoch }
+   # CK3 reload has its own native UI state. Preserve that state instead of
+   # waiting for windows remembered by the pre-save transaction to reappear.
+   set_variable = { name = tcrc_recovered_saved_manual value = var:tcrc_original_manual_pause }
+   set_variable = { name = tcrc_recovered_saved_speed value = var:tcrc_original_speed }
+   set_variable = { name = tcrc_recovered_saved_manager value = var:tcrc_manager_was_open }
+   set_variable = { name = tcrc_original_manual_pause value = scope:manual }
+   set_variable = { name = tcrc_original_speed value = scope:speed }
+   set_variable = { name = tcrc_manager_was_open value = scope:manager_open }
+   remove_variable = tcrc_manager_owned
+   if = { limit = { scope:manager_open = no }
+    set_variable = { name = tcrc_manager_owned value = yes }
+   }
+   remove_variable = tcr_failed
+   set_variable = { name = tcrc_phase value = 37 }
+   debug_log = "TCRV_PARENT|RECOVERED_FAILED_OBSERVATION|lifecycle=[GetPlayer.MakeScope.Var('tcrc_lifecycle').GetValue]"
+   # The calling class31 branch now invalidates the provider and enters45.
+   # Ordinary cleanup and full parent verification still precede event release.
+  }
+ }
+}

@@ -1,0 +1,2 @@
+﻿l_polish:
+ tcro_owner_hold_notice:0 "Automatyzacja podatków została wstrzymana po zmianie postaci gracza lub wczytaniu trwającej operacji. Operacja poprzedniego władcy i jego kontrola nad pauzą zostają zachowane; nie są wydawane polecenia dla nowego władcy, a gra nie jest automatycznie wznawiana."

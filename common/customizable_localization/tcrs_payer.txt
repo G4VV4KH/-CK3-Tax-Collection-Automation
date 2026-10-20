@@ -1,0 +1,15 @@
+﻿tcrs_restore_target_slot = {
+ type = all
+ text = {
+  trigger = {
+   has_variable = tcrs_restore_owner
+   var:tcrs_restore_owner = {
+    has_variable = tcrs_active has_variable = tcrs_phase
+    var:tcrs_phase = 85 has_variable = tcrs_restore_pending
+    has_variable = tcrs_restore_target var:tcrs_restore_target = prev
+   }
+  }
+  localization_key = tcrp_executor_target_yes
+ }
+ text = { fallback = yes localization_key = tcrp_executor_target_no }
+}

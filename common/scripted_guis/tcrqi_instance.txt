@@ -1,0 +1,8 @@
+﻿tcrqi_instance_birth = { scope = character is_valid = { is_ai = no is_alive = yes scope:single_player = yes } effect = { if = { limit = { is_ai = no is_alive = yes scope:single_player = yes }
+tcrq_load_effect = yes
+if = { limit = { has_variable = tcrqi_births }
+ change_variable = { name = tcrqi_births add = 1 }
+} else = { set_variable = { name = tcrqi_births value = 1 } }
+debug_log = "TCRQI|INSTANCE_ADMITTED|owner=[GetPlayer.GetID]|epoch=[GetPlayer.MakeScope.Var('tcrq_epoch').GetValue]|births=[GetPlayer.MakeScope.Var('tcrqi_births').GetValue]"
+
+} } }

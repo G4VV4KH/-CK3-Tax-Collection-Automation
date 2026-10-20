@@ -1,0 +1,117 @@
+﻿tcrs_payer_base_permission = { scope = character is_valid = { tcrs_payer_ui_trigger = yes } }
+
+tcrs_payer_manager_permission = { scope = character is_valid = { tcrs_payer_ui_trigger = yes
+OR = { var:tcrs_phase = 10 var:tcrs_phase = 85 AND = { var:tcrs_phase = 40 var:tcrc_phase = 40 } }
+scope:helpers_closed = yes } }
+
+tcrs_capture_total = { scope = character is_valid = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 10
+scope:manager_exact = yes scope:helpers_closed = yes scope:total >= 0
+NOT = { has_variable = tcrs_native_floor } } effect = { if = { limit = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 10
+scope:manager_exact = yes scope:helpers_closed = yes scope:total >= 0
+NOT = { has_variable = tcrs_native_floor } }
+tcrs_check_payers_effect = yes
+if = { limit = { NOT = { has_variable = tcrs_payer_error } }
+ set_variable = { name = tcrs_native_floor value = scope:total }
+ tcrs_authorize_effect = yes
+}
+ } } }
+
+tcrs_final_total = { scope = character is_valid = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 40 var:tcrc_phase = 40
+has_variable = tcrs_native_floor scope:manager_exact = yes scope:helpers_closed = yes scope:total >= 0
+tcrv_parent_quiescent_trigger = yes NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcrp_job_active } } effect = { if = { limit = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 40 var:tcrc_phase = 40
+has_variable = tcrs_native_floor scope:manager_exact = yes scope:helpers_closed = yes scope:total >= 0
+tcrv_parent_quiescent_trigger = yes NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcrp_job_active } }
+tcrs_check_payers_effect = yes
+if = { limit = { NOT = { has_variable = tcrs_payer_error } }
+ set_variable = { name = tcrs_native_actual value = scope:total }
+ if = { limit = { scope:total >= var:tcrs_native_floor } tcrs_accept_effect = yes }
+ else = { tcrs_request_rollback_effect = yes }
+}
+ } } }
+
+tcrs_restore_choose = { scope = character is_valid = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+scope:helpers_closed = yes NOT = { has_variable = tcrs_restore_pending }
+NOT = { has_variable = tcrs_payers_restored } NOT = { has_variable = tcrs_payer_error }
+tcrv_parent_quiescent_trigger = yes NOT = { has_variable = tcrp_job_active } } effect = { if = { limit = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+scope:helpers_closed = yes NOT = { has_variable = tcrs_restore_pending }
+NOT = { has_variable = tcrs_payers_restored } NOT = { has_variable = tcrs_payer_error }
+tcrv_parent_quiescent_trigger = yes NOT = { has_variable = tcrp_job_active } }
+tcrs_choose_restore_payer_effect = yes
+ } } }
+
+tcrs_restore_open = { scope = character is_valid = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+has_variable = tcrs_restore_pending NOT = { has_variable = tcrs_restore_dispatch }
+scope:target_match = yes scope:helpers_closed = yes NOT = { has_variable = tcrs_payer_error } } }
+
+tcrs_restore_select = { scope = character is_valid = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+has_variable = tcrs_restore_pending has_variable = tcrs_restore_payer
+NOT = { has_variable = tcrs_restore_dispatch } NOT = { has_variable = tcrs_payer_error }
+scope:target_match = yes scope:row_ready = yes scope:row = var:tcrs_restore_payer
+scope:capacity = yes scope:list_empty = yes } }
+
+tcrs_restore_clear = { scope = character is_valid = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+has_variable = tcrs_restore_pending NOT = { has_variable = tcrs_restore_dispatch }
+scope:target_match = yes NOT = { has_variable = tcrs_payer_error } } }
+
+tcrs_restore_authorize = { scope = character is_valid = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+has_variable = tcrs_restore_pending has_variable = tcrs_restore_payer
+NOT = { has_variable = tcrs_restore_dispatch } NOT = { has_variable = tcrs_payer_error }
+scope:target_match = yes scope:row_ready = yes scope:row = var:tcrs_restore_payer
+scope:capacity = yes scope:exact_selected = yes
+var:tcrs_restore_payer = { assigned_tax_slot = root.var:tcrs_restore_source } } effect = { if = { limit = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+has_variable = tcrs_restore_pending has_variable = tcrs_restore_payer
+NOT = { has_variable = tcrs_restore_dispatch } NOT = { has_variable = tcrs_payer_error }
+scope:target_match = yes scope:row_ready = yes scope:row = var:tcrs_restore_payer
+scope:capacity = yes scope:exact_selected = yes
+var:tcrs_restore_payer = { assigned_tax_slot = root.var:tcrs_restore_source } }
+set_variable = { name = tcrs_restore_ready value = var:tcrs_restore_sequence }
+ } } }
+
+tcrs_restore_dispatch = { scope = character is_valid = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+has_variable = tcrs_restore_pending has_variable = tcrs_restore_payer
+NOT = { has_variable = tcrs_restore_dispatch } NOT = { has_variable = tcrs_payer_error }
+scope:target_match = yes scope:row_ready = yes scope:row = var:tcrs_restore_payer
+scope:capacity = yes scope:exact_selected = yes
+var:tcrs_restore_payer = { assigned_tax_slot = root.var:tcrs_restore_source }
+has_variable = tcrs_restore_ready var:tcrs_restore_ready = var:tcrs_restore_sequence } effect = { if = { limit = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+has_variable = tcrs_restore_pending has_variable = tcrs_restore_payer
+NOT = { has_variable = tcrs_restore_dispatch } NOT = { has_variable = tcrs_payer_error }
+scope:target_match = yes scope:row_ready = yes scope:row = var:tcrs_restore_payer
+scope:capacity = yes scope:exact_selected = yes
+var:tcrs_restore_payer = { assigned_tax_slot = root.var:tcrs_restore_source }
+has_variable = tcrs_restore_ready var:tcrs_restore_ready = var:tcrs_restore_sequence }
+set_variable = { name = tcrs_restore_dispatch value = var:tcrs_restore_sequence }
+ } } }
+
+tcrs_restore_native_permission = { scope = character is_valid = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+has_variable = tcrs_restore_pending has_variable = tcrs_restore_payer
+has_variable = tcrs_restore_dispatch
+var:tcrs_restore_dispatch = var:tcrs_restore_sequence NOT = { has_variable = tcrs_payer_error }
+scope:target_match = yes scope:row_ready = yes scope:row = var:tcrs_restore_payer
+scope:capacity = yes scope:exact_selected = yes
+var:tcrs_restore_payer = { assigned_tax_slot = root.var:tcrs_restore_source } } }
+
+tcrs_restore_ack = { scope = character is_valid = { tcrs_payer_ui_trigger = yes
+tcrs_restore_receipt_trigger = yes scope:helpers_closed = yes } effect = { if = { limit = { tcrs_payer_ui_trigger = yes
+tcrs_restore_receipt_trigger = yes scope:helpers_closed = yes }
+tcrs_retire_restore_payer_effect = yes
+ } } }
+
+tcrs_restore_close = { scope = character is_valid = { tcrs_payer_ui_trigger = yes
+tcrs_restore_receipt_trigger = yes scope:target_match = yes } }
+
+tcrs_restored_total = { scope = character is_valid = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+has_variable = tcrs_payers_restored has_variable = tcrs_native_floor
+NOT = { has_variable = tcrs_restore_pending } NOT = { has_variable = tcrs_payer_error }
+scope:helpers_closed = yes scope:manager_exact = yes scope:total >= var:tcrs_native_floor } effect = { if = { limit = { tcrs_payer_ui_trigger = yes var:tcrs_phase = 85
+has_variable = tcrs_payers_restored has_variable = tcrs_native_floor
+NOT = { has_variable = tcrs_restore_pending } NOT = { has_variable = tcrs_payer_error }
+scope:helpers_closed = yes scope:manager_exact = yes scope:total >= var:tcrs_native_floor }
+tcrs_check_payers_effect = yes
+if = { limit = { NOT = { has_variable = tcrs_payer_error } }
+ set_variable = { name = tcrs_native_actual value = scope:total }
+ tcrs_finish_rollback_effect = yes
+}
+ } } }

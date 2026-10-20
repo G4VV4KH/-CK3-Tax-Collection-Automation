@@ -1,0 +1,229 @@
+﻿tcrq_bootstrap = { scope = character is_valid = {
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+has_variable = tcrq_pending
+scope:epoch = var:tcrq_epoch
+is_ai = no is_alive = yes
+
+} trigger_else = { always = no }
+NOT = { has_variable = tcrq_bootstrap_ready }
+scope:keys_cleared = yes
+} trigger_else = { always = no }
+
+} effect = { if = { limit = {
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+has_variable = tcrq_pending
+scope:epoch = var:tcrq_epoch
+is_ai = no is_alive = yes
+
+} trigger_else = { always = no }
+NOT = { has_variable = tcrq_bootstrap_ready }
+scope:keys_cleared = yes
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrq_bootstrap_ready value = yes }
+tcrq_classify_effect = yes
+if = { limit = { has_variable = tcrq_idle } tcrq_finish_idle_effect = yes }
+
+} } }
+
+tcrq_observe_event = { scope = character is_valid = {
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+has_variable = tcrq_pending
+scope:epoch = var:tcrq_epoch
+is_ai = no is_alive = yes
+
+} trigger_else = { always = no }
+tcrq_pending_event_trigger = yes
+scope:game_paused = yes scope:event_paused = yes
+NOT = { has_variable = tcrq_event_seen }
+} trigger_else = { always = no }
+
+} effect = { if = { limit = {
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+has_variable = tcrq_pending
+scope:epoch = var:tcrq_epoch
+is_ai = no is_alive = yes
+
+} trigger_else = { always = no }
+tcrq_pending_event_trigger = yes
+scope:game_paused = yes scope:event_paused = yes
+NOT = { has_variable = tcrq_event_seen }
+} trigger_else = { always = no }
+
+}
+set_variable = { name = tcrq_event_seen value = yes }
+tcrq_classify_effect = yes
+} } }
+
+tcrq_resume = { scope = character is_valid = {
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_start_gold
+has_variable = tcrq_epoch
+}
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+has_variable = tcrq_pending
+scope:epoch = var:tcrq_epoch
+is_ai = no is_alive = yes
+
+} trigger_else = { always = no }
+tcrq_pending_event_trigger = yes
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrq_event_seen
+scope:game_paused = yes scope:event_paused = yes scope:helpers_closed = yes
+has_variable = tca_enabled NOT = { has_variable = tcri_disable_requested }
+
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_start_gold
+}
+current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day gold = var:tcrc_start_gold
+} trigger_else = { always = no }
+
+} trigger_else = { always = no }
+
+} effect = { if = { limit = {
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_start_gold
+has_variable = tcrq_epoch
+}
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+has_variable = tcrq_pending
+scope:epoch = var:tcrq_epoch
+is_ai = no is_alive = yes
+
+} trigger_else = { always = no }
+tcrq_pending_event_trigger = yes
+tcro_current_player_owner_trigger = yes
+NOT = { has_variable = tcri_hold_reason }
+has_variable = tcrq_event_seen
+scope:game_paused = yes scope:event_paused = yes scope:helpers_closed = yes
+has_variable = tca_enabled NOT = { has_variable = tcri_disable_requested }
+
+trigger_if = { limit = {
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_start_gold
+}
+current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day gold = var:tcrc_start_gold
+} trigger_else = { always = no }
+
+} trigger_else = { always = no }
+
+}
+if = { limit = { has_variable = tcrs_active } tcrs_recovery_resume_effect = yes } else_if = { limit = { OR = { has_variable = tcrf_active has_variable = tcrf_pending has_variable = tcrf_receipt_pending } } tcrf_recovery_resume_effect = yes } else = {
+tcrq_classify_effect = yes
+if = { limit = { OR = { var:tcrq_class = 0 var:tcrq_class = 1 var:tcrq_class = 2 var:tcrq_class = 3 } } tcrq_resume_effect = yes }
+
+}
+} } }
+
+tcrq_cancel_ready = { scope = character is_valid = {
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+has_variable = tcrq_pending
+has_variable = tcrq_bootstrap_ready
+scope:epoch = var:tcrq_epoch
+is_ai = no is_alive = yes
+tcrq_pending_event_trigger = yes
+tcro_current_player_owner_trigger = yes
+has_variable = tcrq_event_seen
+scope:game_paused = yes scope:event_paused = yes scope:helpers_closed = yes
+NOT = { has_variable = tca_enabled }
+
+} trigger_else = { always = no }
+
+} effect = { if = { limit = {
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+has_variable = tcrq_pending
+has_variable = tcrq_bootstrap_ready
+scope:epoch = var:tcrq_epoch
+is_ai = no is_alive = yes
+tcrq_pending_event_trigger = yes
+tcro_current_player_owner_trigger = yes
+has_variable = tcrq_event_seen
+scope:game_paused = yes scope:event_paused = yes scope:helpers_closed = yes
+NOT = { has_variable = tca_enabled }
+
+} trigger_else = { always = no }
+
+}
+if = { limit = { has_variable = tcrs_active } tcrs_recovery_resume_effect = yes } else_if = { limit = { OR = { has_variable = tcrf_active has_variable = tcrf_pending has_variable = tcrf_receipt_pending } } tcrf_recovery_resume_effect = yes } else = {
+tcrq_classify_effect = yes
+if = { limit = { OR = { var:tcrq_class = 0 var:tcrq_class = 1 var:tcrq_class = 2 var:tcrq_class = 3 }
+ }
+ set_variable = { name = tcrq_event_cancel_ready value = yes }
+}
+
+
+}
+} } }
+
+tcrq_bound = { scope = character is_valid = {
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+has_variable = tcrq_pending
+has_variable = tcrq_bootstrap_ready
+scope:epoch = var:tcrq_epoch
+is_ai = no is_alive = yes
+scope:watch_matches = yes
+NOT = { has_variable = tcrq_wait_reported }
+} trigger_else = { always = no }
+
+} effect = { if = { limit = {
+trigger_if = { limit = {
+has_variable = tcrq_epoch
+}
+has_variable = tcrq_pending
+has_variable = tcrq_bootstrap_ready
+scope:epoch = var:tcrq_epoch
+is_ai = no is_alive = yes
+scope:watch_matches = yes
+NOT = { has_variable = tcrq_wait_reported }
+} trigger_else = { always = no }
+
+}
+tcrq_wait_pending_effect = yes
+} } }
+
+tcrq_cancel_permission = { scope = character is_valid = {
+OR = { AND = { tcrq_off_cancel_allowed_trigger = yes } tcrq_cancelled_event_trigger = yes }
+} }

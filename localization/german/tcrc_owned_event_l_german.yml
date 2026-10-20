@@ -1,0 +1,6 @@
+﻿l_german:
+ tcrc_event_title:0 "Die Steuereinziehung wird neu berechnet"
+ tcrc_event_desc:0 "Nach der Neuberechnung der Steuereinziehung wird der vorherige Pausenzustand wiederhergestellt."
+ tcrc_event_complete:0 "Neuberechnung abgeschlossen"
+ tcrc_event_cancel:0 "Automatisierung angehalten"
+ tcrc_event_failed:0 "Automatisierung nach fehlgeschlagener Überprüfung angehalten"

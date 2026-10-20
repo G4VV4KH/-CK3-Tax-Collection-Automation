@@ -1,0 +1,67 @@
+﻿tcri_capture_edge_effect = {
+ save_scope_as = tcri_edge_owner
+ clear_variable_list = tcri_empty_slots
+ clear_variable_list = tcri_unassigned
+ every_tax_slot = { limit = { has_tax_collector = no }
+  save_scope_as = tcri_edge_slot
+  scope:tcri_edge_owner = { add_to_variable_list = { name = tcri_empty_slots target = scope:tcri_edge_slot } }
+ }
+ every_unassigned_taxpayers = {
+  save_scope_as = tcri_edge_payer
+  scope:tcri_edge_owner = { add_to_variable_list = { name = tcri_unassigned target = scope:tcri_edge_payer } }
+ }
+ set_variable = { name = tcri_snapshot_ready value = yes }
+}
+tcri_disable_effect = {
+ remove_variable = tca_enabled
+ remove_variable = tcr_requested
+ # The coordinator owns cancellation/settlement. Never discard its journal
+ # or change native pause state in the checkbox effect.
+ if = { limit = { OR = {
+  has_variable = tcrc_lifecycle_active has_variable = tcr_active_generation
+ } }
+  set_variable = { name = tcri_disable_requested value = yes }
+  if = { limit = { has_variable = tcrs_active } tcrs_request_rollback_effect = yes }
+ }
+}
+tcri_enable_effect = {
+ if = { limit = {
+  tcri_available_trigger = yes
+  NOT = { has_variable = tcrc_lifecycle_active }
+  NOT = { has_variable = tcr_active_generation }
+  NOT = { has_variable = tcri_disable_requested }
+  NOT = { has_variable = tcr_failed }
+ }
+  if = { limit = { tcri_legacy_pending_trigger = yes }
+   # A save can contain an interrupted old swap. Keep the exact old journal
+   # intact until a separately verified migration/recovery adapter handles it.
+   set_variable = { name = tcri_hold_reason value = 1 }
+  } else_if = { limit = { NOT = { has_variable = tcri_hold_reason } }
+   set_variable = { name = tca_enabled value = yes }
+   tcri_capture_edge_effect = yes
+   tcr_request_effect = yes
+  }
+ }
+}
+tcri_observe_edge_effect = {
+ if = { limit = { tcri_idle_trigger = yes tcri_edge_changed_trigger = yes }
+  tcri_capture_edge_effect = yes
+  # Removing the last vacancy also updates the snapshot, but needs no pass.
+  if = { limit = { OR = {
+   any_tax_slot = { has_tax_collector = no }
+   any_unassigned_taxpayers = { always = yes }
+  } }
+   tcr_request_effect = yes
+  }
+ }
+}
+tcri_retry_vacancy_effect = {
+ # A formerly impossible vacancy can become fillable when a courtier arrives
+ # or reaches adulthood. This does not trigger optional incumbent upgrades.
+ if = { limit = { tcr_enabled_trigger = yes any_tax_slot = { has_tax_collector = no } }
+  tcr_request_effect = yes
+ }
+}
+tcri_load_effect = {
+# Centralized tcrq_load_effect is the only load entry.
+}

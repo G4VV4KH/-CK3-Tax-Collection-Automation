@@ -1,0 +1,5 @@
+﻿l_polish:
+ tcri_automation_label:0 "Automatyzuj pobór podatków"
+ tcri_automation_tooltip:0 "Przelicza pobór podatków po włączeniu, gdy zwolni się stanowisko poborcy lub pojawi się nieprzydzielony podatnik. Przeliczanie wstrzymuje upływ czasu w grze i przywraca poprzedni stan pauzy po bezpiecznym zakończeniu."
+ tcri_automation_working:0 "Trwa przeliczanie poboru podatków…"
+ tcri_automation_held:0 "Automatyzacja podatków wstrzymana: wymagane jest przywrócenie lub weryfikacja."

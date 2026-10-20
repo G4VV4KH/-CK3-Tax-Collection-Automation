@@ -1,0 +1,64 @@
+﻿tcre_executor_target_slot = {
+ type = all
+ text = {
+  trigger = {
+   has_variable = tcre_slot_owner exists = var:tcre_slot_owner
+   has_variable = tcre_slot_generation has_variable = tcre_slot_sequence
+   var:tcre_slot_owner = {
+    tcre_command_active_trigger = yes
+    var:tcr_expected_slot = prev
+    var:tcre_job_generation = prev.var:tcre_slot_generation
+    var:tcre_sequence = prev.var:tcre_slot_sequence
+   }
+  }
+  localization_key = tcre_executor_target_yes
+ }
+ text = { fallback = yes localization_key = tcre_executor_target_no }
+}
+
+# A saved appointment lease can leave its native helper open across Load.
+# Ordinary tcre permissions deliberately reject tcrq_pending; this permits
+# closing ONLY that exact helper, without authorizing a hire or fabricating ACK.
+tcrs_recovery_appoint_slot = {
+ type = all
+ text = {
+  trigger = {
+   trigger_if = { limit = {
+    has_variable = tcre_slot_owner exists = var:tcre_slot_owner
+    has_variable = tcre_slot_generation has_variable = tcre_slot_sequence
+   }
+    var:tcre_slot_owner = {
+     trigger_if = { limit = {
+      has_variable = tcrq_pending has_variable = tcrq_bootstrap_ready
+      has_variable = tcrq_epoch has_variable = tcrq_class
+      has_variable = tcrq_loaded_lifecycle has_variable = tcrc_event_requested
+      has_variable = tcrs_pending has_variable = tcre_job_active
+      has_variable = tcr_command_generation has_variable = tcre_job_generation
+      has_variable = tcre_sequence has_variable = tcrs_vacancy_sequence
+      has_variable = tcr_expected_kind has_variable = tcr_expected_slot
+      has_variable = tcr_expected_collector has_variable = tcrs_command_slot
+      has_variable = tcrs_command_collector
+     }
+      tcrs_identity_trigger = yes
+      NOT = { has_variable = tcrs_failed } NOT = { has_variable = tcr_failed }
+      var:tcrq_class = 41
+      var:tcrq_loaded_lifecycle = var:tcrc_lifecycle
+      var:tcrc_event_requested = var:tcrc_lifecycle
+      OR = { var:tcrs_phase = 30 var:tcrs_phase = 60 }
+      var:tcr_expected_kind = 1
+      var:tcr_expected_slot = prev
+      var:tcrs_command_slot = prev
+      var:tcr_expected_collector = var:tcrs_command_collector
+      var:tcre_job_generation = var:tcrs_generation
+      var:tcr_command_generation = var:tcrs_generation
+      var:tcre_job_generation = prev.var:tcre_slot_generation
+      var:tcre_sequence = prev.var:tcre_slot_sequence
+      var:tcre_sequence = var:tcrs_vacancy_sequence
+     } trigger_else = { always = no }
+    }
+   } trigger_else = { always = no }
+  }
+  localization_key = tcre_executor_target_yes
+ }
+ text = { fallback = yes localization_key = tcre_executor_target_no }
+}

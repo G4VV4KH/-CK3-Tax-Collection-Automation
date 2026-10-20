@@ -1,0 +1,4 @@
+﻿l_german:
+ tcrui_recalculating_title:0 "Die Steuereinziehung wird neu berechnet…"
+ tcrui_recalculating_description:0 "Nach Abschluss der Neuberechnung wird der vorherige Pausenzustand wiederhergestellt."
+ tcrui_disable_automation:0 "Automatisierung deaktivieren"

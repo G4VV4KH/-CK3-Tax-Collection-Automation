@@ -1,0 +1,43 @@
+﻿tcri_available_trigger = {
+ is_ai = no is_alive = yes
+ government_has_flag = government_is_clan
+ any_tax_slot = { always = yes }
+}
+tcri_legacy_pending_trigger = {
+ OR = {
+  has_variable = tca_swap_tx_pending
+  has_variable = tca_active_epoch
+  AND = { exists = global_var:tca_batch_pause_owner global_var:tca_batch_pause_owner = this }
+  AND = { exists = global_var:tca_swap_recovery_owner global_var:tca_swap_recovery_owner = this }
+ }
+}
+tcri_idle_trigger = {
+ tcr_enabled_trigger = yes
+ NOT = { has_variable = tcrc_lifecycle_active }
+ NOT = { has_variable = tcr_active_generation }
+ NOT = { has_variable = tcr_failed }
+ NOT = { has_variable = tcri_hold_reason }
+ NOT = { has_variable = tcri_disable_requested }
+}
+tcri_edge_changed_trigger = {
+ # Compare identities in both directions. Counting alone misses replacement
+ # of one empty jurisdiction/unassigned payer by another at the same count.
+ OR = {
+  NOT = { has_variable = tcri_snapshot_ready }
+  any_tax_slot = {
+   has_tax_collector = no
+   root = { NOT = { is_target_in_variable_list = { name = tcri_empty_slots target = prev } } }
+  }
+  any_in_list = { variable = tcri_empty_slots
+   save_temporary_scope_as = tcri_previous_slot
+   root = { NOT = { any_tax_slot = { this = scope:tcri_previous_slot has_tax_collector = no } } }
+  }
+  any_unassigned_taxpayers = {
+   root = { NOT = { is_target_in_variable_list = { name = tcri_unassigned target = prev } } }
+  }
+  any_in_list = { variable = tcri_unassigned
+   save_temporary_scope_as = tcri_previous_payer
+   root = { NOT = { any_unassigned_taxpayers = { this = scope:tcri_previous_payer } } }
+  }
+ }
+}

@@ -1,20 +1,19 @@
 {
   "mod": "tax_collection_automation",
-  "version": "0.1.2",
+  "version": "0.3.0",
   "artwork": "Cover artwork was generated with AI.",
-  "gallery": [
-    {
-      "file": "GALLERY/01-tax-panel.jpg",
-      "caption": "Tax collection automation enabled in the native tax panel, with its English tooltip visible.",
-      "ai_generated": false,
-      "sha256": "6dbd528592f0d610a03cec964edd67d9bc506b7d250c8eb86e8118b0a1eb063c",
-      "transformation": "Same-size JPEG encoding; complete original frame, no crop, retouching, added text or gameplay changes."
-    }
-  ],
   "files": {
     "GALLERY/01-tax-panel.jpg": {
       "bytes": 817898,
       "sha256": "6dbd528592f0d610a03cec964edd67d9bc506b7d250c8eb86e8118b0a1eb063c"
+    },
+    "GALLERY/manifest.json": {
+      "bytes": 1066,
+      "sha256": "a104a968a58de0ef153c1e79f852ebb39ea65654bc43b8874cda7f78149fef96"
+    },
+    "cover-paradox-1920x1080.jpg": {
+      "bytes": 1592361,
+      "sha256": "15474c50d945163aab9aa07175c6bcd2b29c3ff294ce7c0dc37e48d94cae4026"
     },
     "cover-paradox-1920x1080.png": {
       "bytes": 3189514,

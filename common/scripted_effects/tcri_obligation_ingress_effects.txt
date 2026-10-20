@@ -1,0 +1,14 @@
+﻿# Called only from an obligation's native on_added, with scope:liege as root.
+# This is a coalesced request, not a GUI click, decree setter or model snapshot.
+# Native commit/cache ordering is checked separately by the bounded engine test.
+tcri_obligation_added_effect = {
+ if = { limit = {
+  tcr_enabled_trigger = yes
+  exists = scope:tax_slot
+  any_tax_slot = { this = scope:tax_slot }
+ }
+  # Do not require idle: an external edit during a lifecycle dirties the current
+  # generation under its already-owned pause. Off/held/load-pending owners stay inert.
+  tcr_request_effect = yes
+ }
+}

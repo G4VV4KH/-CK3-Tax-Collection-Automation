@@ -1,0 +1,4 @@
+﻿l_simp_chinese:
+ tcrui_recalculating_title:0 "正在重新计算税收……"
+ tcrui_recalculating_description:0 "重新计算结束后，将恢复此前的暂停状态。"
+ tcrui_disable_automation:0 "关闭自动化"

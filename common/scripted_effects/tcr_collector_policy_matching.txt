@@ -1,0 +1,389 @@
+﻿tcrcp_prepare_collector_matrix_effect = {
+ save_scope_as = tcrcm_owner
+ every_in_list = { variable = tcrcm_payers
+  remove_variable = tcrcm_native_slot
+  remove_variable = tcrcm_matrix_complete
+  remove_variable = tcrcm_plan_slot
+  remove_variable = tcrcm_plan_policy
+  remove_variable = tcrcm_plan_keep
+
+  remove_variable = tcrcm_policy_0
+  remove_variable = tcrcm_policy_1
+  remove_variable = tcrcm_policy_2
+  remove_variable = tcrcm_policy_3
+  remove_variable = tcrcm_policy_4
+  remove_variable = tcrcm_policy_5
+  remove_variable = tcrcm_policy_6
+  remove_variable = tcrcm_policy_7
+  remove_variable = tcrcm_policy_8
+  remove_variable = tcrcm_policy_9
+  remove_variable = tcrcm_policy_10
+  remove_variable = tcrcm_policy_11
+  remove_variable = tcrcm_policy_12
+  remove_variable = tcrcm_policy_13
+  remove_variable = tcrcm_policy_14
+  remove_variable = tcrcm_policy_15
+  remove_variable = tcrcm_policy_16
+  remove_variable = tcrcm_policy_17
+  remove_variable = tcrcm_policy_18
+  remove_variable = tcrcm_policy_19
+  remove_variable = tcrcm_policy_20
+  remove_variable = tcrcm_policy_21
+  remove_variable = tcrcm_policy_22
+  remove_variable = tcrcm_policy_23
+  remove_variable = tcrcm_policy_24
+  remove_variable = tcrcm_policy_25
+  remove_variable = tcrcm_policy_26
+  remove_variable = tcrcm_policy_27
+  remove_variable = tcrcm_policy_28
+  remove_variable = tcrcm_policy_29
+  remove_variable = tcrcm_policy_30
+  remove_variable = tcrcm_policy_31
+
+ }
+ clear_variable_list = tcrcm_payers
+ clear_variable_list = tcrcm_slots
+ remove_variable = tcrcm_snapshot_ready
+ remove_variable = tcrcp_collectors_plan_complete
+ set_variable = { name = tcrcm_slot_count value = var:tcrcp_slot_count }
+ set_variable = { name = tcrcm_payer_count value = var:tcrcp_selected_count }
+ every_in_list = { variable = tcrcp_slots
+  save_scope_as = tcrcm_slot
+  set_variable = { name = tcrcm_index value = var:tcrcp_index }
+  set_variable = { name = tcrcm_capacity value = 1 }
+  scope:tcrcm_owner = { add_to_variable_list = { name = tcrcm_slots target = scope:tcrcm_slot } }
+ }
+ every_in_list = { variable = tcap_selected_collectors
+  save_scope_as = tcrcm_payer
+  scope:tcrcm_owner = { add_to_variable_list = { name = tcrcm_payers target = scope:tcrcm_payer } }
+  if = { limit = { is_tax_collector_of = scope:tcrcm_owner }
+   set_variable = { name = tcrcm_native_slot value = tax_slot }
+  }
+ }
+
+ remove_variable = tcrcm_slot_0
+ if = { limit = { has_variable = tcrcp_slot_0 } set_variable = { name = tcrcm_slot_0 value = var:tcrcp_slot_0 } }
+ remove_variable = tcrcm_slot_1
+ if = { limit = { has_variable = tcrcp_slot_1 } set_variable = { name = tcrcm_slot_1 value = var:tcrcp_slot_1 } }
+ remove_variable = tcrcm_slot_2
+ if = { limit = { has_variable = tcrcp_slot_2 } set_variable = { name = tcrcm_slot_2 value = var:tcrcp_slot_2 } }
+ remove_variable = tcrcm_slot_3
+ if = { limit = { has_variable = tcrcp_slot_3 } set_variable = { name = tcrcm_slot_3 value = var:tcrcp_slot_3 } }
+ remove_variable = tcrcm_slot_4
+ if = { limit = { has_variable = tcrcp_slot_4 } set_variable = { name = tcrcm_slot_4 value = var:tcrcp_slot_4 } }
+ remove_variable = tcrcm_slot_5
+ if = { limit = { has_variable = tcrcp_slot_5 } set_variable = { name = tcrcm_slot_5 value = var:tcrcp_slot_5 } }
+ remove_variable = tcrcm_slot_6
+ if = { limit = { has_variable = tcrcp_slot_6 } set_variable = { name = tcrcm_slot_6 value = var:tcrcp_slot_6 } }
+ remove_variable = tcrcm_slot_7
+ if = { limit = { has_variable = tcrcp_slot_7 } set_variable = { name = tcrcm_slot_7 value = var:tcrcp_slot_7 } }
+ remove_variable = tcrcm_slot_8
+ if = { limit = { has_variable = tcrcp_slot_8 } set_variable = { name = tcrcm_slot_8 value = var:tcrcp_slot_8 } }
+ remove_variable = tcrcm_slot_9
+ if = { limit = { has_variable = tcrcp_slot_9 } set_variable = { name = tcrcm_slot_9 value = var:tcrcp_slot_9 } }
+ remove_variable = tcrcm_slot_10
+ if = { limit = { has_variable = tcrcp_slot_10 } set_variable = { name = tcrcm_slot_10 value = var:tcrcp_slot_10 } }
+ remove_variable = tcrcm_slot_11
+ if = { limit = { has_variable = tcrcp_slot_11 } set_variable = { name = tcrcm_slot_11 value = var:tcrcp_slot_11 } }
+ remove_variable = tcrcm_slot_12
+ if = { limit = { has_variable = tcrcp_slot_12 } set_variable = { name = tcrcm_slot_12 value = var:tcrcp_slot_12 } }
+ remove_variable = tcrcm_slot_13
+ if = { limit = { has_variable = tcrcp_slot_13 } set_variable = { name = tcrcm_slot_13 value = var:tcrcp_slot_13 } }
+ remove_variable = tcrcm_slot_14
+ if = { limit = { has_variable = tcrcp_slot_14 } set_variable = { name = tcrcm_slot_14 value = var:tcrcp_slot_14 } }
+ remove_variable = tcrcm_slot_15
+ if = { limit = { has_variable = tcrcp_slot_15 } set_variable = { name = tcrcm_slot_15 value = var:tcrcp_slot_15 } }
+ remove_variable = tcrcm_slot_16
+ if = { limit = { has_variable = tcrcp_slot_16 } set_variable = { name = tcrcm_slot_16 value = var:tcrcp_slot_16 } }
+ remove_variable = tcrcm_slot_17
+ if = { limit = { has_variable = tcrcp_slot_17 } set_variable = { name = tcrcm_slot_17 value = var:tcrcp_slot_17 } }
+ remove_variable = tcrcm_slot_18
+ if = { limit = { has_variable = tcrcp_slot_18 } set_variable = { name = tcrcm_slot_18 value = var:tcrcp_slot_18 } }
+ remove_variable = tcrcm_slot_19
+ if = { limit = { has_variable = tcrcp_slot_19 } set_variable = { name = tcrcm_slot_19 value = var:tcrcp_slot_19 } }
+ remove_variable = tcrcm_slot_20
+ if = { limit = { has_variable = tcrcp_slot_20 } set_variable = { name = tcrcm_slot_20 value = var:tcrcp_slot_20 } }
+ remove_variable = tcrcm_slot_21
+ if = { limit = { has_variable = tcrcp_slot_21 } set_variable = { name = tcrcm_slot_21 value = var:tcrcp_slot_21 } }
+ remove_variable = tcrcm_slot_22
+ if = { limit = { has_variable = tcrcp_slot_22 } set_variable = { name = tcrcm_slot_22 value = var:tcrcp_slot_22 } }
+ remove_variable = tcrcm_slot_23
+ if = { limit = { has_variable = tcrcp_slot_23 } set_variable = { name = tcrcm_slot_23 value = var:tcrcp_slot_23 } }
+ remove_variable = tcrcm_slot_24
+ if = { limit = { has_variable = tcrcp_slot_24 } set_variable = { name = tcrcm_slot_24 value = var:tcrcp_slot_24 } }
+ remove_variable = tcrcm_slot_25
+ if = { limit = { has_variable = tcrcp_slot_25 } set_variable = { name = tcrcm_slot_25 value = var:tcrcp_slot_25 } }
+ remove_variable = tcrcm_slot_26
+ if = { limit = { has_variable = tcrcp_slot_26 } set_variable = { name = tcrcm_slot_26 value = var:tcrcp_slot_26 } }
+ remove_variable = tcrcm_slot_27
+ if = { limit = { has_variable = tcrcp_slot_27 } set_variable = { name = tcrcm_slot_27 value = var:tcrcp_slot_27 } }
+ remove_variable = tcrcm_slot_28
+ if = { limit = { has_variable = tcrcp_slot_28 } set_variable = { name = tcrcm_slot_28 value = var:tcrcp_slot_28 } }
+ remove_variable = tcrcm_slot_29
+ if = { limit = { has_variable = tcrcp_slot_29 } set_variable = { name = tcrcm_slot_29 value = var:tcrcp_slot_29 } }
+ remove_variable = tcrcm_slot_30
+ if = { limit = { has_variable = tcrcp_slot_30 } set_variable = { name = tcrcm_slot_30 value = var:tcrcp_slot_30 } }
+ remove_variable = tcrcm_slot_31
+ if = { limit = { has_variable = tcrcp_slot_31 } set_variable = { name = tcrcm_slot_31 value = var:tcrcp_slot_31 } }
+
+ if = { limit = { has_variable = tcrcp_snapshot_ready }
+  set_variable = { name = tcrcm_snapshot_ready value = yes }
+ }
+}
+
+tcrcp_plan_collectors_effect = {
+ remove_variable = tcrcp_collectors_plan_complete
+ tcrcm_plan_taxpayers_effect = yes
+ if = { limit = {
+  has_variable = tcrcm_plan_complete
+  var:tcrcm_planned_count = var:tcrcp_selected_count
+ }
+  set_variable = { name = tcrcp_collectors_plan_complete value = yes }
+ }
+}
+
+
+
+# Matrix contract: every payer has tcrcm_matrix_complete=yes only after provider
+# has considered EVERY current slot. A missing tcrcm_policy_i is an illegal edge;
+# it must never mean 'provider has not yet looked'. Capacity must match the
+# proposed collector state, not merely the previous live state.
+tcrcm_validate_matrix_effect = {
+ remove_variable = tcrcm_matrix_valid
+ remove_variable = tcrcm_matrix_missing
+ every_in_list = {
+  variable = tcrcm_payers
+  if = { limit = { NOT = { has_variable = tcrcm_matrix_complete } }
+   scope:tcrcm_owner = { set_variable = { name = tcrcm_matrix_missing value = yes } }
+  }
+ }
+ if = { limit = {
+  has_variable = tcrcm_snapshot_ready
+  NOT = { has_variable = tcrcm_matrix_missing }
+ } set_variable = { name = tcrcm_matrix_valid value = yes } }
+}
+
+# Longest augmenting path, compressed to slot vertices. An unassigned payer
+# starts a path; an assigned payer transfers from its old slot. A path ending
+# at a free slot can reassign several taxpayers, including cycles >2, in one
+# uninterrupted script effect. No native tax state is changed while planning.
+tcrcm_prepare_payer_relaxation_effect = {
+ save_scope_as = tcrcm_payer
+ scope:tcrcm_owner = {
+  remove_variable = tcrcm_relax_ready
+  set_variable = { name = tcrcm_base_policy value = 0 }
+  set_variable = { name = tcrcm_base_keep value = 0 }
+  if = { limit = { NOT = { scope:tcrcm_payer = { has_variable = tcrcm_plan_slot } } }
+   set_variable = { name = tcrcm_relax_ready value = yes }
+  }
+  else_if = { limit = { scope:tcrcm_payer.var:tcrcm_plan_slot = { has_variable = tcrcm_dist_policy } }
+   set_variable = { name = tcrcm_relax_ready value = yes }
+   set_variable = { name = tcrcm_base_policy value = scope:tcrcm_payer.var:tcrcm_plan_slot.var:tcrcm_dist_policy }
+   change_variable = { name = tcrcm_base_policy subtract = scope:tcrcm_payer.var:tcrcm_plan_policy }
+   set_variable = { name = tcrcm_base_keep value = scope:tcrcm_payer.var:tcrcm_plan_slot.var:tcrcm_dist_keep }
+   change_variable = { name = tcrcm_base_keep subtract = scope:tcrcm_payer.var:tcrcm_plan_keep }
+  }
+  if = { limit = { has_variable = tcrcm_relax_ready }
+   tcrcm_relax_all_destinations_effect = yes
+  }
+ }
+}
+
+# INDEX is generated at build time; no dynamic identifier lookup is assumed.
+tcrcm_relax_destination_effect = {
+ if = { limit = {
+  has_variable = tcrcm_slot_$INDEX$
+  scope:tcrcm_payer = { has_variable = tcrcm_policy_$INDEX$ }
+  OR = {
+   NOT = { scope:tcrcm_payer = { has_variable = tcrcm_plan_slot } }
+   scope:tcrcm_payer.var:tcrcm_plan_slot != var:tcrcm_slot_$INDEX$
+  }
+ }
+  set_variable = { name = tcrcm_offer_policy value = var:tcrcm_base_policy }
+  change_variable = { name = tcrcm_offer_policy add = scope:tcrcm_payer.var:tcrcm_policy_$INDEX$ }
+  set_variable = { name = tcrcm_offer_keep value = var:tcrcm_base_keep }
+  if = { limit = { scope:tcrcm_payer = { has_variable = tcrcm_native_slot }
+    scope:tcrcm_payer.var:tcrcm_native_slot = var:tcrcm_slot_$INDEX$
+   }
+   change_variable = { name = tcrcm_offer_keep add = 1 }
+  }
+  var:tcrcm_slot_$INDEX$ = {
+   if = { limit = { OR = {
+    NOT = { has_variable = tcrcm_dist_policy }
+    scope:tcrcm_owner.var:tcrcm_offer_policy > var:tcrcm_dist_policy
+    AND = {
+     scope:tcrcm_owner.var:tcrcm_offer_policy = var:tcrcm_dist_policy
+     scope:tcrcm_owner.var:tcrcm_offer_keep > var:tcrcm_dist_keep
+    }
+   } }
+    set_variable = { name = tcrcm_dist_policy value = scope:tcrcm_owner.var:tcrcm_offer_policy }
+    set_variable = { name = tcrcm_dist_keep value = scope:tcrcm_owner.var:tcrcm_offer_keep }
+    set_variable = { name = tcrcm_parent value = scope:tcrcm_payer }
+   }
+  }
+ }
+}
+
+tcrcm_consider_endpoint_effect = {
+ if = { limit = { has_variable = tcrcm_dist_policy var:tcrcm_used < var:tcrcm_capacity }
+  save_scope_as = tcrcm_slot
+  scope:tcrcm_owner = {
+   if = { limit = { OR = {
+    NOT = { has_variable = tcrcm_endpoint }
+    scope:tcrcm_slot.var:tcrcm_dist_policy > var:tcrcm_endpoint_policy
+    AND = { scope:tcrcm_slot.var:tcrcm_dist_policy = var:tcrcm_endpoint_policy
+     scope:tcrcm_slot.var:tcrcm_dist_keep > var:tcrcm_endpoint_keep
+    }
+   } }
+    set_variable = { name = tcrcm_endpoint value = scope:tcrcm_slot }
+    set_variable = { name = tcrcm_endpoint_policy value = scope:tcrcm_slot.var:tcrcm_dist_policy }
+    set_variable = { name = tcrcm_endpoint_keep value = scope:tcrcm_slot.var:tcrcm_dist_keep }
+   }
+  }
+ }
+}
+
+tcrcm_store_assignment_policy_effect = {
+ if = { limit = { scope:tcrcm_slot.var:tcrcm_index = $INDEX$ }
+  set_variable = { name = tcrcm_plan_policy value = var:tcrcm_policy_$INDEX$ }
+ }
+}
+
+tcrcm_augment_effect = {
+ set_variable = { name = tcrcm_cursor_slot value = var:tcrcm_endpoint }
+ set_variable = { name = tcrcm_backtrack_steps value = 0 }
+ while = { limit = { has_variable = tcrcm_cursor_slot var:tcrcm_backtrack_steps < var:tcrcm_slot_count }
+  change_variable = { name = tcrcm_backtrack_steps add = 1 }
+  var:tcrcm_cursor_slot = { save_scope_as = tcrcm_slot var:tcrcm_parent = { save_scope_as = tcrcm_payer } }
+  remove_variable = tcrcm_previous_slot
+  if = { limit = { scope:tcrcm_payer = { has_variable = tcrcm_plan_slot } }
+   set_variable = { name = tcrcm_previous_slot value = scope:tcrcm_payer.var:tcrcm_plan_slot }
+   var:tcrcm_previous_slot = { change_variable = { name = tcrcm_used subtract = 1 } }
+  }
+  scope:tcrcm_payer = {
+   set_variable = { name = tcrcm_plan_slot value = scope:tcrcm_slot }
+   tcrcm_store_all_assignment_policy_effect = yes
+   set_variable = { name = tcrcm_plan_keep value = 0 }
+   if = { limit = { has_variable = tcrcm_native_slot var:tcrcm_native_slot = scope:tcrcm_slot }
+    set_variable = { name = tcrcm_plan_keep value = 1 }
+   }
+  }
+  scope:tcrcm_slot = { change_variable = { name = tcrcm_used add = 1 } }
+  remove_variable = tcrcm_cursor_slot
+  if = { limit = { has_variable = tcrcm_previous_slot }
+   set_variable = { name = tcrcm_cursor_slot value = var:tcrcm_previous_slot }
+  }
+ }
+ if = { limit = { has_variable = tcrcm_cursor_slot }
+  set_variable = { name = tcrcm_plan_invalid value = yes }
+ }
+ change_variable = { name = tcrcm_planned_count add = 1 }
+}
+
+tcrcm_plan_taxpayers_effect = {
+ save_scope_as = tcrcm_owner
+ tcrcm_validate_matrix_effect = yes
+ remove_variable = tcrcm_plan_complete
+ remove_variable = tcrcm_plan_invalid
+ if = { limit = { has_variable = tcrcm_matrix_valid }
+  set_variable = { name = tcrcm_planned_count value = 0 }
+  set_variable = { name = tcrcm_plan_loop value = yes }
+  every_in_list = { variable = tcrcm_slots set_variable = { name = tcrcm_used value = 0 } }
+  every_in_list = { variable = tcrcm_payers
+   remove_variable = tcrcm_plan_slot remove_variable = tcrcm_plan_policy remove_variable = tcrcm_plan_keep
+  }
+  while = { limit = { has_variable = tcrcm_plan_loop NOT = { has_variable = tcrcm_plan_invalid } }
+   every_in_list = { variable = tcrcm_slots
+    remove_variable = tcrcm_dist_policy remove_variable = tcrcm_dist_keep remove_variable = tcrcm_parent
+   }
+   set_variable = { name = tcrcm_relax_round value = 0 }
+   while = { limit = { var:tcrcm_relax_round < var:tcrcm_slot_count }
+    every_in_list = { variable = tcrcm_payers tcrcm_prepare_payer_relaxation_effect = yes }
+    change_variable = { name = tcrcm_relax_round add = 1 }
+   }
+   remove_variable = tcrcm_endpoint
+   every_in_list = { variable = tcrcm_slots tcrcm_consider_endpoint_effect = yes }
+   if = { limit = { var:tcrcm_planned_count < var:tcrcm_payer_count has_variable = tcrcm_endpoint OR = {
+    var:tcrcm_endpoint_policy > 0
+    AND = { var:tcrcm_endpoint_policy = 0 var:tcrcm_endpoint_keep >= 0 }
+   } }
+    tcrcm_augment_effect = yes
+   }
+   else = { remove_variable = tcrcm_plan_loop }
+  }
+  if = { limit = { NOT = { has_variable = tcrcm_plan_invalid } }
+   set_variable = { name = tcrcm_plan_complete value = yes }
+  }
+ }
+}
+
+
+tcrcm_relax_all_destinations_effect = {
+ tcrcm_relax_destination_effect = { INDEX = 0 }
+ tcrcm_relax_destination_effect = { INDEX = 1 }
+ tcrcm_relax_destination_effect = { INDEX = 2 }
+ tcrcm_relax_destination_effect = { INDEX = 3 }
+ tcrcm_relax_destination_effect = { INDEX = 4 }
+ tcrcm_relax_destination_effect = { INDEX = 5 }
+ tcrcm_relax_destination_effect = { INDEX = 6 }
+ tcrcm_relax_destination_effect = { INDEX = 7 }
+ tcrcm_relax_destination_effect = { INDEX = 8 }
+ tcrcm_relax_destination_effect = { INDEX = 9 }
+ tcrcm_relax_destination_effect = { INDEX = 10 }
+ tcrcm_relax_destination_effect = { INDEX = 11 }
+ tcrcm_relax_destination_effect = { INDEX = 12 }
+ tcrcm_relax_destination_effect = { INDEX = 13 }
+ tcrcm_relax_destination_effect = { INDEX = 14 }
+ tcrcm_relax_destination_effect = { INDEX = 15 }
+ tcrcm_relax_destination_effect = { INDEX = 16 }
+ tcrcm_relax_destination_effect = { INDEX = 17 }
+ tcrcm_relax_destination_effect = { INDEX = 18 }
+ tcrcm_relax_destination_effect = { INDEX = 19 }
+ tcrcm_relax_destination_effect = { INDEX = 20 }
+ tcrcm_relax_destination_effect = { INDEX = 21 }
+ tcrcm_relax_destination_effect = { INDEX = 22 }
+ tcrcm_relax_destination_effect = { INDEX = 23 }
+ tcrcm_relax_destination_effect = { INDEX = 24 }
+ tcrcm_relax_destination_effect = { INDEX = 25 }
+ tcrcm_relax_destination_effect = { INDEX = 26 }
+ tcrcm_relax_destination_effect = { INDEX = 27 }
+ tcrcm_relax_destination_effect = { INDEX = 28 }
+ tcrcm_relax_destination_effect = { INDEX = 29 }
+ tcrcm_relax_destination_effect = { INDEX = 30 }
+ tcrcm_relax_destination_effect = { INDEX = 31 }
+}
+
+tcrcm_store_all_assignment_policy_effect = {
+ tcrcm_store_assignment_policy_effect = { INDEX = 0 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 1 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 2 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 3 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 4 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 5 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 6 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 7 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 8 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 9 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 10 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 11 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 12 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 13 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 14 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 15 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 16 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 17 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 18 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 19 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 20 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 21 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 22 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 23 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 24 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 25 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 26 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 27 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 28 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 29 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 30 }
+ tcrcm_store_assignment_policy_effect = { INDEX = 31 }
+}

@@ -1,0 +1,75 @@
+﻿
+# A reload classification cannot depend on the former GUI lease/ACKs. Identity
+# is immutable journal + actual owner/date/wallet, while the native pause is
+# separately observed by the existing tcrq resume barrier.
+tcrx_recovery_identity_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrx_owner has_variable = tcrx_lifecycle
+  has_variable = tcrx_generation has_variable = tcrx_component
+  has_variable = tcrx_phase has_variable = tcrx_target has_variable = tcrx_count
+  has_variable = tcrx_epoch has_variable = tcrx_total_before
+  has_variable = tcrs_original_payer_count has_variable = tcrv_parent_accepted_count
+  has_variable = tcrs_lifecycle has_variable = tcrs_generation
+  has_variable = tcrs_sequence has_variable = tcrs_phase
+  has_variable = tcrv_owner has_variable = tcrv_lifecycle
+  has_variable = tcrv_generation has_variable = tcrv_phase
+  has_variable = tcrc_start_gold
+ }
+  tcrs_identity_trigger = yes has_variable = tcrs_pending
+  var:tcrx_owner = this var:tcrx_lifecycle = var:tcrs_lifecycle
+  var:tcrx_generation = var:tcrs_generation var:tcrx_component = var:tcrs_sequence
+  var:tcrv_owner = this var:tcrv_lifecycle = var:tcrx_lifecycle
+  var:tcrv_generation = var:tcrx_generation
+  var:tcrx_count >= 2 var:tcrx_count <= 12
+  NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrs_failed }
+ } trigger_else = { always = no }
+}
+
+# Accept a pending inverse command's archive before OR after that exact native
+# inverse has applied. The economic receipt is deliberately not required here.
+tcrx_recovery_restore_member_trigger = {
+ trigger_if = { limit = {
+  root = { tcrx_recovery_identity_trigger = yes
+   has_variable = tcrx_dispatched has_variable = tcrs_restore_source
+   has_variable = tcrs_restore_target }
+  tcrx_member_trigger = yes has_variable = tcrx_mechanical_outcome
+ }
+  var:tcrx_source = root.var:tcrs_restore_target
+  var:tcrx_target = root.var:tcrs_restore_source
+  var:tcrs_payer_original_slot = root.var:tcrs_restore_target
+ } trigger_else = { always = no }
+}
+
+# Recovery only: one accepted batch has finished, but its same component is
+# still doing read-only optional capture. No later payer job may have begun.
+# This does not admit unrelated legacy optional/pending-command class49 cases.
+tcrx_recovery_handoff_trigger = {
+ trigger_if = { limit = {
+  tcrx_recovery_identity_trigger = yes
+  has_variable = tcrx_accepted has_variable = tcrx_dispatched
+  has_variable = tcrv_active
+  NOT = { has_variable = tcrx_active }
+  NOT = { has_variable = tcrv_job_payer }
+  NOT = { has_variable = tcrv_parent_job_purpose }
+  NOT = { has_variable = tcrv_hold }
+  NOT = { has_variable = tcrs_restore_pending }
+  NOT = { has_variable = tcre_job_active }
+  NOT = { has_variable = tcrp_job_active }
+  NOT = { has_variable = tcr_command_generation }
+  tcrv_no_pending_trigger = yes
+ }
+  var:tcrx_phase = 90 var:tcrs_phase = 40
+  var:tcrv_parent_accepted_count = var:tcrx_count
+  OR = {
+   AND = { OR = { var:tcrv_phase = 45 var:tcrv_phase = 5 }
+    NOT = { has_variable = tcrm_active } }
+   trigger_if = { limit = {
+    has_variable = tcrm_owner has_variable = tcrm_generation
+    has_variable = tcrm_mode has_variable = tcrm_epoch
+   }
+    var:tcrv_phase = 10 var:tcrm_mode = 2
+    var:tcrm_owner = this var:tcrm_generation = var:tcrx_generation
+   } trigger_else = { always = no }
+  }
+ } trigger_else = { always = no }
+}

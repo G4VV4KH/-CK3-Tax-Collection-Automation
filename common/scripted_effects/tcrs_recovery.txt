@@ -1,0 +1,103 @@
+﻿# 40 = untouched journal; 41 = exact collector partial/final map with no payer
+# command; 42 = quiescent allocation or exact interrupted payer restoration.
+# command. Every accepted reload returns the compound to its ORIGINAL mapping.
+# No fabricated hire ACK, generic rebaseline or silent incomplete acceptance.
+tcrs_recovery_classify_effect = {
+ if = { limit = { OR = { has_variable = tcrx_active tcrx_recovery_handoff_trigger = yes } }
+  tcrx_recovery_classify_effect = yes
+ } else = {
+ set_variable = { name = tcrq_class value = 49 }
+ if = { limit = {
+  has_variable = tcrq_pending tcrs_identity_trigger = yes
+  NOT = { has_variable = tcrs_failed } NOT = { has_variable = tcr_failed }
+  NOT = { has_variable = tcrp_job_active }
+  tcrv_parent_quiescent_trigger = yes
+ }
+  tcrs_check_collectors_effect = yes
+  if = { limit = { NOT = { has_variable = tcrs_topology_bad } }
+   if = { limit = {
+    var:tcrs_phase = 10 NOT = { has_variable = tcrs_pending }
+    NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation }
+   } set_variable = { name = tcrq_class value = 40 } }
+   else_if = { limit = {
+    has_variable = tcrs_pending
+    OR = { var:tcrs_phase = 30 var:tcrs_phase = 60 }
+    OR = {
+     AND = { NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcr_command_generation } }
+     AND = {
+      has_variable = tcre_job_active has_variable = tcr_command_generation
+      has_variable = tcre_job_generation has_variable = tcre_sequence
+      has_variable = tcrs_vacancy_sequence has_variable = tcr_expected_kind
+      has_variable = tcr_expected_collector has_variable = tcr_expected_slot
+      has_variable = tcrs_command_collector has_variable = tcrs_command_slot
+      var:tcre_job_generation = var:tcrs_generation
+      var:tcr_command_generation = var:tcrs_generation
+      var:tcre_sequence = var:tcrs_vacancy_sequence
+      var:tcr_expected_kind = 1
+      var:tcr_expected_collector = var:tcrs_command_collector
+      var:tcr_expected_slot = var:tcrs_command_slot
+      var:tcr_expected_collector = {
+       OR = {
+        AND = { is_tax_collector = no root.var:tcr_expected_slot = { has_tax_collector = no } }
+        AND = { is_tax_collector_of = root tax_slot = root.var:tcr_expected_slot }
+       }
+      }
+     }
+    }
+   } set_variable = { name = tcrq_class value = 41 } }
+   else_if = { limit = {
+    has_variable = tcrs_pending
+    OR = { var:tcrs_phase = 40 var:tcrs_phase = 85 }
+    NOT = { has_variable = tcre_job_active }
+    tcrs_payer_recovery_safe_trigger = yes
+   } set_variable = { name = tcrq_class value = 42 } }
+  }
+ }
+ }
+}
+tcrs_recovery_resume_effect = {
+ if = { limit = {
+  tcrs_identity_trigger = yes
+  has_variable = tcrq_pending has_variable = tcrq_bootstrap_ready
+  has_variable = tcrq_event_seen has_variable = tcrq_epoch
+  tcrq_pending_event_trigger = yes
+  scope:epoch = var:tcrq_epoch
+  scope:game_paused = yes scope:event_paused = yes scope:helpers_closed = yes
+ }
+  tcrs_recovery_classify_effect = yes
+  if = { limit = { OR = { var:tcrq_class = 40 var:tcrq_class = 41 var:tcrq_class = 42 var:tcrq_class = 43 } }
+   set_variable = { name = tcrs_recovery_class value = var:tcrq_class }
+   set_variable = { name = tcrs_recovery_epoch value = var:tcrq_epoch }
+   set_variable = { name = tcrs_recovery_sequence value = var:tcrs_sequence }
+   set_variable = { name = tcrc_event_observed_lifecycle value = var:tcrc_lifecycle }
+   set_variable = { name = tcrq_loaded_manual value = scope:manual }
+   set_variable = { name = tcrq_loaded_speed value = scope:speed }
+   set_variable = { name = tcrc_original_speed value = scope:speed }
+   set_variable = { name = tcrc_manager_was_open value = scope:manager_open }
+   remove_variable = tcrc_manager_owned
+   if = { limit = { scope:manager_open = no } set_variable = { name = tcrc_manager_owned value = yes } }
+   if = { limit = { var:tcrs_recovery_class = 42 } tcrs_payer_recovery_effect = yes }
+   if = { limit = { var:tcrs_recovery_class = 43 } tcrx_recovery_retire_effect = yes }
+   if = { limit = { has_variable = tcre_job_active }
+    set_variable = { name = tcrs_superseded_vacancy_sequence value = var:tcre_sequence }
+    # Retire only the exact superseded component command already classified.
+    tcre_clear_slot_marker_effect = yes
+    tcr_clear_command_effect = yes remove_variable = tcre_job_active
+    remove_variable = tcre_hired_sequence_ack remove_variable = tcre_hired_generation_ack
+    remove_variable = tcre_dispatched_sequence remove_variable = tcre_dispatched_generation
+   }
+   remove_variable = tcrs_command_collector remove_variable = tcrs_command_slot
+   remove_variable = tcrs_vacancy_sequence
+   remove_variable = tcrq_pending remove_variable = tcrq_waiting remove_variable = tcrq_wait_reported
+   remove_variable = tcrq_event_cancel_ready
+   set_variable = { name = tcrc_phase value = 34 }
+   tcrs_request_rollback_effect = yes
+   # An existing rollback can continue from native actual state without
+   # clearing the immutable original/desired component mapping.
+   if = { limit = { NOT = { var:tcrs_phase = 85 } has_variable = tcrs_pending has_variable = tcrs_restoration_started }
+    set_variable = { name = tcrs_phase value = 60 }
+   }
+   debug_log = "TCRS|RECOVER_ROLLBACK|class=[GetPlayer.MakeScope.Var('tcrs_recovery_class').GetValue]"
+  }
+ }
+}

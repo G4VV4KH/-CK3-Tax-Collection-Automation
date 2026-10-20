@@ -1,0 +1,33 @@
+﻿tcrq_recovery_target = { type = all
+ text = { trigger = { OR = {
+AND = { trigger_if = { limit = {
+   exists = var:tcre_slot_owner has_variable = tcre_slot_generation has_variable = tcre_slot_sequence
+  }
+   var:tcre_slot_owner = {
+    trigger_if = { limit = {
+     has_variable = tcrq_pending exists = var:tcr_expected_slot
+     has_variable = tcre_job_generation has_variable = tcre_sequence
+    }
+     var:tcr_expected_slot = prev
+     var:tcre_job_generation = prev.var:tcre_slot_generation
+     var:tcre_sequence = prev.var:tcre_slot_sequence
+    } trigger_else = { always = no }
+   }
+  } trigger_else = { always = no } }
+AND = { trigger_if = { limit = {
+   exists = var:tcrp_slot_owner has_variable = tcrp_slot_generation has_variable = tcrp_slot_sequence
+  }
+   var:tcrp_slot_owner = {
+    trigger_if = { limit = {
+     has_variable = tcrq_pending exists = var:tcr_expected_slot
+     has_variable = tcrp_job_generation has_variable = tcrp_sequence
+    }
+     var:tcr_expected_slot = prev
+     var:tcrp_job_generation = prev.var:tcrp_slot_generation
+     var:tcrp_sequence = prev.var:tcrp_slot_sequence
+    } trigger_else = { always = no }
+   }
+  } trigger_else = { always = no } }
+} } localization_key = tcre_executor_target_yes }
+ text = { fallback = yes localization_key = tcre_executor_target_no }
+}

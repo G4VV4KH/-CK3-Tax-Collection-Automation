@@ -1,0 +1,8 @@
+﻿# Additive on_action subscriptions; native event definitions remain untouched.
+on_vassal_gained = { on_actions = { tcr_vassal_gained } }
+tcr_vassal_gained = { effect = { tcr_request_effect = yes } }
+on_vassal_change = { on_actions = { tcr_vassal_changed } }
+tcr_vassal_changed = { effect = {
+ if = { limit = { exists = scope:old_liege } scope:old_liege = { tcr_request_effect = yes } }
+ if = { limit = { exists = liege } liege = { tcr_request_effect = yes } }
+} }

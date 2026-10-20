@@ -1,0 +1,367 @@
+﻿tcrx_open = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes scope:helpers_closed = yes
+      OR = { var:tcrx_phase = 10 var:tcrx_phase = 40 }
+      scope:target = yes
+} trigger_else = { always = no } }
+}
+
+tcrx_trace_driver = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+NOT = { has_variable = tcrx_trace_driver_seen }
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+NOT = { has_variable = tcrx_trace_driver_seen }
+} trigger_else = { always = no } }
+
+set_variable = { name = tcrx_trace_driver_seen value = yes }
+debug_log = "TCRX|DRIVER_SEEN"
+if = { limit = { tcrx_identity_trigger = yes } debug_log = "TCRX|DRIVER_IDENTITY_YES" }
+else = { debug_log = "TCRX|DRIVER_IDENTITY_NO" }
+if = { limit = { scope:paused = yes } debug_log = "TCRX|DRIVER_PAUSED_YES" }
+else = { debug_log = "TCRX|DRIVER_PAUSED_NO" }
+if = { limit = { scope:context_allowed = yes } debug_log = "TCRX|DRIVER_CONTEXT_YES" }
+else = { debug_log = "TCRX|DRIVER_CONTEXT_NO" }
+if = { limit = { scope:helpers_closed = yes } debug_log = "TCRX|DRIVER_HELPERS_CLOSED" }
+else = { debug_log = "TCRX|DRIVER_HELPER_OPEN" }
+
+ } }
+}
+
+tcrx_trace_manager = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+NOT = { has_variable = tcrx_trace_manager_seen } exists = scope:rows
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+NOT = { has_variable = tcrx_trace_manager_seen } exists = scope:rows
+} trigger_else = { always = no } }
+
+set_variable = { name = tcrx_trace_manager_seen value = yes }
+debug_log = "TCRX|MANAGER_SEEN"
+if = { limit = { tcrx_ui_trigger = yes } debug_log = "TCRX|MANAGER_UI_YES" }
+else = { debug_log = "TCRX|MANAGER_UI_NO" }
+
+ } }
+}
+
+tcrx_begin_selection = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 10
+      scope:target = yes scope:ready = yes scope:count = 0
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 10
+      scope:target = yes scope:ready = yes scope:count = 0
+} trigger_else = { always = no } }
+
+set_variable = { name = tcrx_phase value = 20 }
+debug_log = "TCRX|SELECTION_BEGIN"
+
+ } }
+}
+
+tcrx_select = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 20
+      scope:target = yes scope:ready = yes scope:selectable = yes
+      scope:row = { trigger_if = { limit = { tcrx_member_trigger = yes }
+       assigned_tax_slot = var:tcrx_source NOT = { has_variable = tcrx_selected }
+      } trigger_else = { always = no } }
+} trigger_else = { always = no } }
+}
+
+tcrx_selected = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 20
+      scope:target = yes scope:ready = yes scope:selected = yes
+      scope:row = { trigger_if = { limit = { tcrx_member_trigger = yes }
+       assigned_tax_slot = var:tcrx_source NOT = { has_variable = tcrx_selected }
+      } trigger_else = { always = no } }
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 20
+      scope:target = yes scope:ready = yes scope:selected = yes
+      scope:row = { trigger_if = { limit = { tcrx_member_trigger = yes }
+       assigned_tax_slot = var:tcrx_source NOT = { has_variable = tcrx_selected }
+      } trigger_else = { always = no } }
+} trigger_else = { always = no } }
+
+scope:row = { set_variable = { name = tcrx_selected value = yes } }
+change_variable = { name = tcrx_selected_count add = 1 }
+
+ } }
+}
+
+tcrx_audit_begin = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 20
+scope:target = yes scope:ready = yes scope:count = var:tcrx_count
+var:tcrx_selected_count = var:tcrx_count
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 20
+scope:target = yes scope:ready = yes scope:count = var:tcrx_count
+var:tcrx_selected_count = var:tcrx_count
+} trigger_else = { always = no } }
+
+set_variable = { name = tcrx_phase value = 21 }
+set_variable = { name = tcrx_audit_count value = 0 }
+every_in_list = { variable = tcrx_payers remove_variable = tcrx_audited_selected }
+
+ } }
+}
+
+tcrx_audit_row = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 21
+scope:target = yes scope:ready = yes scope:selected = yes
+scope:row = { tcrx_member_trigger = yes NOT = { has_variable = tcrx_audited_selected } }
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 21
+scope:target = yes scope:ready = yes scope:selected = yes
+scope:row = { tcrx_member_trigger = yes NOT = { has_variable = tcrx_audited_selected } }
+} trigger_else = { always = no } }
+
+scope:row = { set_variable = { name = tcrx_audited_selected value = yes } }
+change_variable = { name = tcrx_audit_count add = 1 }
+
+ } }
+}
+
+tcrx_audit_bad_row = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes
+OR = { var:tcrx_phase = 21 var:tcrx_phase = 22 var:tcrx_phase = 30 }
+scope:target = yes scope:ready = yes
+NOT = { any_in_list = { variable = tcrx_payers assigned_tax_slot != var:tcrx_source } }
+OR = {
+ AND = { scope:selected = no scope:row = { tcrx_member_trigger = yes } }
+ AND = { scope:selected = yes scope:row = { NOT = { tcrx_member_trigger = yes } } }
+}
+NOT = { has_variable = tcrx_cancel }
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes
+OR = { var:tcrx_phase = 21 var:tcrx_phase = 22 var:tcrx_phase = 30 }
+scope:target = yes scope:ready = yes
+NOT = { any_in_list = { variable = tcrx_payers assigned_tax_slot != var:tcrx_source } }
+OR = {
+ AND = { scope:selected = no scope:row = { tcrx_member_trigger = yes } }
+ AND = { scope:selected = yes scope:row = { NOT = { tcrx_member_trigger = yes } } }
+}
+NOT = { has_variable = tcrx_cancel }
+} trigger_else = { always = no } }
+
+set_variable = { name = tcrx_error value = 5 }
+set_variable = { name = tcrx_cancel value = yes }
+debug_log = "TCRX|SELECTION_MISMATCH"
+
+ } }
+}
+
+tcrx_audit_complete = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 21
+scope:target = yes scope:ready = yes scope:count = var:tcrx_count
+var:tcrx_audit_count = var:tcrx_count
+NOT = { any_in_list = { variable = tcrx_payers NOT = { has_variable = tcrx_audited_selected } } }
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 21
+scope:target = yes scope:ready = yes scope:count = var:tcrx_count
+var:tcrx_audit_count = var:tcrx_count
+NOT = { any_in_list = { variable = tcrx_payers NOT = { has_variable = tcrx_audited_selected } } }
+} trigger_else = { always = no } }
+set_variable = { name = tcrx_phase value = 22 }
+
+ } }
+}
+
+tcrx_dispatch = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 22
+scope:target = yes scope:ready = yes scope:count = var:tcrx_count
+var:tcrx_selected_count = var:tcrx_count var:tcrx_audit_count = var:tcrx_count
+tcrx_dispatch_enabled_trigger = yes
+tcrm_context_valid_trigger = yes var:tcrm_epoch = var:tcrx_epoch
+var:tcrx_target = { available_taxpayer_slots >= root.var:tcrx_count }
+NOT = { any_in_list = { variable = tcrx_payers
+ NOT = { tcrx_member_trigger = yes has_variable = tcrx_selected has_variable = tcrx_audited_selected
+  assigned_tax_slot = var:tcrx_source can_assign_to_tax_slot = var:tcrx_target }
+} }
+
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 22
+scope:target = yes scope:ready = yes scope:count = var:tcrx_count
+var:tcrx_selected_count = var:tcrx_count var:tcrx_audit_count = var:tcrx_count
+tcrx_dispatch_enabled_trigger = yes
+tcrm_context_valid_trigger = yes var:tcrm_epoch = var:tcrx_epoch
+var:tcrx_target = { available_taxpayer_slots >= root.var:tcrx_count }
+NOT = { any_in_list = { variable = tcrx_payers
+ NOT = { tcrx_member_trigger = yes has_variable = tcrx_selected has_variable = tcrx_audited_selected
+  assigned_tax_slot = var:tcrx_source can_assign_to_tax_slot = var:tcrx_target }
+} }
+
+} trigger_else = { always = no } }
+
+set_variable = { name = tcrx_dispatched value = yes }
+set_variable = { name = tcrx_phase value = 30 }
+set_variable = { name = tcrx_watchdog_ticks value = 0 }
+debug_log = "TCRX|AUTHORIZED"
+
+ } }
+}
+
+tcrx_native = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ordinary_trigger = yes var:tcrx_phase = 30
+scope:target = yes scope:ready = yes scope:count = var:tcrx_count
+var:tcrx_selected_count = var:tcrx_count var:tcrx_audit_count = var:tcrx_count
+tcrx_dispatch_enabled_trigger = yes
+tcrm_context_valid_trigger = yes var:tcrm_epoch = var:tcrx_epoch
+var:tcrx_target = { available_taxpayer_slots >= root.var:tcrx_count }
+NOT = { any_in_list = { variable = tcrx_payers
+ NOT = { tcrx_member_trigger = yes has_variable = tcrx_selected has_variable = tcrx_audited_selected
+  assigned_tax_slot = var:tcrx_source can_assign_to_tax_slot = var:tcrx_target }
+} }
+has_variable = tcrx_dispatched
+
+} trigger_else = { always = no } }
+}
+
+tcrx_ack = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes var:tcrx_phase = 30
+has_variable = tcrx_dispatched tcrx_all_acked_trigger = yes
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes var:tcrx_phase = 30
+has_variable = tcrx_dispatched tcrx_all_acked_trigger = yes
+} trigger_else = { always = no } }
+
+tcrx_check_map_effect = yes
+if = { limit = { NOT = { has_variable = tcrx_map_bad } }
+ every_in_list = { variable = tcrx_payers
+  set_variable = { name = tcrx_mechanical_outcome value = yes }
+ }
+ set_variable = { name = tcrx_phase value = 40 }
+ set_variable = { name = tcrx_watchdog_ticks value = 0 }
+ debug_log = "TCRX|ACK"
+} else = { set_variable = { name = tcrx_error value = 1 } }
+
+ } }
+}
+
+tcrx_actual = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes var:tcrx_phase = 40
+scope:target = yes scope:ready = yes
+scope:row = { trigger_if = { limit = { tcrx_member_trigger = yes }
+ assigned_tax_slot = var:tcrx_target NOT = { has_variable = tcrx_actual_gold }
+} trigger_else = { always = no } }
+exists = scope:gold exists = scope:reference
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes var:tcrx_phase = 40
+scope:target = yes scope:ready = yes
+scope:row = { trigger_if = { limit = { tcrx_member_trigger = yes }
+ assigned_tax_slot = var:tcrx_target NOT = { has_variable = tcrx_actual_gold }
+} trigger_else = { always = no } }
+exists = scope:gold exists = scope:reference
+} trigger_else = { always = no } }
+
+scope:row = {
+ set_variable = { name = tcrx_actual_gold value = scope:gold }
+ set_variable = { name = tcrx_actual_reference value = scope:reference }
+ if = { limit = { OR = {
+  var:tcrx_actual_gold <= var:tcrx_before_gold
+  var:tcrx_actual_reference != var:tcrx_preview
+ } } root = { set_variable = { name = tcrx_error value = 2 } } }
+}
+change_variable = { name = tcrx_actual_count add = 1 }
+if = { limit = { var:tcrx_actual_count = var:tcrx_count }
+ set_variable = { name = tcrx_phase value = 50 }
+ debug_log = "TCRX|ACTUAL_ROWS_COMPLETE"
+}
+
+ } }
+}
+
+tcrx_total = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes var:tcrx_phase = 50
+scope:manager_exact = yes scope:total >= 0 tcrx_all_acked_trigger = yes
+var:tcrx_actual_count = var:tcrx_count
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes var:tcrx_phase = 50
+scope:manager_exact = yes scope:total >= 0 tcrx_all_acked_trigger = yes
+var:tcrx_actual_count = var:tcrx_count
+} trigger_else = { always = no } }
+
+tcrx_check_map_effect = yes
+set_variable = { name = tcrx_total_after value = scope:total }
+if = { limit = {
+ NOT = { has_variable = tcrx_map_bad } NOT = { has_variable = tcrx_error }
+ NOT = { has_variable = tcrx_cancel }
+ tcr_enabled_trigger = yes NOT = { has_variable = tcri_disable_requested }
+ NOT = { has_variable = tcrc_abort_requested } NOT = { has_variable = tcr_requested }
+ scope:total >= var:tcrx_total_before scope:total >= var:tcrs_native_floor
+}
+ tcrx_accept_effect = yes
+} else = { set_variable = { name = tcrx_cancel value = yes } }
+
+ } }
+}
+
+tcrx_cancel = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes var:tcrx_phase < 80
+OR = { NOT = { tcr_enabled_trigger = yes } has_variable = tcri_disable_requested
+ has_variable = tcrc_abort_requested has_variable = tcr_requested
+ has_variable = tcrs_rollback_requested has_variable = tcrx_error
+}
+NOT = { has_variable = tcrx_cancel }
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes var:tcrx_phase < 80
+OR = { NOT = { tcr_enabled_trigger = yes } has_variable = tcri_disable_requested
+ has_variable = tcrc_abort_requested has_variable = tcr_requested
+ has_variable = tcrs_rollback_requested has_variable = tcrx_error
+}
+NOT = { has_variable = tcrx_cancel }
+} trigger_else = { always = no } }
+set_variable = { name = tcrx_cancel value = yes }
+
+ } }
+}
+
+tcrx_close = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes scope:target = yes
+OR = { has_variable = tcrx_cancel var:tcrx_phase = 80 }
+} trigger_else = { always = no } }
+}
+
+tcrx_finish = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes scope:helpers_closed = yes
+OR = { has_variable = tcrx_cancel var:tcrx_phase = 80 }
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes scope:helpers_closed = yes
+OR = { has_variable = tcrx_cancel var:tcrx_phase = 80 }
+} trigger_else = { always = no } }
+
+if = { limit = { has_variable = tcrx_cancel }
+ tcrx_finish_rejected_effect = yes
+} else = {
+ remove_variable = tcrx_active
+ set_variable = { name = tcrx_phase value = 90 }
+ set_variable = { name = tcrv_phase value = 45 }
+ debug_log = "TCRX|FINISHED"
+}
+
+ } }
+}
+
+tcrx_watchdog = { scope = character is_valid = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes var:tcrx_phase < 80
+NOT = { has_variable = tcrx_cancel }
+} trigger_else = { always = no } }
+ effect = { if = { limit = { trigger_if = { limit = { has_variable = tcrx_active has_variable = tcrx_owner has_variable = tcrx_phase has_variable = tcrx_count has_variable = tcrx_generation has_variable = tcrx_lifecycle has_variable = tcrx_component has_variable = tcrx_epoch has_variable = tcrx_target has_variable = tcrx_total_before has_variable = tcrx_selected_count has_variable = tcrx_audit_count has_variable = tcrx_actual_count has_variable = tcrx_watchdog_ticks }
+tcrx_ui_trigger = yes var:tcrx_phase < 80
+NOT = { has_variable = tcrx_cancel }
+} trigger_else = { always = no } }
+
+set_variable = { name = tcrx_watchdog_ticks value = 15 }
+set_variable = { name = tcrx_error value = 3 }
+set_variable = { name = tcrx_cancel value = yes }
+debug_log = "TCRX|WATCHDOG_ROLLBACK"
+
+ } }
+}

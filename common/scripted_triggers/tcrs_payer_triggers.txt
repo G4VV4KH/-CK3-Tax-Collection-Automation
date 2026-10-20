@@ -1,0 +1,94 @@
+﻿tcrs_payer_context_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrs_active has_variable = tcrs_owner has_variable = tcrs_generation
+  has_variable = tcrs_lifecycle has_variable = tcrs_sequence has_variable = tcrs_phase
+  has_variable = tcrc_lifecycle has_variable = tcr_active_generation
+  has_variable = tcrc_life_year has_variable = tcrc_life_month has_variable = tcrc_life_day
+  has_variable = tcrc_start_gold has_variable = tcrc_original_speed
+ }
+  var:tcrs_owner = this var:tcrs_lifecycle = var:tcrc_lifecycle
+  var:tcrs_generation = var:tcr_active_generation
+  tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+  NOT = { has_variable = tcrs_failed } NOT = { has_variable = tcr_failed }
+  current_year = var:tcrc_life_year current_month = var:tcrc_life_month current_day = var:tcrc_life_day
+  gold = var:tcrc_start_gold
+ } trigger_else = { always = no }
+}
+tcrs_payer_ui_trigger = {
+ tcrs_payer_context_trigger = yes
+ scope:paused = yes scope:speed = var:tcrc_original_speed scope:context_allowed = yes
+ scope:sequence = var:tcrs_sequence
+}
+tcrs_original_payer_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrs_payer_owner has_variable = tcrs_payer_lifecycle
+  has_variable = tcrs_payer_sequence has_variable = tcrs_payer_original_slot
+ }
+  is_alive = yes exists = liege liege = root
+  var:tcrs_payer_owner = root var:tcrs_payer_lifecycle = root.var:tcrs_lifecycle
+  var:tcrs_payer_sequence = root.var:tcrs_sequence
+  save_temporary_scope_as = tcrs_member
+  root = { any_tax_slot = { this = scope:tcrs_member.var:tcrs_payer_original_slot } }
+ } trigger_else = { always = no }
+}
+tcrs_expected_payer_hook_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrs_active has_variable = tcrs_phase has_variable = tcrs_restore_pending
+  has_variable = tcrs_restore_dispatch has_variable = tcrs_restore_sequence
+  has_variable = tcrs_restore_payer has_variable = tcrs_restore_source has_variable = tcrs_restore_target
+  exists = scope:vassal exists = scope:tax_slot
+ }
+  tcrs_payer_context_trigger = yes var:tcrs_phase = 85
+  var:tcrs_restore_dispatch = var:tcrs_restore_sequence scope:vassal = var:tcrs_restore_payer
+  OR = { scope:tax_slot = var:tcrs_restore_source scope:tax_slot = var:tcrs_restore_target }
+ } trigger_else = { always = no }
+}
+tcrs_restore_receipt_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrs_restore_pending has_variable = tcrs_restore_sequence
+  has_variable = tcrs_restore_dispatch has_variable = tcrs_restore_ack_assigned has_variable = tcrs_restore_ack_removed
+  has_variable = tcrs_restore_payer has_variable = tcrs_restore_target has_variable = tcrs_restore_source
+ }
+  tcrs_payer_context_trigger = yes var:tcrs_phase = 85
+  var:tcrs_restore_dispatch = var:tcrs_restore_sequence
+  var:tcrs_restore_ack_assigned = var:tcrs_restore_sequence
+  var:tcrs_restore_ack_removed = var:tcrs_restore_sequence
+  var:tcrs_restore_payer = { tcrs_original_payer_trigger = yes assigned_tax_slot = root.var:tcrs_restore_target }
+  var:tcrs_restore_target = { any_tax_slot_vassal = { this = root.var:tcrs_restore_payer } }
+  NOT = { any_tax_slot = { this != root.var:tcrs_restore_target any_tax_slot_vassal = { this = root.var:tcrs_restore_payer } } }
+ } trigger_else = { always = no }
+}
+tcrs_payer_recovery_safe_trigger = {
+ NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation }
+ tcrv_parent_quiescent_trigger = yes
+ trigger_if = { limit = { has_variable = tcrs_restore_pending }
+  trigger_if = { limit = {
+   has_variable = tcrs_restore_payer has_variable = tcrs_restore_source
+   has_variable = tcrs_restore_target has_variable = tcrs_restore_sequence
+   has_variable = tcrs_phase
+  }
+   var:tcrs_phase = 85
+   var:tcrs_restore_payer = {
+    tcrs_original_payer_trigger = yes
+    OR = {
+     tcrx_recovery_restore_member_trigger = yes
+     trigger_if = { limit = { tcrv_parent_sealed_receipt_trigger = yes }
+      var:tcrs_payer_original_slot = root.var:tcrs_restore_target
+      var:tcrc_payer_receipt_source = root.var:tcrs_restore_target
+      var:tcrc_payer_receipt_target = root.var:tcrs_restore_source
+     } trigger_else = { always = no }
+    }
+    OR = {
+     assigned_tax_slot = root.var:tcrs_restore_source
+     assigned_tax_slot = root.var:tcrs_restore_target
+    }
+    save_temporary_scope_as = tcrs_recovered_payer
+    assigned_tax_slot = { any_tax_slot_vassal = { this = scope:tcrs_recovered_payer } }
+   }
+   NOT = { any_tax_slot = {
+    this != root.var:tcrs_restore_payer.assigned_tax_slot
+    any_tax_slot_vassal = { this = root.var:tcrs_restore_payer }
+   } }
+  } trigger_else = { always = no }
+ }
+}

@@ -1,0 +1,236 @@
+﻿tcrm_validate_matrix_effect = {
+ remove_variable = tcrm_matrix_valid
+ remove_variable = tcrm_matrix_missing
+ every_in_list = {
+  variable = tcrm_payers
+  if = { limit = { NOT = { has_variable = tcrm_matrix_complete } }
+   scope:tcrm_owner = { set_variable = { name = tcrm_matrix_missing value = yes } }
+  }
+ }
+ if = { limit = {
+  has_variable = tcrm_snapshot_ready
+  NOT = { has_variable = tcrm_matrix_missing }
+ } set_variable = { name = tcrm_matrix_valid value = yes } }
+}
+
+
+tcrm_prepare_payer_relaxation_effect = {
+ save_scope_as = tcrm_payer
+ scope:tcrm_owner = {
+  remove_variable = tcrm_relax_ready
+  set_variable = { name = tcrm_base_gold value = 0 }
+  set_variable = { name = tcrm_base_keep value = 0 }
+  if = { limit = { NOT = { scope:tcrm_payer = { has_variable = tcrm_plan_slot } } }
+   set_variable = { name = tcrm_relax_ready value = yes }
+  }
+  else_if = { limit = { scope:tcrm_payer.var:tcrm_plan_slot = { has_variable = tcrm_dist_gold } }
+   set_variable = { name = tcrm_relax_ready value = yes }
+   set_variable = { name = tcrm_base_gold value = scope:tcrm_payer.var:tcrm_plan_slot.var:tcrm_dist_gold }
+   change_variable = { name = tcrm_base_gold subtract = scope:tcrm_payer.var:tcrm_plan_gold }
+   set_variable = { name = tcrm_base_keep value = scope:tcrm_payer.var:tcrm_plan_slot.var:tcrm_dist_keep }
+   change_variable = { name = tcrm_base_keep subtract = scope:tcrm_payer.var:tcrm_plan_keep }
+  }
+  if = { limit = { has_variable = tcrm_relax_ready }
+   tcrm_relax_all_destinations_effect = yes
+  }
+ }
+}
+
+
+tcrm_relax_destination_effect = {
+ if = { limit = {
+  has_variable = tcrm_slot_$INDEX$
+  scope:tcrm_payer = { has_variable = tcrm_gold_$INDEX$ }
+  OR = {
+   NOT = { scope:tcrm_payer = { has_variable = tcrm_plan_slot } }
+   scope:tcrm_payer.var:tcrm_plan_slot != var:tcrm_slot_$INDEX$
+  }
+ }
+  set_variable = { name = tcrm_offer_gold value = var:tcrm_base_gold }
+  change_variable = { name = tcrm_offer_gold add = scope:tcrm_payer.var:tcrm_gold_$INDEX$ }
+  set_variable = { name = tcrm_offer_keep value = var:tcrm_base_keep }
+  if = { limit = { scope:tcrm_payer = { has_variable = tcrm_native_slot }
+    scope:tcrm_payer.var:tcrm_native_slot = var:tcrm_slot_$INDEX$
+   }
+   change_variable = { name = tcrm_offer_keep add = 1 }
+  }
+  var:tcrm_slot_$INDEX$ = {
+   if = { limit = { OR = {
+    NOT = { has_variable = tcrm_dist_gold }
+    scope:tcrm_owner.var:tcrm_offer_gold > var:tcrm_dist_gold
+    AND = {
+     scope:tcrm_owner.var:tcrm_offer_gold = var:tcrm_dist_gold
+     scope:tcrm_owner.var:tcrm_offer_keep > var:tcrm_dist_keep
+    }
+   } }
+    set_variable = { name = tcrm_dist_gold value = scope:tcrm_owner.var:tcrm_offer_gold }
+    set_variable = { name = tcrm_dist_keep value = scope:tcrm_owner.var:tcrm_offer_keep }
+    set_variable = { name = tcrm_parent value = scope:tcrm_payer }
+   }
+  }
+ }
+}
+
+
+tcrm_consider_endpoint_effect = {
+ if = { limit = { has_variable = tcrm_dist_gold var:tcrm_used < var:tcrm_capacity }
+  save_scope_as = tcrm_slot
+  scope:tcrm_owner = {
+   if = { limit = { OR = {
+    NOT = { has_variable = tcrm_endpoint }
+    scope:tcrm_slot.var:tcrm_dist_gold > var:tcrm_endpoint_gold
+    AND = { scope:tcrm_slot.var:tcrm_dist_gold = var:tcrm_endpoint_gold
+     scope:tcrm_slot.var:tcrm_dist_keep > var:tcrm_endpoint_keep
+    }
+   } }
+    set_variable = { name = tcrm_endpoint value = scope:tcrm_slot }
+    set_variable = { name = tcrm_endpoint_gold value = scope:tcrm_slot.var:tcrm_dist_gold }
+    set_variable = { name = tcrm_endpoint_keep value = scope:tcrm_slot.var:tcrm_dist_keep }
+   }
+  }
+ }
+}
+
+
+tcrm_store_assignment_gold_effect = {
+ if = { limit = { scope:tcrm_slot.var:tcrm_index = $INDEX$ }
+  set_variable = { name = tcrm_plan_gold value = var:tcrm_gold_$INDEX$ }
+ }
+}
+
+
+tcrm_augment_effect = {
+ set_variable = { name = tcrm_cursor_slot value = var:tcrm_endpoint }
+ set_variable = { name = tcrm_backtrack_steps value = 0 }
+ while = { limit = { has_variable = tcrm_cursor_slot var:tcrm_backtrack_steps < var:tcrm_slot_count }
+  change_variable = { name = tcrm_backtrack_steps add = 1 }
+  var:tcrm_cursor_slot = { save_scope_as = tcrm_slot var:tcrm_parent = { save_scope_as = tcrm_payer } }
+  remove_variable = tcrm_previous_slot
+  if = { limit = { scope:tcrm_payer = { has_variable = tcrm_plan_slot } }
+   set_variable = { name = tcrm_previous_slot value = scope:tcrm_payer.var:tcrm_plan_slot }
+   var:tcrm_previous_slot = { change_variable = { name = tcrm_used subtract = 1 } }
+  }
+  scope:tcrm_payer = {
+   set_variable = { name = tcrm_plan_slot value = scope:tcrm_slot }
+   tcrm_store_all_assignment_gold_effect = yes
+   set_variable = { name = tcrm_plan_keep value = 0 }
+   if = { limit = { has_variable = tcrm_native_slot var:tcrm_native_slot = scope:tcrm_slot }
+    set_variable = { name = tcrm_plan_keep value = 1 }
+   }
+  }
+  scope:tcrm_slot = { change_variable = { name = tcrm_used add = 1 } }
+  remove_variable = tcrm_cursor_slot
+  if = { limit = { has_variable = tcrm_previous_slot }
+   set_variable = { name = tcrm_cursor_slot value = var:tcrm_previous_slot }
+  }
+ }
+ if = { limit = { has_variable = tcrm_cursor_slot }
+  set_variable = { name = tcrm_plan_invalid value = yes }
+ }
+ change_variable = { name = tcrm_planned_count add = 1 }
+}
+
+
+tcrm_plan_taxpayers_effect = {
+ save_scope_as = tcrm_owner
+ tcrm_validate_matrix_effect = yes
+ remove_variable = tcrm_plan_complete
+ remove_variable = tcrm_plan_invalid
+ if = { limit = { has_variable = tcrm_matrix_valid }
+  set_variable = { name = tcrm_planned_count value = 0 }
+  set_variable = { name = tcrm_plan_loop value = yes }
+  every_in_list = { variable = tcrm_slots set_variable = { name = tcrm_used value = 0 } }
+  every_in_list = { variable = tcrm_payers
+   remove_variable = tcrm_plan_slot remove_variable = tcrm_plan_gold remove_variable = tcrm_plan_keep
+  }
+  while = { limit = { has_variable = tcrm_plan_loop NOT = { has_variable = tcrm_plan_invalid } }
+   every_in_list = { variable = tcrm_slots
+    remove_variable = tcrm_dist_gold remove_variable = tcrm_dist_keep remove_variable = tcrm_parent
+   }
+   set_variable = { name = tcrm_relax_round value = 0 }
+   while = { limit = { var:tcrm_relax_round < var:tcrm_slot_count }
+    every_in_list = { variable = tcrm_payers tcrm_prepare_payer_relaxation_effect = yes }
+    change_variable = { name = tcrm_relax_round add = 1 }
+   }
+   remove_variable = tcrm_endpoint
+   every_in_list = { variable = tcrm_slots tcrm_consider_endpoint_effect = yes }
+   if = { limit = { var:tcrm_planned_count < var:tcrm_payer_count has_variable = tcrm_endpoint var:tcrm_endpoint_gold >= 0 }
+    tcrm_augment_effect = yes
+   }
+   else = { remove_variable = tcrm_plan_loop }
+  }
+  if = { limit = { NOT = { has_variable = tcrm_plan_invalid } }
+   set_variable = { name = tcrm_plan_complete value = yes }
+  }
+ }
+}
+
+tcrm_relax_all_destinations_effect = {
+ tcrm_relax_destination_effect = { INDEX = 0 }
+ tcrm_relax_destination_effect = { INDEX = 1 }
+ tcrm_relax_destination_effect = { INDEX = 2 }
+ tcrm_relax_destination_effect = { INDEX = 3 }
+ tcrm_relax_destination_effect = { INDEX = 4 }
+ tcrm_relax_destination_effect = { INDEX = 5 }
+ tcrm_relax_destination_effect = { INDEX = 6 }
+ tcrm_relax_destination_effect = { INDEX = 7 }
+ tcrm_relax_destination_effect = { INDEX = 8 }
+ tcrm_relax_destination_effect = { INDEX = 9 }
+ tcrm_relax_destination_effect = { INDEX = 10 }
+ tcrm_relax_destination_effect = { INDEX = 11 }
+ tcrm_relax_destination_effect = { INDEX = 12 }
+ tcrm_relax_destination_effect = { INDEX = 13 }
+ tcrm_relax_destination_effect = { INDEX = 14 }
+ tcrm_relax_destination_effect = { INDEX = 15 }
+ tcrm_relax_destination_effect = { INDEX = 16 }
+ tcrm_relax_destination_effect = { INDEX = 17 }
+ tcrm_relax_destination_effect = { INDEX = 18 }
+ tcrm_relax_destination_effect = { INDEX = 19 }
+ tcrm_relax_destination_effect = { INDEX = 20 }
+ tcrm_relax_destination_effect = { INDEX = 21 }
+ tcrm_relax_destination_effect = { INDEX = 22 }
+ tcrm_relax_destination_effect = { INDEX = 23 }
+ tcrm_relax_destination_effect = { INDEX = 24 }
+ tcrm_relax_destination_effect = { INDEX = 25 }
+ tcrm_relax_destination_effect = { INDEX = 26 }
+ tcrm_relax_destination_effect = { INDEX = 27 }
+ tcrm_relax_destination_effect = { INDEX = 28 }
+ tcrm_relax_destination_effect = { INDEX = 29 }
+ tcrm_relax_destination_effect = { INDEX = 30 }
+ tcrm_relax_destination_effect = { INDEX = 31 }
+}
+
+tcrm_store_all_assignment_gold_effect = {
+ tcrm_store_assignment_gold_effect = { INDEX = 0 }
+ tcrm_store_assignment_gold_effect = { INDEX = 1 }
+ tcrm_store_assignment_gold_effect = { INDEX = 2 }
+ tcrm_store_assignment_gold_effect = { INDEX = 3 }
+ tcrm_store_assignment_gold_effect = { INDEX = 4 }
+ tcrm_store_assignment_gold_effect = { INDEX = 5 }
+ tcrm_store_assignment_gold_effect = { INDEX = 6 }
+ tcrm_store_assignment_gold_effect = { INDEX = 7 }
+ tcrm_store_assignment_gold_effect = { INDEX = 8 }
+ tcrm_store_assignment_gold_effect = { INDEX = 9 }
+ tcrm_store_assignment_gold_effect = { INDEX = 10 }
+ tcrm_store_assignment_gold_effect = { INDEX = 11 }
+ tcrm_store_assignment_gold_effect = { INDEX = 12 }
+ tcrm_store_assignment_gold_effect = { INDEX = 13 }
+ tcrm_store_assignment_gold_effect = { INDEX = 14 }
+ tcrm_store_assignment_gold_effect = { INDEX = 15 }
+ tcrm_store_assignment_gold_effect = { INDEX = 16 }
+ tcrm_store_assignment_gold_effect = { INDEX = 17 }
+ tcrm_store_assignment_gold_effect = { INDEX = 18 }
+ tcrm_store_assignment_gold_effect = { INDEX = 19 }
+ tcrm_store_assignment_gold_effect = { INDEX = 20 }
+ tcrm_store_assignment_gold_effect = { INDEX = 21 }
+ tcrm_store_assignment_gold_effect = { INDEX = 22 }
+ tcrm_store_assignment_gold_effect = { INDEX = 23 }
+ tcrm_store_assignment_gold_effect = { INDEX = 24 }
+ tcrm_store_assignment_gold_effect = { INDEX = 25 }
+ tcrm_store_assignment_gold_effect = { INDEX = 26 }
+ tcrm_store_assignment_gold_effect = { INDEX = 27 }
+ tcrm_store_assignment_gold_effect = { INDEX = 28 }
+ tcrm_store_assignment_gold_effect = { INDEX = 29 }
+ tcrm_store_assignment_gold_effect = { INDEX = 30 }
+ tcrm_store_assignment_gold_effect = { INDEX = 31 }
+}

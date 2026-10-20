@@ -1,0 +1,6 @@
+﻿l_simp_chinese:
+ tcrc_event_title:0 "正在重新计算税收"
+ tcrc_event_desc:0 "税收重新计算完毕后，将恢复此前的暂停状态。"
+ tcrc_event_complete:0 "重新计算完成"
+ tcrc_event_cancel:0 "自动化已停止"
+ tcrc_event_failed:0 "验证失败，自动化已停止"

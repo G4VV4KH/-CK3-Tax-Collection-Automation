@@ -1,0 +1,20 @@
+﻿tcre_command_active_trigger = {
+NOT = { has_variable = tcrq_pending }
+trigger_if = { limit = {
+has_variable = tcre_job_active
+has_variable = tcr_active_generation
+has_variable = tcr_command_generation
+has_variable = tcre_job_generation
+has_variable = tcre_sequence
+has_variable = tcr_expected_kind
+has_variable = tcre_phase
+has_variable = tcr_expected_slot
+has_variable = tcr_expected_collector
+}
+var:tcr_expected_kind = 1
+var:tcr_command_generation = var:tcr_active_generation
+var:tcre_job_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed }
+}
+trigger_else = { always = no }
+}

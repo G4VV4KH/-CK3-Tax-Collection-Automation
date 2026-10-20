@@ -1,21 +1,11 @@
 ﻿window = {
+ tcrs_payer_vassals = {}
+ tcrq_source_cleanup = {}
 	name = "window_tax_slot_vassals"
-	# TCA_WORKERS_BEGIN
-	alwaystransparent = "[GetVariableSystem.Exists('tca_running')]"
-	tca_swap_removal_worker = {}
-	# TCA_WORKERS_END
 	parentanchor = "center"
 	size = { 700 1000 }
 	layer = middle
 	allow_outside = yes
-
-	# TCA_CONTENT_BEGIN
-	widget = {
-		size = { 100% 100% }
-		visible = "[Not(GetVariableSystem.Exists('tca_running'))]"
-	# TCA_CONTENT_END
-	using = Window_Background
-	using = Window_Decoration
 
 	datacontext = "[TaxSlotVassalWindow.GetTaxSlot]"
 
@@ -23,6 +13,12 @@
 		name = _show
 		on_start = "[GetVariableSystem.Set( 'tax_slot_vassal_tab', Select_CString( TaxSlot.HasTaxpayers, 'manage_vassals', 'assign_vassals' ) )]"
 	}
+
+alwaystransparent = "[Or(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrx_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrx_phase').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrx_lifecycle').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrx_generation').IsSet,GetPlayer.MakeScope.GetVariable('tcrx_component').IsSet))))),And(GetVariableSystem.HasValue('tcrx_owned',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_component').GetValueWithDefault('(CFixedPoint)-1')))))))),And(EqualTo_string(TaxSlotVassalWindow.GetTaxSlot.Custom('tcrx_destination_slot'),'1'),EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID))))),Or(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrs_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrs_phase').IsSet,And(EqualTo_CFixedPoint(GetPlayer.MakeScope.Var('tcrs_phase').GetValue,'(CFixedPoint)85'),And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(TaxSlotVassalWindow.GetTaxSlot.Custom('tcrs_restore_target_slot'),'1')))))),Or(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle_active').IsSet,GetScriptedGui('tcro_ordinary_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End))),And(And(GetPlayer.IsValid,And(GetScriptedGui('tcro_ordinary_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End),And(Not(GetPlayer.MakeScope.GetVariable('tcri_hold_reason').IsSet),And(GetPlayer.MakeScope.GetVariable('tcrb_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrb_owner').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrb_generation').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrb_lifecycle').IsSet,And(GetPlayer.MakeScope.GetVariable('tcr_active_generation').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle').IsSet,And(EqualTo_string(UIntToString(GetPlayer.MakeScope.Var('tcrb_owner').GetCharacter.GetID),UIntToString(GetPlayer.GetID)),And(EqualTo_CFixedPoint(GetPlayer.MakeScope.Var('tcrb_generation').GetValue,GetPlayer.MakeScope.Var('tcr_active_generation').GetValue),EqualTo_CFixedPoint(GetPlayer.MakeScope.Var('tcrb_lifecycle').GetValue,GetPlayer.MakeScope.Var('tcrc_lifecycle').GetValue))))))))))))),And(GetVariableSystem.HasValue('tcrb_source_owned_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrb_lifecycle').GetValue)),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrb_generation').GetValue))))))),And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetID),GetVariableSystem.Get('tcrb_source_slot_id')))))),And(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle').IsSet,GetScriptedGui('tcro_ordinary_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)))),And(GetPlayer.MakeScope.GetVariable('tcrv_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrv_owner').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrv_lifecycle').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrv_generation').IsSet,And(GetPlayer.MakeScope.GetVariable('tcr_active_generation').IsSet,And(EqualTo_string(UIntToString(GetPlayer.MakeScope.Var('tcrv_owner').GetCharacter.GetID),UIntToString(GetPlayer.GetID)),And(EqualTo_CFixedPoint(GetPlayer.MakeScope.Var('tcrv_lifecycle').GetValue,GetPlayer.MakeScope.Var('tcrc_lifecycle').GetValue),EqualTo_CFixedPoint(GetPlayer.MakeScope.Var('tcrv_generation').GetValue,GetPlayer.MakeScope.Var('tcr_active_generation').GetValue))))))))),And(GetVariableSystem.HasValue('tcrb_source_owned_token',Concatenate('tcrv:',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrv_lifecycle').GetValue)),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrv_generation').GetValue)))))))),And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetID),GetVariableSystem.Get('tcrb_source_slot_id'))))))))]"
+widget = { name = tcrc_user_content size = { 100% 100% } visible = "[And(Not(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrx_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrx_phase').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrx_lifecycle').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrx_generation').IsSet,GetPlayer.MakeScope.GetVariable('tcrx_component').IsSet))))),And(GetVariableSystem.HasValue('tcrx_owned',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_lifecycle').GetValueWithDefault('(CFixedPoint)-1'))),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.GetVariable('tcrx_component').GetValueWithDefault('(CFixedPoint)-1')))))))),And(EqualTo_string(TaxSlotVassalWindow.GetTaxSlot.Custom('tcrx_destination_slot'),'1'),EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)))))),And(Not(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrs_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrs_phase').IsSet,And(EqualTo_CFixedPoint(GetPlayer.MakeScope.Var('tcrs_phase').GetValue,'(CFixedPoint)85'),And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(TaxSlotVassalWindow.GetTaxSlot.Custom('tcrs_restore_target_slot'),'1'))))))),Not(Or(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle_active').IsSet,GetScriptedGui('tcro_ordinary_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End))),And(And(GetPlayer.IsValid,And(GetScriptedGui('tcro_ordinary_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End),And(Not(GetPlayer.MakeScope.GetVariable('tcri_hold_reason').IsSet),And(GetPlayer.MakeScope.GetVariable('tcrb_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrb_owner').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrb_generation').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrb_lifecycle').IsSet,And(GetPlayer.MakeScope.GetVariable('tcr_active_generation').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle').IsSet,And(EqualTo_string(UIntToString(GetPlayer.MakeScope.Var('tcrb_owner').GetCharacter.GetID),UIntToString(GetPlayer.GetID)),And(EqualTo_CFixedPoint(GetPlayer.MakeScope.Var('tcrb_generation').GetValue,GetPlayer.MakeScope.Var('tcr_active_generation').GetValue),EqualTo_CFixedPoint(GetPlayer.MakeScope.Var('tcrb_lifecycle').GetValue,GetPlayer.MakeScope.Var('tcrc_lifecycle').GetValue))))))))))))),And(GetVariableSystem.HasValue('tcrb_source_owned_token',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrb_lifecycle').GetValue)),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrb_generation').GetValue))))))),And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetID),GetVariableSystem.Get('tcrb_source_slot_id')))))),And(And(And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrc_lifecycle').IsSet,GetScriptedGui('tcro_ordinary_permission').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)))),And(GetPlayer.MakeScope.GetVariable('tcrv_active').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrv_owner').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrv_lifecycle').IsSet,And(GetPlayer.MakeScope.GetVariable('tcrv_generation').IsSet,And(GetPlayer.MakeScope.GetVariable('tcr_active_generation').IsSet,And(EqualTo_string(UIntToString(GetPlayer.MakeScope.Var('tcrv_owner').GetCharacter.GetID),UIntToString(GetPlayer.GetID)),And(EqualTo_CFixedPoint(GetPlayer.MakeScope.Var('tcrv_lifecycle').GetValue,GetPlayer.MakeScope.Var('tcrc_lifecycle').GetValue),EqualTo_CFixedPoint(GetPlayer.MakeScope.Var('tcrv_generation').GetValue,GetPlayer.MakeScope.Var('tcr_active_generation').GetValue))))))))),And(GetVariableSystem.HasValue('tcrb_source_owned_token',Concatenate('tcrv:',Concatenate(UIntToString(GetPlayer.GetID),Concatenate(':',Concatenate(IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrv_lifecycle').GetValue)),Concatenate(':',IntToString(FixedPointToInt(GetPlayer.MakeScope.Var('tcrv_generation').GetValue)))))))),And(EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetOwner.GetID),UIntToString(GetPlayer.GetID)),EqualTo_string(UIntToString(TaxSlotVassalWindow.GetTaxSlot.GetID),GetVariableSystem.Get('tcrb_source_slot_id')))))))))]"
+	using = Window_Background
+	using = Window_Decoration
+
 
 	vbox = {
 		using = Window_Margins
@@ -723,9 +719,18 @@
 			}
 		}
 	}
-	# TCA_CONTENT_CLOSE_BEGIN
-	}
-	# TCA_CONTENT_CLOSE_END
+
+}
+tcrm_provider_assigned = { }
+tcrp_executor_vassals = { }
+tcrx_vassal_worker = {}
+tcrx_recovery_source_cleanup = {}
+tcrx_handoff_source_cleanup = {}
+tcrb_source_cleanup = { }
+tcrf_ui_foreign_source = {}
+tcrv_assigned_observer = { }
+tcrv_parent_source_cleanup = { }
+tcrc_failure_source_cleanup = { }
 }
 
 types TaxCollectorVassalViewTypes
@@ -1269,4 +1274,3 @@ types TaxCollectorVassalViewTypes
 		}
 	}
 }
-

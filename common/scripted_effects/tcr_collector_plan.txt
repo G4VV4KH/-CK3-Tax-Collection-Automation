@@ -1,0 +1,285 @@
+﻿# Synthetic decree placement policy only. No monetary unit.
+tcrcp_capture_slot_policy_effect = {
+ save_scope_as = tcrcp_policy_slot
+ remove_variable = tcrcp_decree_known
+ set_variable = { name = tcrcp_policy_priority value = 0 }
+ set_variable = { name = tcrcp_eligible_payer_count value = 0 }
+
+ if = { limit = { is_active_obligation = default_tax_collector }
+  set_variable = { name = tcrcp_decree_known value = yes }
+  scope:tcrcp_owner = { every_in_list = { variable = tcrcp_payers
+   limit = { is_alive = yes always = yes }
+   scope:tcrcp_policy_slot = { change_variable = { name = tcrcp_eligible_payer_count add = 1 } }
+  } }
+  if = { limit = { var:tcrcp_eligible_payer_count > 0 }
+   set_variable = { name = tcrcp_policy_priority value = 21 }
+  }
+ }
+ if = { limit = { is_active_obligation = strict_taxation_tax_collector }
+  set_variable = { name = tcrcp_decree_known value = yes }
+  scope:tcrcp_owner = { every_in_list = { variable = tcrcp_payers
+   limit = { is_alive = yes always = yes }
+   scope:tcrcp_policy_slot = { change_variable = { name = tcrcp_eligible_payer_count add = 1 } }
+  } }
+  if = { limit = { var:tcrcp_eligible_payer_count > 0 }
+   set_variable = { name = tcrcp_policy_priority value = 41 }
+  }
+ }
+ if = { limit = { is_active_obligation = iqta_special_rights_tax_collector }
+  set_variable = { name = tcrcp_decree_known value = yes }
+  scope:tcrcp_owner = { every_in_list = { variable = tcrcp_payers
+   limit = { is_alive = yes always = yes }
+   scope:tcrcp_policy_slot = { change_variable = { name = tcrcp_eligible_payer_count add = 1 } }
+  } }
+  if = { limit = { var:tcrcp_eligible_payer_count > 0 }
+   set_variable = { name = tcrcp_policy_priority value = 1 }
+  }
+ }
+ if = { limit = { is_active_obligation = ghazi_special_rights_tax_collector }
+  set_variable = { name = tcrcp_decree_known value = yes }
+  scope:tcrcp_owner = { every_in_list = { variable = tcrcp_payers
+   limit = { is_alive = yes faith = scope:tcrcp_owner.faith }
+   scope:tcrcp_policy_slot = { change_variable = { name = tcrcp_eligible_payer_count add = 1 } }
+  } }
+  if = { limit = { var:tcrcp_eligible_payer_count > 0 }
+   set_variable = { name = tcrcp_policy_priority value = 11 }
+  }
+ }
+ if = { limit = { is_active_obligation = muqata_special_rights_tax_collector }
+  set_variable = { name = tcrcp_decree_known value = yes }
+  scope:tcrcp_owner = { every_in_list = { variable = tcrcp_payers
+   limit = { is_alive = yes always = yes }
+   scope:tcrcp_policy_slot = { change_variable = { name = tcrcp_eligible_payer_count add = 1 } }
+  } }
+  if = { limit = { var:tcrcp_eligible_payer_count > 0 }
+   set_variable = { name = tcrcp_policy_priority value = 1 }
+  }
+ }
+ if = { limit = { is_active_obligation = jizya_special_rights_tax_collector }
+  set_variable = { name = tcrcp_decree_known value = yes }
+  scope:tcrcp_owner = { every_in_list = { variable = tcrcp_payers
+   limit = { is_alive = yes religion != scope:tcrcp_owner.religion }
+   scope:tcrcp_policy_slot = { change_variable = { name = tcrcp_eligible_payer_count add = 1 } }
+  } }
+  if = { limit = { var:tcrcp_eligible_payer_count > 0 }
+   set_variable = { name = tcrcp_policy_priority value = 101 }
+  }
+ }
+ if = { limit = { is_active_obligation = deqhan_special_rights_tax_collector }
+  set_variable = { name = tcrcp_decree_known value = yes }
+  scope:tcrcp_owner = { every_in_list = { variable = tcrcp_payers
+   limit = { is_alive = yes always = yes }
+   scope:tcrcp_policy_slot = { change_variable = { name = tcrcp_eligible_payer_count add = 1 } }
+  } }
+  if = { limit = { var:tcrcp_eligible_payer_count > 0 }
+   set_variable = { name = tcrcp_policy_priority value = 36 }
+  }
+ }
+ if = { limit = { is_active_obligation = maguh_special_rights_tax_collector }
+  set_variable = { name = tcrcp_decree_known value = yes }
+  scope:tcrcp_owner = { every_in_list = { variable = tcrcp_payers
+   limit = { is_alive = yes always = yes }
+   scope:tcrcp_policy_slot = { change_variable = { name = tcrcp_eligible_payer_count add = 1 } }
+  } }
+  if = { limit = { var:tcrcp_eligible_payer_count > 0 }
+   set_variable = { name = tcrcp_policy_priority value = 1 }
+  }
+ }
+ if = { limit = { NOT = { has_variable = tcrcp_decree_known } }
+  scope:tcrcp_owner = { set_variable = { name = tcrcp_unknown_obligation value = yes } }
+ }
+}
+
+# Admission: current player/ruler, active generation, native pause acquired
+# by the caller. This whole effect only computes scratch, never changes taxes.
+tcr_build_collector_plan_effect = {
+ if = { limit = { tcr_enabled_trigger = yes has_variable = tcr_active_generation NOT = { has_variable = tcr_failed } }
+  remove_variable = tcr_collector_plan_ready
+  remove_variable = tcr_collector_plan_shortage
+  remove_variable = tcrcp_unknown_obligation
+  remove_variable = tcrcp_plan_error
+  every_in_list = { variable = tcap_selected_collectors
+   remove_variable = tcr_plan_slot remove_variable = tcr_plan_generation
+  }
+  every_in_list = { variable = tcrcp_slots remove_variable = tcr_planned_collector }
+  set_variable = { name = tcr_collector_plan_generation value = var:tcr_active_generation }
+  tcrcp_prepare_snapshot_effect = yes
+  if = { limit = { has_variable = tcrcp_snapshot_ready }
+   every_in_list = { variable = tcrcp_slots tcrcp_capture_slot_policy_effect = yes }
+   if = { limit = { NOT = { has_variable = tcrcp_unknown_obligation } }
+    tcrcp_prepare_collector_matrix_effect = yes
+    remove_variable = tcrcp_lowest_selected_aptitude
+    every_in_list = { variable = tcap_selected_collectors
+     save_scope_as = tcrcp_candidate
+     scope:tcrcp_owner = {
+      if = { limit = { NOT = { has_variable = tcrcp_lowest_selected_aptitude } }
+       set_variable = { name = tcrcp_lowest_selected_aptitude value = scope:tcrcp_candidate.var:tcrcp_aptitude }
+      } else_if = { limit = { scope:tcrcp_candidate.var:tcrcp_aptitude < var:tcrcp_lowest_selected_aptitude }
+       set_variable = { name = tcrcp_lowest_selected_aptitude value = scope:tcrcp_candidate.var:tcrcp_aptitude }
+      }
+     }
+    }
+    # Additive positive translation preserves selected-candidate aptitude order.
+    # Nonnegative utility lets the reused solver fill zero-priority empty slots.
+    every_in_list = { variable = tcap_selected_collectors
+     save_scope_as = tcrcp_candidate
+     set_variable = { name = tcrcp_placement_strength value = var:tcrcp_aptitude }
+     change_variable = { name = tcrcp_placement_strength subtract = scope:tcrcp_owner.var:tcrcp_lowest_selected_aptitude }
+     change_variable = { name = tcrcp_placement_strength add = 1 }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_0 } }
+      set_variable = { name = tcrcm_policy_0 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_0 multiply = scope:tcrcp_owner.var:tcrcp_slot_0.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_1 } }
+      set_variable = { name = tcrcm_policy_1 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_1 multiply = scope:tcrcp_owner.var:tcrcp_slot_1.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_2 } }
+      set_variable = { name = tcrcm_policy_2 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_2 multiply = scope:tcrcp_owner.var:tcrcp_slot_2.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_3 } }
+      set_variable = { name = tcrcm_policy_3 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_3 multiply = scope:tcrcp_owner.var:tcrcp_slot_3.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_4 } }
+      set_variable = { name = tcrcm_policy_4 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_4 multiply = scope:tcrcp_owner.var:tcrcp_slot_4.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_5 } }
+      set_variable = { name = tcrcm_policy_5 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_5 multiply = scope:tcrcp_owner.var:tcrcp_slot_5.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_6 } }
+      set_variable = { name = tcrcm_policy_6 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_6 multiply = scope:tcrcp_owner.var:tcrcp_slot_6.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_7 } }
+      set_variable = { name = tcrcm_policy_7 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_7 multiply = scope:tcrcp_owner.var:tcrcp_slot_7.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_8 } }
+      set_variable = { name = tcrcm_policy_8 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_8 multiply = scope:tcrcp_owner.var:tcrcp_slot_8.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_9 } }
+      set_variable = { name = tcrcm_policy_9 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_9 multiply = scope:tcrcp_owner.var:tcrcp_slot_9.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_10 } }
+      set_variable = { name = tcrcm_policy_10 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_10 multiply = scope:tcrcp_owner.var:tcrcp_slot_10.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_11 } }
+      set_variable = { name = tcrcm_policy_11 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_11 multiply = scope:tcrcp_owner.var:tcrcp_slot_11.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_12 } }
+      set_variable = { name = tcrcm_policy_12 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_12 multiply = scope:tcrcp_owner.var:tcrcp_slot_12.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_13 } }
+      set_variable = { name = tcrcm_policy_13 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_13 multiply = scope:tcrcp_owner.var:tcrcp_slot_13.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_14 } }
+      set_variable = { name = tcrcm_policy_14 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_14 multiply = scope:tcrcp_owner.var:tcrcp_slot_14.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_15 } }
+      set_variable = { name = tcrcm_policy_15 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_15 multiply = scope:tcrcp_owner.var:tcrcp_slot_15.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_16 } }
+      set_variable = { name = tcrcm_policy_16 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_16 multiply = scope:tcrcp_owner.var:tcrcp_slot_16.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_17 } }
+      set_variable = { name = tcrcm_policy_17 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_17 multiply = scope:tcrcp_owner.var:tcrcp_slot_17.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_18 } }
+      set_variable = { name = tcrcm_policy_18 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_18 multiply = scope:tcrcp_owner.var:tcrcp_slot_18.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_19 } }
+      set_variable = { name = tcrcm_policy_19 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_19 multiply = scope:tcrcp_owner.var:tcrcp_slot_19.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_20 } }
+      set_variable = { name = tcrcm_policy_20 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_20 multiply = scope:tcrcp_owner.var:tcrcp_slot_20.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_21 } }
+      set_variable = { name = tcrcm_policy_21 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_21 multiply = scope:tcrcp_owner.var:tcrcp_slot_21.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_22 } }
+      set_variable = { name = tcrcm_policy_22 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_22 multiply = scope:tcrcp_owner.var:tcrcp_slot_22.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_23 } }
+      set_variable = { name = tcrcm_policy_23 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_23 multiply = scope:tcrcp_owner.var:tcrcp_slot_23.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_24 } }
+      set_variable = { name = tcrcm_policy_24 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_24 multiply = scope:tcrcp_owner.var:tcrcp_slot_24.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_25 } }
+      set_variable = { name = tcrcm_policy_25 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_25 multiply = scope:tcrcp_owner.var:tcrcp_slot_25.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_26 } }
+      set_variable = { name = tcrcm_policy_26 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_26 multiply = scope:tcrcp_owner.var:tcrcp_slot_26.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_27 } }
+      set_variable = { name = tcrcm_policy_27 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_27 multiply = scope:tcrcp_owner.var:tcrcp_slot_27.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_28 } }
+      set_variable = { name = tcrcm_policy_28 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_28 multiply = scope:tcrcp_owner.var:tcrcp_slot_28.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_29 } }
+      set_variable = { name = tcrcm_policy_29 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_29 multiply = scope:tcrcp_owner.var:tcrcp_slot_29.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_30 } }
+      set_variable = { name = tcrcm_policy_30 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_30 multiply = scope:tcrcp_owner.var:tcrcp_slot_30.var:tcrcp_policy_priority }
+     }
+     if = { limit = { scope:tcrcp_owner = { has_variable = tcrcp_slot_31 } }
+      set_variable = { name = tcrcm_policy_31 value = var:tcrcp_placement_strength }
+      change_variable = { name = tcrcm_policy_31 multiply = scope:tcrcp_owner.var:tcrcp_slot_31.var:tcrcp_policy_priority }
+     }
+     set_variable = { name = tcrcm_matrix_complete value = yes }
+    }
+    tcrcp_plan_collectors_effect = yes
+    if = { limit = {
+     has_variable = tcrcp_collectors_plan_complete
+     var:tcr_collector_plan_generation = var:tcr_active_generation
+     NOT = { has_variable = tcr_failed }
+    }
+     set_variable = { name = tcr_collector_plan_count value = 0 }
+     every_in_list = { variable = tcap_selected_collectors
+      if = { limit = { has_variable = tcrcm_plan_slot }
+       set_variable = { name = tcr_plan_slot value = var:tcrcm_plan_slot }
+       set_variable = { name = tcr_plan_generation value = scope:tcrcp_owner.var:tcr_active_generation }
+       save_scope_as = tcrcp_candidate
+       var:tcr_plan_slot = { set_variable = { name = tcr_planned_collector value = scope:tcrcp_candidate } }
+       scope:tcrcp_owner = { change_variable = { name = tcr_collector_plan_count add = 1 } }
+      } else = { scope:tcrcp_owner = { set_variable = { name = tcrcp_plan_error value = yes } } }
+     }
+     if = { limit = { var:tcr_collector_plan_count = var:tcrcp_selected_count NOT = { has_variable = tcrcp_plan_error } }
+      set_variable = { name = tcr_collector_plan_ready value = yes }
+      if = { limit = { var:tcr_collector_plan_count < var:tcrcp_slot_count }
+       set_variable = { name = tcr_collector_plan_shortage value = yes }
+      }
+     }
+    }
+   }
+  }
+ }
+}

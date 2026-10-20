@@ -1,0 +1,6 @@
+﻿l_french:
+ tcrc_event_title:0 "La perception des impôts est en cours de recalcul"
+ tcrc_event_desc:0 "L’état de pause précédent sera rétabli après le recalcul de la perception des impôts."
+ tcrc_event_complete:0 "Recalcul terminé"
+ tcrc_event_cancel:0 "Automatisation arrêtée"
+ tcrc_event_failed:0 "Automatisation arrêtée après l’échec d’une vérification"

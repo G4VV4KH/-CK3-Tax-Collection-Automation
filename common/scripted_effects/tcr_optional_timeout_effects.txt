@@ -1,0 +1,37 @@
+﻿# Optional observation can time out before any native mutation. In that
+# case retain completed mandatory work and use normal exact-owned cleanup.
+# Never convert a dispatched command, partial transfer or receipt into a defer.
+tcrc_optional_timeout_effect = {
+ remove_variable = tcrc_optional_timeout_deferred
+ if = { limit = { has_variable = tcrx_active tcrx_identity_trigger = yes }
+  # Never latch tcr_failed while a native batch can still be exactly restored.
+  # Existing flag suppresses the final generic block; the batch is not deferred.
+  set_variable = { name = tcrc_optional_timeout_deferred value = yes }
+  set_variable = { name = tcrx_error value = 4 }
+  set_variable = { name = tcrx_cancel value = yes }
+ } else_if = { limit = {
+  trigger_if = { limit = { has_variable = tcrc_phase has_variable = tcrv_phase has_variable = tcrv_wallet }
+   tcrv_identity_trigger = yes tcrv_parent_ledger_identity_trigger = yes
+   var:tcrc_phase = 37 gold = var:tcrv_wallet
+   OR = { var:tcrv_phase = 5 var:tcrv_phase = 10 }
+   NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+   NOT = { has_variable = tcrb_active } NOT = { has_variable = tcr_command_generation }
+   NOT = { has_variable = tcrv_job_payer } NOT = { has_variable = tcrv_job_source }
+   NOT = { has_variable = tcrv_job_target } NOT = { has_variable = tcrv_expected_sequence }
+   NOT = { has_variable = tcrv_parent_job_purpose } NOT = { has_variable = tcrv_hold }
+   tcrv_no_pending_trigger = yes
+  } trigger_else = { always = no }
+ }
+  tcrv_parent_check_ledger_effect = yes
+  tcrv_check_ledger_effect = yes
+  if = { limit = { NOT = { has_variable = tcrv_parent_bad } NOT = { has_variable = tcrv_ledger_bad } }
+   set_variable = { name = tcrc_optional_timeout_deferred value = yes }
+   tcrv_defer_effect = yes
+   debug_log = "TCRC|OPTIONAL_TIMEOUT_DEFERRED|no_native_command=yes"
+  }
+ }
+ if = { limit = { NOT = { has_variable = tcrc_optional_timeout_deferred } }
+  set_variable = { name = tcrc_block_reason value = 10 }
+  tcrc_block_effect = yes
+ }
+}

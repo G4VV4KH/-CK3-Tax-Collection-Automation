@@ -1,0 +1,42 @@
+﻿tcrq_pending_event_trigger = {
+trigger_if = { limit = { exists = scope:event_owner exists = scope:event_lifecycle }
+trigger_if = { limit = {
+has_variable = tcrc_event_requested
+has_variable = tcrc_lifecycle
+has_variable = tcrq_loaded_lifecycle
+}
+has_variable = tcrq_pending
+has_variable = tcrq_bootstrap_ready
+scope:event_owner = this
+
+tcro_owned_trigger = yes is_ai = no is_alive = yes
+scope:event_lifecycle = var:tcrc_lifecycle
+var:tcrq_loaded_lifecycle = var:tcrc_lifecycle
+var:tcrc_event_requested = var:tcrc_lifecycle
+
+} trigger_else = { always = no }
+
+} trigger_else = { always = no }
+}
+tcrq_cancelled_event_trigger = {
+trigger_if = { limit = { exists = scope:event_owner exists = scope:event_lifecycle }
+trigger_if = { limit = {
+has_variable = tcrq_cancelled_lifecycle
+}
+scope:event_owner = this
+scope:event_lifecycle = var:tcrq_cancelled_lifecycle
+
+} trigger_else = { always = no }
+
+} trigger_else = { always = no }
+}
+
+tcrq_off_cancel_allowed_trigger = {
+ trigger_if = { limit = { has_variable = tcrq_class }
+  tcrq_pending_event_trigger = yes
+  tcro_current_player_owner_trigger = yes
+  has_variable = tcrq_event_cancel_ready
+  NOT = { has_variable = tca_enabled }
+  OR = { var:tcrq_class = 0 var:tcrq_class = 1 var:tcrq_class = 2 var:tcrq_class = 3 }
+ } trigger_else = { always = no }
+}

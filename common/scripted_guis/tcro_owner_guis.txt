@@ -1,0 +1,143 @@
+﻿tcro_ordinary_permission = { scope = character is_valid = {
+ NOT = { has_variable = tcrq_pending }
+tcro_current_player_owner_trigger = yes
+} effect = { if = { limit = {
+tcro_current_player_owner_trigger = yes
+}
+
+} } }
+
+tcro_detect_mismatch = { scope = character is_valid = {
+tcro_owned_trigger = yes
+trigger_if = {
+ limit = { has_variable = tcrc_lifecycle exists = scope:lifecycle }
+ scope:lifecycle = var:tcrc_lifecycle
+}
+trigger_else = { always = no }
+exists = scope:player NOT = { scope:player = this }
+NOT = { has_variable = tcro_handoff_pending }
+} effect = { if = { limit = {
+tcro_owned_trigger = yes
+trigger_if = {
+ limit = { has_variable = tcrc_lifecycle exists = scope:lifecycle }
+ scope:lifecycle = var:tcrc_lifecycle
+}
+trigger_else = { always = no }
+exists = scope:player NOT = { scope:player = this }
+NOT = { has_variable = tcro_handoff_pending }
+}
+tcro_request_hold_effect = yes
+set_variable = { name = tcro_observed_new_player value = scope:player }
+} } }
+
+tcro_observe_hold = { scope = character is_valid = {
+tcro_owned_trigger = yes
+trigger_if = {
+ limit = { has_variable = tcrc_lifecycle exists = scope:lifecycle }
+ scope:lifecycle = var:tcrc_lifecycle
+}
+trigger_else = { always = no }
+has_variable = tcro_handoff_pending
+NOT = { has_variable = tcro_hold_observed }
+} effect = { if = { limit = {
+tcro_owned_trigger = yes
+trigger_if = {
+ limit = { has_variable = tcrc_lifecycle exists = scope:lifecycle }
+ scope:lifecycle = var:tcrc_lifecycle
+}
+trigger_else = { always = no }
+has_variable = tcro_handoff_pending
+NOT = { has_variable = tcro_hold_observed }
+}
+set_variable = { name = tcro_hold_observed value = yes }
+set_variable = { name = tcro_observed_manual_pause value = scope:manual }
+set_variable = { name = tcro_observed_game_pause value = scope:game_paused }
+set_variable = { name = tcro_observed_speed value = scope:speed }
+set_variable = { name = tcro_observed_year value = current_year }
+set_variable = { name = tcro_observed_month value = current_month }
+set_variable = { name = tcro_observed_day value = current_day }
+tcro_classify_settlement_effect = yes
+} } }
+
+tcro_observe_late_ack = { scope = character is_valid = {
+tcro_owned_trigger = yes
+trigger_if = {
+ limit = { has_variable = tcrc_lifecycle exists = scope:lifecycle }
+ scope:lifecycle = var:tcrc_lifecycle
+}
+trigger_else = { always = no }
+has_variable = tcro_handoff_pending
+has_variable = tcro_hold_observed
+trigger_if = {
+ limit = { has_variable = tcro_settlement_kind }
+ NOT = { var:tcro_settlement_kind = 3 }
+}
+trigger_else = { always = no }
+tcro_exact_hire_settled_trigger = yes
+} effect = { if = { limit = {
+tcro_owned_trigger = yes
+trigger_if = {
+ limit = { has_variable = tcrc_lifecycle exists = scope:lifecycle }
+ scope:lifecycle = var:tcrc_lifecycle
+}
+trigger_else = { always = no }
+has_variable = tcro_handoff_pending
+has_variable = tcro_hold_observed
+trigger_if = {
+ limit = { has_variable = tcro_settlement_kind }
+ NOT = { var:tcro_settlement_kind = 3 }
+}
+trigger_else = { always = no }
+tcro_exact_hire_settled_trigger = yes
+}
+tcro_classify_settlement_effect = yes
+} } }
+
+tcro_start_watch = { scope = character is_valid = {
+tcro_owned_trigger = yes
+trigger_if = {
+ limit = { has_variable = tcrc_lifecycle exists = scope:lifecycle }
+ scope:lifecycle = var:tcrc_lifecycle
+}
+trigger_else = { always = no }
+has_variable = tcro_handoff_pending
+has_variable = tcro_hold_observed NOT = { has_variable = tcro_hold_bounded }
+NOT = { has_variable = tcro_watch_started }
+} effect = { if = { limit = {
+tcro_owned_trigger = yes
+trigger_if = {
+ limit = { has_variable = tcrc_lifecycle exists = scope:lifecycle }
+ scope:lifecycle = var:tcrc_lifecycle
+}
+trigger_else = { always = no }
+has_variable = tcro_handoff_pending
+has_variable = tcro_hold_observed NOT = { has_variable = tcro_hold_bounded }
+NOT = { has_variable = tcro_watch_started }
+}
+set_variable = { name = tcro_watch_started value = yes }
+} } }
+
+tcro_bound_reached = { scope = character is_valid = {
+tcro_owned_trigger = yes
+trigger_if = {
+ limit = { has_variable = tcrc_lifecycle exists = scope:lifecycle }
+ scope:lifecycle = var:tcrc_lifecycle
+}
+trigger_else = { always = no }
+has_variable = tcro_handoff_pending
+has_variable = tcro_hold_observed NOT = { has_variable = tcro_hold_bounded }
+scope:watch_matches = yes
+} effect = { if = { limit = {
+tcro_owned_trigger = yes
+trigger_if = {
+ limit = { has_variable = tcrc_lifecycle exists = scope:lifecycle }
+ scope:lifecycle = var:tcrc_lifecycle
+}
+trigger_else = { always = no }
+has_variable = tcro_handoff_pending
+has_variable = tcro_hold_observed NOT = { has_variable = tcro_hold_bounded }
+scope:watch_matches = yes
+}
+set_variable = { name = tcro_hold_bounded value = yes }
+tcro_classify_settlement_effect = yes
+} } }

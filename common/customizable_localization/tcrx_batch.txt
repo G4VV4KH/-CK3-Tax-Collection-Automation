@@ -1,0 +1,16 @@
+﻿
+tcrx_destination_slot = { type = all
+ text = { trigger = {
+  trigger_if = { limit = { has_variable = tcrx_slot_owner }
+   trigger_if = { limit = { exists = var:tcrx_slot_owner }
+    var:tcrx_slot_owner = {
+     trigger_if = { limit = { has_variable = tcrx_target }
+      var:tcrx_target = prev
+     } trigger_else = { always = no }
+    }
+   } trigger_else = { always = no }
+  } trigger_else = { always = no }
+ }
+  localization_key = tcrp_executor_target_yes }
+ text = { fallback = yes localization_key = tcrp_executor_target_no }
+}

@@ -1,0 +1,84 @@
+﻿tcro_can_claim_trigger = {
+ is_ai = no is_alive = yes
+ NOT = { exists = global_var:tcr_transaction_owner }
+ NOT = { exists = global_var:tcr_transaction_lifecycle }
+ NOT = { has_variable = tcre_job_active }
+ NOT = { has_variable = tcrp_job_active }
+ NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+ NOT = { has_variable = tcro_handoff_pending }
+ NOT = { has_variable = tcro_hold_reason }
+}
+tcro_owned_trigger = {
+trigger_if = {
+ limit = {
+  exists = global_var:tcr_transaction_owner
+  exists = global_var:tcr_transaction_lifecycle
+  has_variable = tcrc_lifecycle
+ }
+ global_var:tcr_transaction_owner = this
+ var:tcrc_lifecycle = global_var:tcr_transaction_lifecycle
+}
+trigger_else = { always = no }
+}
+tcro_current_player_owner_trigger = {
+ tcro_owned_trigger = yes
+ is_ai = no is_alive = yes
+ NOT = { has_variable = tcro_handoff_pending }
+ NOT = { has_variable = tcro_hold_reason }
+}
+tcro_exact_hire_settled_trigger = {
+ trigger_if = {
+  limit = {
+   tcro_owned_trigger = yes has_variable = tcre_job_active
+   has_variable = tcr_active_generation has_variable = tcr_command_generation
+   has_variable = tcre_job_generation has_variable = tcr_expected_kind
+   exists = var:tcr_expected_slot exists = var:tcr_expected_collector
+   has_variable = tcre_sequence has_variable = tcr_hired_ack
+   has_variable = tcre_hired_sequence_ack has_variable = tcre_hired_generation_ack
+  }
+  save_temporary_scope_as = tcro_check_owner
+  var:tcr_command_generation = var:tcr_active_generation
+  var:tcre_job_generation = var:tcr_active_generation
+  var:tcr_expected_kind = 1
+  var:tcr_hired_ack = var:tcr_active_generation
+  var:tcre_hired_sequence_ack = var:tcre_sequence
+  var:tcre_hired_generation_ack = var:tcr_active_generation
+  var:tcr_expected_collector = {
+   is_tax_collector_of = scope:tcro_check_owner
+   tax_slot = scope:tcro_check_owner.var:tcr_expected_slot
+  }
+ }
+ trigger_else = { always = no }
+}
+tcro_finished_receipt_trigger = {
+ OR = {
+  AND = {
+   trigger_if = {
+    limit = { has_variable = tcrc_completed_lifecycle has_variable = tcrc_lifecycle }
+    var:tcrc_completed_lifecycle = var:tcrc_lifecycle
+   }
+   trigger_else = { always = no }
+  }
+  AND = {
+   trigger_if = {
+    limit = { has_variable = tcrc_cancelled_lifecycle has_variable = tcrc_lifecycle }
+    var:tcrc_cancelled_lifecycle = var:tcrc_lifecycle
+   }
+   trigger_else = { always = no }
+  }
+ }
+}
+tcro_undispatched_vacancy_trigger = {
+ trigger_if = {
+  limit = {
+   has_variable = tcre_job_active has_variable = tcre_phase
+   NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+   NOT = { has_variable = tcre_dispatched_sequence }
+   exists = var:tcr_expected_slot exists = var:tcr_expected_collector
+  }
+  OR = { var:tcre_phase = 10 var:tcre_phase = 20 }
+  var:tcr_expected_slot = { has_tax_collector = no }
+  var:tcr_expected_collector = { is_tax_collector = no }
+ }
+ trigger_else = { always = no }
+}

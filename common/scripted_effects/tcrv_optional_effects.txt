@@ -1,0 +1,1682 @@
+﻿# Advisory payer order never authorizes a transfer. Native monetary rows
+# are recreated by tcrm for the exact selected payer before each later job.
+# Only identities/ranks survive; cached money cannot enter a receipt.
+tcrv_clear_advisory_effect = {
+ every_in_list = { variable = tcrv_advisory_payers
+  limit = { exists = this }
+  remove_variable = tcrv_advisory_rank
+  remove_variable = tcrv_advisory_gain
+ }
+ clear_variable_list = tcrv_advisory_payers
+ remove_variable = tcrv_advisory_owner
+ remove_variable = tcrv_advisory_generation
+ remove_variable = tcrv_advisory_lifecycle
+ remove_variable = tcrv_advisory_continue
+ remove_variable = tcrv_recheck_payer
+ remove_variable = tcrv_advisory_next_rank
+ remove_variable = tcrv_advisory_best_rank
+ remove_variable = tcrv_advisory_build_payer
+ remove_variable = tcrv_advisory_build_gain
+}
+# Character scope. Called only for a freshly priced, currently legal positive edge.
+tcrv_record_advisory_gain_effect = {
+ if = { limit = { scope:tcrv_owner = { NOT = { has_variable = tcrv_recheck_payer } } }
+  if = { limit = { var:tcrv_gain > var:tcrv_advisory_gain }
+   set_variable = { name = tcrv_advisory_gain value = var:tcrv_gain }
+  }
+ }
+}
+# Stable strict-max scan uses the provider's existing fixed iteration order for
+# ties, exactly like the current best-edge selection. Store only ordinal ranks.
+tcrv_build_advisory_effect = {
+ set_variable = { name = tcrv_advisory_owner value = this }
+ set_variable = { name = tcrv_advisory_generation value = var:tcrv_generation }
+ set_variable = { name = tcrv_advisory_lifecycle value = var:tcrv_lifecycle }
+ set_variable = { name = tcrv_advisory_next_rank value = 0 }
+ while = {
+  limit = { any_in_list = { variable = tcrm_payers
+   has_variable = tcrv_advisory_gain var:tcrv_advisory_gain > 0
+  } }
+  remove_variable = tcrv_advisory_build_payer
+  set_variable = { name = tcrv_advisory_build_gain value = 0 }
+  every_in_list = { variable = tcrm_payers
+   limit = { has_variable = tcrv_advisory_gain var:tcrv_advisory_gain > 0 }
+   if = { limit = { var:tcrv_advisory_gain > scope:tcrv_owner.var:tcrv_advisory_build_gain }
+    save_scope_as = tcrv_advisory_candidate
+    scope:tcrv_owner = {
+     set_variable = { name = tcrv_advisory_build_payer value = scope:tcrv_advisory_candidate }
+     set_variable = { name = tcrv_advisory_build_gain value = scope:tcrv_advisory_candidate.var:tcrv_advisory_gain }
+    }
+   }
+  }
+  change_variable = { name = tcrv_advisory_next_rank add = 1 }
+  add_to_variable_list = { name = tcrv_advisory_payers target = var:tcrv_advisory_build_payer }
+  var:tcrv_advisory_build_payer = {
+   set_variable = { name = tcrv_advisory_rank value = scope:tcrv_owner.var:tcrv_advisory_next_rank }
+   remove_variable = tcrv_advisory_gain
+  }
+ }
+ # Zero-gain scratch is not an advisory entry and is never retained.
+ every_in_list = { variable = tcrm_payers remove_variable = tcrv_advisory_gain }
+ remove_variable = tcrv_advisory_build_payer
+ remove_variable = tcrv_advisory_build_gain
+ remove_variable = tcrv_advisory_next_rank
+}
+# Ruler scope, phase5 with actual ledger and helper quiescence already checked.
+# Invalid/stale queue identity is discarded before any provider is admitted.
+tcrv_select_recheck_effect = {
+ save_scope_as = tcrv_owner
+ remove_variable = tcrv_recheck_payer
+ remove_variable = tcrv_advisory_continue
+ remove_variable = tcrv_advisory_best_rank
+ if = { limit = { tcrv_advisory_identity_trigger = yes }
+  every_in_list = { variable = tcrv_advisory_payers
+   limit = {
+    has_variable = tcrv_advisory_rank var:tcrv_advisory_rank > 0
+    is_alive = yes exists = liege liege = scope:tcrv_owner
+    exists = assigned_tax_slot tcrv_payer_unused_in_lifecycle_trigger = yes
+   }
+   if = { limit = { scope:tcrv_owner = { NOT = { has_variable = tcrv_recheck_payer } } }
+    save_scope_as = tcrv_advisory_candidate
+    scope:tcrv_owner = {
+     set_variable = { name = tcrv_recheck_payer value = scope:tcrv_advisory_candidate }
+     set_variable = { name = tcrv_advisory_best_rank value = scope:tcrv_advisory_candidate.var:tcrv_advisory_rank }
+    }
+   } else_if = { limit = { var:tcrv_advisory_rank < scope:tcrv_owner.var:tcrv_advisory_best_rank }
+    save_scope_as = tcrv_advisory_candidate
+    scope:tcrv_owner = {
+     set_variable = { name = tcrv_recheck_payer value = scope:tcrv_advisory_candidate }
+     set_variable = { name = tcrv_advisory_best_rank value = scope:tcrv_advisory_candidate.var:tcrv_advisory_rank }
+    }
+   }
+  }
+ }
+ remove_variable = tcrv_advisory_best_rank
+ if = { limit = { NOT = { has_variable = tcrv_recheck_payer } }
+  tcrv_clear_advisory_effect = yes
+ }
+}
+
+# Receipt schema2 scratch only. Never call on uncertain or pending native work.
+tcrv_clear_reference_job_effect = {
+ remove_variable = tcrv_job_receipt_schema
+ remove_variable = tcrv_job_before_reference
+ remove_variable = tcrv_actual_reference
+}
+# Deliberately no collector, RemoveVassals, pause, speed, gold compensation
+# or parent original-baseline mutation exists in this module.
+tcrv_hold_effect = {
+ tcrv_clear_advisory_effect = yes
+ set_variable = { name = tcrv_hold value = yes }
+ set_variable = { name = tcrv_phase value = 90 }
+ tcrm_invalidate_effect = yes
+ debug_log = "TCRV|HELD|reason=[GetPlayer.MakeScope.Var('tcrv_reason').GetValue]"
+}
+tcrv_defer_effect = {
+ tcrv_clear_advisory_effect = yes
+ tcrm_invalidate_effect = yes
+ set_variable = { name = tcrv_outcome value = 3 }
+ set_variable = { name = tcrv_phase value = 45 }
+}
+tcrv_begin_effect = {
+ if = { limit = { trigger_if = { limit = { has_variable = tcr_active_generation has_variable = tcr_start_day has_variable = tcr_start_month has_variable = tcr_start_year has_variable = tcrc_lifecycle has_variable = tcrc_original_speed has_variable = tcrc_phase }
+tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+tcr_enabled_trigger = yes var:tcrc_phase = 37 tcrb_settled_trigger = yes
+has_variable = tcr_active_generation has_variable = tcrc_lifecycle_active
+scope:paused = yes scope:speed = var:tcrc_original_speed
+NOT = { any_unassigned_taxpayers = { always = yes } }
+NOT = { has_variable = tcr_requested } NOT = { has_variable = tcr_failed }
+NOT = { has_variable = tcri_hold_reason } NOT = { has_variable = tcrv_active }
+tcrv_no_pending_trigger = yes
+NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcre_job_active }
+NOT = { has_variable = tcrb_active } NOT = { has_variable = tcrm_active }
+NOT = { has_variable = tcr_command_generation }
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+} trigger_else = { always = no } }
+  save_scope_as = tcrv_owner
+  tcrv_clear_advisory_effect = yes
+  clear_variable_list = tcrv_members clear_variable_list = tcrv_slots
+  clear_variable_list = tcrv_authorized_payers
+  remove_variable = tcrv_settled remove_variable = tcrv_hold
+  remove_variable = tcrv_job_payer remove_variable = tcrv_job_source
+  remove_variable = tcrv_job_target remove_variable = tcrv_expected_sequence
+  remove_variable = tcrv_reason remove_variable = tcrv_verified
+  remove_variable = tcrv_scan_complete
+  remove_variable = tcrv_total_floor remove_variable = tcrv_initial_total
+  tcrv_clear_reference_job_effect = yes
+  set_variable = { name = tcrv_owner value = this }
+  set_variable = { name = tcrv_generation value = var:tcr_active_generation }
+  set_variable = { name = tcrv_lifecycle value = var:tcrc_lifecycle }
+  set_variable = { name = tcrv_wallet value = gold }
+  set_variable = { name = tcrv_phase value = 5 }
+  set_variable = { name = tcrv_active value = yes }
+  set_variable = { name = tcrv_pass value = 0 }
+  set_variable = { name = tcrv_moves value = 0 }
+  set_variable = { name = tcrv_outcome value = 1 }
+  set_variable = { name = tcrv_member_count value = 0 }
+  set_variable = { name = tcrv_slot_count value = 0 }
+  every_tax_slot = {
+   save_scope_as = tcrv_slot
+   set_variable = { name = tcrv_slot_owner value = scope:tcrv_owner }
+   set_variable = { name = tcrv_slot_generation value = scope:tcrv_owner.var:tcrv_generation }
+   set_variable = { name = tcrv_slot_lifecycle value = scope:tcrv_owner.var:tcrv_lifecycle }
+   set_variable = { name = tcrv_obligation value = 0 }
+   if = { limit = { is_active_obligation = default_tax_collector } set_variable = { name = tcrv_obligation value = 1 } }
+if = { limit = { is_active_obligation = strict_taxation_tax_collector } set_variable = { name = tcrv_obligation value = 2 } }
+if = { limit = { is_active_obligation = iqta_special_rights_tax_collector } set_variable = { name = tcrv_obligation value = 3 } }
+if = { limit = { is_active_obligation = ghazi_special_rights_tax_collector } set_variable = { name = tcrv_obligation value = 4 } }
+if = { limit = { is_active_obligation = muqata_special_rights_tax_collector } set_variable = { name = tcrv_obligation value = 5 } }
+if = { limit = { is_active_obligation = jizya_special_rights_tax_collector } set_variable = { name = tcrv_obligation value = 6 } }
+if = { limit = { is_active_obligation = deqhan_special_rights_tax_collector } set_variable = { name = tcrv_obligation value = 7 } }
+if = { limit = { is_active_obligation = maguh_special_rights_tax_collector } set_variable = { name = tcrv_obligation value = 8 } }
+   if = { limit = { has_tax_collector = yes }
+    set_variable = { name = tcrv_collector value = tax_collector }
+    set_variable = { name = tcrv_aptitude value = tax_collector.tax_collector_aptitude_score }
+   } else = { scope:tcrv_owner = { set_variable = { name = tcrv_reason value = 1 } } }
+   if = { limit = { var:tcrv_obligation = 0 } scope:tcrv_owner = { set_variable = { name = tcrv_reason value = 2 } } }
+   scope:tcrv_owner = {
+    add_to_variable_list = { name = tcrv_slots target = scope:tcrv_slot }
+    change_variable = { name = tcrv_slot_count add = 1 }
+   }
+   every_tax_slot_vassal = {
+    save_scope_as = tcrv_payer
+    set_variable = { name = tcrv_member_owner value = scope:tcrv_owner }
+    set_variable = { name = tcrv_member_generation value = scope:tcrv_owner.var:tcrv_generation }
+    set_variable = { name = tcrv_member_lifecycle value = scope:tcrv_owner.var:tcrv_lifecycle }
+    set_variable = { name = tcrv_initial_slot value = assigned_tax_slot }
+    set_variable = { name = tcrv_expected_slot value = assigned_tax_slot }
+    remove_variable = tcrv_receipt_sequence
+    scope:tcrv_owner = {
+     add_to_variable_list = { name = tcrv_members target = scope:tcrv_payer }
+     change_variable = { name = tcrv_member_count add = 1 }
+    }
+   }
+  }
+  if = { limit = { has_variable = tcrv_reason } tcrv_defer_effect = yes }
+ }
+}
+# Compare actual topology with the separate authorized ledger. Nothing below
+# overwrites tcrc_original_payer_slot or tcrb_original_slot.
+tcrv_check_ledger_effect = {
+ save_scope_as = tcrv_owner
+ remove_variable = tcrv_ledger_bad
+ set_variable = { name = tcrv_actual_members value = 0 }
+ set_variable = { name = tcrv_actual_slots value = 0 }
+ every_tax_slot = {
+  save_scope_as = tcrv_actual_slot
+  scope:tcrv_owner = { change_variable = { name = tcrv_actual_slots add = 1 } }
+  if = { limit = { NOT = { has_variable = tcrv_slot_owner has_variable = tcrv_slot_generation has_variable = tcrv_slot_lifecycle has_variable = tcrv_collector has_variable = tcrv_aptitude has_variable = tcrv_obligation } }
+   scope:tcrv_owner = { set_variable = { name = tcrv_ledger_bad value = yes } }
+  } else_if = { limit = { has_tax_collector = no }
+   scope:tcrv_owner = { set_variable = { name = tcrv_ledger_bad value = yes } }
+  } else_if = { limit = { OR = {
+   var:tcrv_slot_owner != scope:tcrv_owner
+   var:tcrv_slot_generation != scope:tcrv_owner.var:tcrv_generation
+   var:tcrv_slot_lifecycle != scope:tcrv_owner.var:tcrv_lifecycle
+   tax_collector != var:tcrv_collector
+   tax_collector.tax_collector_aptitude_score != var:tcrv_aptitude
+   NOT = { OR = { AND = { var:tcrv_obligation = 1 is_active_obligation = default_tax_collector } AND = { var:tcrv_obligation = 2 is_active_obligation = strict_taxation_tax_collector } AND = { var:tcrv_obligation = 3 is_active_obligation = iqta_special_rights_tax_collector } AND = { var:tcrv_obligation = 4 is_active_obligation = ghazi_special_rights_tax_collector } AND = { var:tcrv_obligation = 5 is_active_obligation = muqata_special_rights_tax_collector } AND = { var:tcrv_obligation = 6 is_active_obligation = jizya_special_rights_tax_collector } AND = { var:tcrv_obligation = 7 is_active_obligation = deqhan_special_rights_tax_collector } AND = { var:tcrv_obligation = 8 is_active_obligation = maguh_special_rights_tax_collector } } }
+  } } scope:tcrv_owner = { set_variable = { name = tcrv_ledger_bad value = yes } } }
+  every_tax_slot_vassal = {
+   scope:tcrv_owner = { change_variable = { name = tcrv_actual_members add = 1 } }
+   if = { limit = { NOT = { has_variable = tcrv_member_owner has_variable = tcrv_member_generation has_variable = tcrv_member_lifecycle has_variable = tcrv_expected_slot } }
+    scope:tcrv_owner = { set_variable = { name = tcrv_ledger_bad value = yes } }
+   } else_if = { limit = { OR = {
+    var:tcrv_member_owner != scope:tcrv_owner
+    var:tcrv_member_generation != scope:tcrv_owner.var:tcrv_generation
+    var:tcrv_member_lifecycle != scope:tcrv_owner.var:tcrv_lifecycle
+   } } scope:tcrv_owner = { set_variable = { name = tcrv_ledger_bad value = yes } }
+   } else_if = { limit = { assigned_tax_slot != var:tcrv_expected_slot }
+    # Only the exact just-ACKed pending transfer may differ before acceptance.
+    if = { limit = { scope:tcrv_owner = { has_variable = tcrv_job_payer has_variable = tcrv_job_target } }
+     if = { limit = { NOT = { this = scope:tcrv_owner.var:tcrv_job_payer assigned_tax_slot = scope:tcrv_owner.var:tcrv_job_target scope:tcrv_owner = { tcrv_exact_job_completed_trigger = yes } } }
+      scope:tcrv_owner = { set_variable = { name = tcrv_ledger_bad value = yes } }
+     }
+    } else = { scope:tcrv_owner = { set_variable = { name = tcrv_ledger_bad value = yes } } }
+   }
+  }
+ }
+ if = { limit = { OR = {
+  var:tcrv_actual_members != var:tcrv_member_count
+  var:tcrv_actual_slots != var:tcrv_slot_count
+  any_unassigned_taxpayers = { always = yes }
+ } } set_variable = { name = tcrv_ledger_bad value = yes } }
+}
+tcrv_receive_matrix_effect = {
+ save_scope_as = tcrv_owner
+ tcrv_check_ledger_effect = yes
+ if = { limit = { has_variable = tcrv_ledger_bad }
+  set_variable = { name = tcrv_reason value = 3 } tcrv_defer_effect = yes
+ } else_if = { limit = {
+  tcrm_context_valid_trigger = yes has_variable = tcrm_snapshot_ready
+  has_variable = tcrv_matrix_measured NOT = { has_variable = tcrv_matrix_bad }
+  # Source contributions and the manager total use different native aggregates.
+  # CK3 1.20.1.1 can return different values for the same unchanged ledger.
+  # Complete per-payer receipts and exact context validate the matrix; compare
+  # each move against its own source income, and the manager total against its
+  # own pre-move floor after native ACK. Do not equate these different getters.
+  var:tcrm_mode = 2
+ }
+  remove_variable = tcrv_job_payer
+  tcrv_clear_reference_job_effect = yes
+  set_variable = { name = tcrv_best_gain value = 0 }
+  if = { limit = { NOT = { has_variable = tcrv_recheck_payer } } tcrv_clear_advisory_effect = yes }
+  every_in_list = { variable = tcrm_payers
+   if = { limit = { scope:tcrv_owner = { NOT = { has_variable = tcrv_recheck_payer } } }
+    set_variable = { name = tcrv_advisory_gain value = 0 }
+   }
+   if = { limit = { has_variable = tcrm_native_slot has_variable = tcrm_source_gold has_variable = tcrm_source_reference }
+    if = { limit = { tcrv_payer_unused_in_lifecycle_trigger = yes assigned_tax_slot = var:tcrm_native_slot }
+if = { limit = { has_variable = tcrm_edge_status_0 has_variable = tcrm_gold_0 scope:tcrv_owner = { has_variable = tcrm_slot_0 } }
+ if = { limit = { var:tcrm_edge_status_0 = 1
+  var:tcrm_gold_0 > var:tcrm_source_gold
+  var:tcrm_gold_0 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_0 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_0 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_0
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_0 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_0 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_0 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_1 has_variable = tcrm_gold_1 scope:tcrv_owner = { has_variable = tcrm_slot_1 } }
+ if = { limit = { var:tcrm_edge_status_1 = 1
+  var:tcrm_gold_1 > var:tcrm_source_gold
+  var:tcrm_gold_1 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_1 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_1 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_1
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_1 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_1 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_1 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_2 has_variable = tcrm_gold_2 scope:tcrv_owner = { has_variable = tcrm_slot_2 } }
+ if = { limit = { var:tcrm_edge_status_2 = 1
+  var:tcrm_gold_2 > var:tcrm_source_gold
+  var:tcrm_gold_2 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_2 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_2 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_2
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_2 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_2 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_2 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_3 has_variable = tcrm_gold_3 scope:tcrv_owner = { has_variable = tcrm_slot_3 } }
+ if = { limit = { var:tcrm_edge_status_3 = 1
+  var:tcrm_gold_3 > var:tcrm_source_gold
+  var:tcrm_gold_3 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_3 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_3 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_3
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_3 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_3 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_3 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_4 has_variable = tcrm_gold_4 scope:tcrv_owner = { has_variable = tcrm_slot_4 } }
+ if = { limit = { var:tcrm_edge_status_4 = 1
+  var:tcrm_gold_4 > var:tcrm_source_gold
+  var:tcrm_gold_4 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_4 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_4 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_4
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_4 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_4 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_4 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_5 has_variable = tcrm_gold_5 scope:tcrv_owner = { has_variable = tcrm_slot_5 } }
+ if = { limit = { var:tcrm_edge_status_5 = 1
+  var:tcrm_gold_5 > var:tcrm_source_gold
+  var:tcrm_gold_5 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_5 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_5 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_5
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_5 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_5 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_5 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_6 has_variable = tcrm_gold_6 scope:tcrv_owner = { has_variable = tcrm_slot_6 } }
+ if = { limit = { var:tcrm_edge_status_6 = 1
+  var:tcrm_gold_6 > var:tcrm_source_gold
+  var:tcrm_gold_6 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_6 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_6 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_6
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_6 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_6 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_6 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_7 has_variable = tcrm_gold_7 scope:tcrv_owner = { has_variable = tcrm_slot_7 } }
+ if = { limit = { var:tcrm_edge_status_7 = 1
+  var:tcrm_gold_7 > var:tcrm_source_gold
+  var:tcrm_gold_7 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_7 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_7 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_7
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_7 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_7 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_7 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_8 has_variable = tcrm_gold_8 scope:tcrv_owner = { has_variable = tcrm_slot_8 } }
+ if = { limit = { var:tcrm_edge_status_8 = 1
+  var:tcrm_gold_8 > var:tcrm_source_gold
+  var:tcrm_gold_8 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_8 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_8 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_8
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_8 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_8 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_8 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_9 has_variable = tcrm_gold_9 scope:tcrv_owner = { has_variable = tcrm_slot_9 } }
+ if = { limit = { var:tcrm_edge_status_9 = 1
+  var:tcrm_gold_9 > var:tcrm_source_gold
+  var:tcrm_gold_9 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_9 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_9 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_9
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_9 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_9 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_9 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_10 has_variable = tcrm_gold_10 scope:tcrv_owner = { has_variable = tcrm_slot_10 } }
+ if = { limit = { var:tcrm_edge_status_10 = 1
+  var:tcrm_gold_10 > var:tcrm_source_gold
+  var:tcrm_gold_10 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_10 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_10 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_10
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_10 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_10 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_10 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_11 has_variable = tcrm_gold_11 scope:tcrv_owner = { has_variable = tcrm_slot_11 } }
+ if = { limit = { var:tcrm_edge_status_11 = 1
+  var:tcrm_gold_11 > var:tcrm_source_gold
+  var:tcrm_gold_11 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_11 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_11 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_11
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_11 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_11 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_11 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_12 has_variable = tcrm_gold_12 scope:tcrv_owner = { has_variable = tcrm_slot_12 } }
+ if = { limit = { var:tcrm_edge_status_12 = 1
+  var:tcrm_gold_12 > var:tcrm_source_gold
+  var:tcrm_gold_12 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_12 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_12 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_12
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_12 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_12 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_12 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_13 has_variable = tcrm_gold_13 scope:tcrv_owner = { has_variable = tcrm_slot_13 } }
+ if = { limit = { var:tcrm_edge_status_13 = 1
+  var:tcrm_gold_13 > var:tcrm_source_gold
+  var:tcrm_gold_13 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_13 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_13 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_13
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_13 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_13 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_13 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_14 has_variable = tcrm_gold_14 scope:tcrv_owner = { has_variable = tcrm_slot_14 } }
+ if = { limit = { var:tcrm_edge_status_14 = 1
+  var:tcrm_gold_14 > var:tcrm_source_gold
+  var:tcrm_gold_14 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_14 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_14 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_14
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_14 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_14 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_14 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_15 has_variable = tcrm_gold_15 scope:tcrv_owner = { has_variable = tcrm_slot_15 } }
+ if = { limit = { var:tcrm_edge_status_15 = 1
+  var:tcrm_gold_15 > var:tcrm_source_gold
+  var:tcrm_gold_15 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_15 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_15 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_15
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_15 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_15 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_15 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_16 has_variable = tcrm_gold_16 scope:tcrv_owner = { has_variable = tcrm_slot_16 } }
+ if = { limit = { var:tcrm_edge_status_16 = 1
+  var:tcrm_gold_16 > var:tcrm_source_gold
+  var:tcrm_gold_16 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_16 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_16 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_16
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_16 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_16 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_16 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_17 has_variable = tcrm_gold_17 scope:tcrv_owner = { has_variable = tcrm_slot_17 } }
+ if = { limit = { var:tcrm_edge_status_17 = 1
+  var:tcrm_gold_17 > var:tcrm_source_gold
+  var:tcrm_gold_17 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_17 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_17 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_17
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_17 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_17 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_17 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_18 has_variable = tcrm_gold_18 scope:tcrv_owner = { has_variable = tcrm_slot_18 } }
+ if = { limit = { var:tcrm_edge_status_18 = 1
+  var:tcrm_gold_18 > var:tcrm_source_gold
+  var:tcrm_gold_18 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_18 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_18 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_18
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_18 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_18 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_18 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_19 has_variable = tcrm_gold_19 scope:tcrv_owner = { has_variable = tcrm_slot_19 } }
+ if = { limit = { var:tcrm_edge_status_19 = 1
+  var:tcrm_gold_19 > var:tcrm_source_gold
+  var:tcrm_gold_19 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_19 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_19 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_19
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_19 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_19 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_19 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_20 has_variable = tcrm_gold_20 scope:tcrv_owner = { has_variable = tcrm_slot_20 } }
+ if = { limit = { var:tcrm_edge_status_20 = 1
+  var:tcrm_gold_20 > var:tcrm_source_gold
+  var:tcrm_gold_20 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_20 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_20 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_20
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_20 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_20 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_20 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_21 has_variable = tcrm_gold_21 scope:tcrv_owner = { has_variable = tcrm_slot_21 } }
+ if = { limit = { var:tcrm_edge_status_21 = 1
+  var:tcrm_gold_21 > var:tcrm_source_gold
+  var:tcrm_gold_21 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_21 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_21 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_21
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_21 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_21 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_21 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_22 has_variable = tcrm_gold_22 scope:tcrv_owner = { has_variable = tcrm_slot_22 } }
+ if = { limit = { var:tcrm_edge_status_22 = 1
+  var:tcrm_gold_22 > var:tcrm_source_gold
+  var:tcrm_gold_22 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_22 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_22 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_22
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_22 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_22 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_22 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_23 has_variable = tcrm_gold_23 scope:tcrv_owner = { has_variable = tcrm_slot_23 } }
+ if = { limit = { var:tcrm_edge_status_23 = 1
+  var:tcrm_gold_23 > var:tcrm_source_gold
+  var:tcrm_gold_23 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_23 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_23 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_23
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_23 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_23 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_23 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_24 has_variable = tcrm_gold_24 scope:tcrv_owner = { has_variable = tcrm_slot_24 } }
+ if = { limit = { var:tcrm_edge_status_24 = 1
+  var:tcrm_gold_24 > var:tcrm_source_gold
+  var:tcrm_gold_24 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_24 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_24 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_24
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_24 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_24 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_24 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_25 has_variable = tcrm_gold_25 scope:tcrv_owner = { has_variable = tcrm_slot_25 } }
+ if = { limit = { var:tcrm_edge_status_25 = 1
+  var:tcrm_gold_25 > var:tcrm_source_gold
+  var:tcrm_gold_25 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_25 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_25 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_25
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_25 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_25 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_25 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_26 has_variable = tcrm_gold_26 scope:tcrv_owner = { has_variable = tcrm_slot_26 } }
+ if = { limit = { var:tcrm_edge_status_26 = 1
+  var:tcrm_gold_26 > var:tcrm_source_gold
+  var:tcrm_gold_26 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_26 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_26 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_26
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_26 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_26 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_26 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_27 has_variable = tcrm_gold_27 scope:tcrv_owner = { has_variable = tcrm_slot_27 } }
+ if = { limit = { var:tcrm_edge_status_27 = 1
+  var:tcrm_gold_27 > var:tcrm_source_gold
+  var:tcrm_gold_27 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_27 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_27 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_27
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_27 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_27 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_27 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_28 has_variable = tcrm_gold_28 scope:tcrv_owner = { has_variable = tcrm_slot_28 } }
+ if = { limit = { var:tcrm_edge_status_28 = 1
+  var:tcrm_gold_28 > var:tcrm_source_gold
+  var:tcrm_gold_28 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_28 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_28 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_28
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_28 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_28 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_28 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_29 has_variable = tcrm_gold_29 scope:tcrv_owner = { has_variable = tcrm_slot_29 } }
+ if = { limit = { var:tcrm_edge_status_29 = 1
+  var:tcrm_gold_29 > var:tcrm_source_gold
+  var:tcrm_gold_29 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_29 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_29 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_29
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_29 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_29 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_29 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_30 has_variable = tcrm_gold_30 scope:tcrv_owner = { has_variable = tcrm_slot_30 } }
+ if = { limit = { var:tcrm_edge_status_30 = 1
+  var:tcrm_gold_30 > var:tcrm_source_gold
+  var:tcrm_gold_30 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_30 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_30 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_30
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_30 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_30 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_30 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+if = { limit = { has_variable = tcrm_edge_status_31 has_variable = tcrm_gold_31 scope:tcrv_owner = { has_variable = tcrm_slot_31 } }
+ if = { limit = { var:tcrm_edge_status_31 = 1
+  var:tcrm_gold_31 > var:tcrm_source_gold
+  var:tcrm_gold_31 > var:tcrm_source_reference
+  scope:tcrv_owner.var:tcrm_slot_31 != var:tcrm_native_slot
+  scope:tcrv_owner.var:tcrm_slot_31 = { has_tax_collector = yes available_taxpayer_slots > 0 }
+  can_assign_to_tax_slot = scope:tcrv_owner.var:tcrm_slot_31
+ }
+  set_variable = { name = tcrv_gain value = var:tcrm_gold_31 }
+  # Rank only the improvement beyond both observed source definitions.
+  if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+   change_variable = { name = tcrv_gain subtract = var:tcrm_source_reference }
+  } else = { change_variable = { name = tcrv_gain subtract = var:tcrm_source_gold } }
+  tcrv_record_advisory_gain_effect = yes
+  if = { limit = { var:tcrv_gain > scope:tcrv_owner.var:tcrv_best_gain }
+   save_scope_as = tcrv_candidate
+   scope:tcrv_owner = {
+    set_variable = { name = tcrv_best_gain value = scope:tcrv_candidate.var:tcrv_gain }
+    set_variable = { name = tcrv_job_payer value = scope:tcrv_candidate }
+    set_variable = { name = tcrv_job_source value = scope:tcrv_candidate.assigned_tax_slot }
+    set_variable = { name = tcrv_job_target value = var:tcrm_slot_31 }
+    set_variable = { name = tcrv_job_before_gold value = scope:tcrv_candidate.var:tcrm_source_gold }
+    set_variable = { name = tcrv_job_before_reference value = scope:tcrv_candidate.var:tcrm_source_reference }
+    set_variable = { name = tcrv_job_receipt_schema value = 2 }
+    set_variable = { name = tcrv_job_preview_gold value = scope:tcrv_candidate.var:tcrm_gold_31 }
+    set_variable = { name = tcrv_job_epoch value = var:tcrm_epoch }
+   }
+  }
+ }
+}
+    }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrv_recheck_payer } }
+   tcrv_build_advisory_effect = yes
+  }
+  if = { limit = { has_variable = tcrv_job_payer }
+   # A full capture applies its first best edge directly. Later jobs use fresh singleton captures.
+   set_variable = { name = tcrv_phase value = 20 }
+   tcrx_prepare_effect = yes
+  } else_if = { limit = { has_variable = tcrv_recheck_payer }
+   # A single payer with no profitable edge is not a completed global scan.
+   var:tcrv_recheck_payer = { remove_variable = tcrv_advisory_rank }
+   remove_list_variable = { name = tcrv_advisory_payers target = var:tcrv_recheck_payer }
+   remove_variable = tcrv_recheck_payer
+   set_variable = { name = tcrv_advisory_continue value = yes }
+   tcrm_invalidate_effect = yes
+   set_variable = { name = tcrv_phase value = 45 }
+  } else = {
+   # Only a complete fresh remaining-payer capture can establish no profitable edge.
+   set_variable = { name = tcrv_scan_complete value = yes }
+   tcrm_invalidate_effect = yes
+   set_variable = { name = tcrv_phase value = 45 }
+  }
+ } else = {
+  set_variable = { name = tcrv_reason value = 5 } tcrv_defer_effect = yes
+ }
+}
+tcrv_queue_effect = {
+ if = { limit = { tcrv_parent_feature_enabled_trigger = yes tcrv_ordinary_trigger = yes tcrv_no_pending_trigger = yes
+ has_variable = tcrv_job_payer var:tcrv_job_payer = { tcrv_payer_unused_in_lifecycle_trigger = yes } }
+
+ var:tcrv_job_payer = { save_scope_as = tcrp_desired_payer }
+ var:tcrv_job_target = { save_scope_as = tcrp_desired_slot }
+ set_variable = { name = tcrv_phase value = 31 }
+ set_variable = { name = tcrv_parent_job_purpose value = 37 }
+ tcrp_queue_transfer_effect = yes
+ if = { limit = { has_variable = tcrp_enqueue_rejected }
+  set_variable = { name = tcrv_reason value = 6 } tcrv_hold_effect = yes
+ } else = { set_variable = { name = tcrv_expected_sequence value = var:tcrp_sequence } }
+
+ }
+}
+# Full identity remains stored in phase42 until parent ledger acceptance.
+tcrv_prepare_pending_effect = {
+ if = { limit = { tcrv_no_pending_trigger = yes tcrv_observed_schema2_economics_trigger = yes }
+  set_variable = { name = tcrv_pending_owner value = this }
+  set_variable = { name = tcrv_pending_lifecycle value = var:tcrv_lifecycle }
+  set_variable = { name = tcrv_pending_generation value = var:tcrv_generation }
+  set_variable = { name = tcrv_pending_sequence value = var:tcrv_expected_sequence }
+  set_variable = { name = tcrv_pending_payer value = var:tcrv_job_payer }
+  set_variable = { name = tcrv_pending_source value = var:tcrv_job_source }
+  set_variable = { name = tcrv_pending_target value = var:tcrv_job_target }
+  set_variable = { name = tcrv_pending_epoch value = var:tcrv_job_epoch }
+  set_variable = { name = tcrv_pending_schema value = var:tcrv_job_receipt_schema }
+  set_variable = { name = tcrv_pending_before_reference value = var:tcrv_job_before_reference }
+  set_variable = { name = tcrv_pending_actual_reference value = var:tcrv_actual_reference }
+  set_variable = { name = tcrv_pending_before_gold value = var:tcrv_job_before_gold }
+  set_variable = { name = tcrv_pending_preview_gold value = var:tcrv_job_preview_gold }
+  set_variable = { name = tcrv_pending_actual_gold value = var:tcrv_actual_gold }
+  set_variable = { name = tcrv_pending_total_before value = var:tcrv_total_floor }
+  set_variable = { name = tcrv_pending_total_after value = scope:total }
+  set_variable = { name = tcrv_pending_initial_total value = var:tcrv_initial_total }
+  set_variable = { name = tcrv_pending_year value = current_year }
+  set_variable = { name = tcrv_pending_month value = current_month }
+  set_variable = { name = tcrv_pending_day value = current_day }
+  set_variable = { name = tcrv_pending_wallet value = var:tcrv_wallet }
+
+  set_variable = { name = tcrv_pending_receipt value = yes }
+  set_variable = { name = tcrv_phase value = 42 }
+  debug_log = "TCRV|VERIFIED_AWAIT_PARENT|generation=[GetPlayer.MakeScope.Var('tcrv_pending_generation').GetValue]|sequence=[GetPlayer.MakeScope.Var('tcrv_pending_sequence').GetValue]"
+ }
+}
+# Parent alone writes tcrc_payer_* fields. This module only verifies them.
+tcrv_parent_accept_effect = {
+ if = { limit = { tcrv_can_parent_accept_trigger = yes }
+  tcrv_check_ledger_effect = yes
+  if = { limit = { has_variable = tcrv_ledger_bad }
+   set_variable = { name = tcrv_reason value = 11 } tcrv_hold_effect = yes
+  } else = {
+   var:tcrv_pending_payer = {
+    set_variable = { name = tcrv_expected_slot value = root.var:tcrv_pending_target }
+    set_variable = { name = tcrv_receipt_sequence value = root.var:tcrv_pending_sequence }
+    set_variable = { name = tcrv_receipt_generation value = root.var:tcrv_pending_generation }
+    set_variable = { name = tcrv_receipt_lifecycle value = root.var:tcrv_pending_lifecycle }
+    set_variable = { name = tcrv_receipt_source value = root.var:tcrv_pending_source }
+    set_variable = { name = tcrv_receipt_before_gold value = root.var:tcrv_pending_before_gold }
+    set_variable = { name = tcrv_receipt_actual_gold value = root.var:tcrv_pending_actual_gold }
+    set_variable = { name = tcrv_move_owner value = root }
+    set_variable = { name = tcrv_move_lifecycle value = root.var:tcrv_pending_lifecycle }
+   }
+   if = { limit = { NOT = { is_target_in_variable_list = { name = tcrv_authorized_payers target = var:tcrv_pending_payer } } }
+    add_to_variable_list = { name = tcrv_authorized_payers target = var:tcrv_pending_payer }
+   }
+   change_variable = { name = tcrv_moves add = 1 }
+   set_variable = { name = tcrv_outcome value = 2 }
+   set_variable = { name = tcrv_accepted_total value = var:tcrv_pending_total_after }
+   set_variable = { name = tcrv_parent_accepted_generation value = var:tcrv_pending_generation }
+   set_variable = { name = tcrv_parent_accepted_sequence value = var:tcrv_pending_sequence }
+   set_variable = { name = tcrv_phase value = 43 }
+   debug_log = "TCRV|PARENT_ACCEPTED|generation=[GetPlayer.MakeScope.Var('tcrv_pending_generation').GetValue]|sequence=[GetPlayer.MakeScope.Var('tcrv_pending_sequence').GetValue]"
+  }
+ }
+}
+tcrv_retire_accepted_effect = {
+ # Called only after a second exact parent-commit check and helper quiescence.
+ if = { limit = { tcrv_can_retire_receipt_trigger = yes scope:helpers_closed = yes }
+  # Consume the advisory entry only after exact parent acceptance and helper closure.
+  var:tcrv_job_payer = { remove_variable = tcrv_advisory_rank }
+  remove_list_variable = { name = tcrv_advisory_payers target = var:tcrv_job_payer }
+  remove_variable = tcrv_recheck_payer
+  remove_variable = tcrv_advisory_continue
+  remove_variable = tcrv_job_payer remove_variable = tcrv_job_source
+  remove_variable = tcrv_job_target remove_variable = tcrv_expected_sequence
+  tcrv_clear_reference_job_effect = yes
+  remove_variable = tcrv_pending_schema
+  remove_variable = tcrv_pending_before_reference
+  remove_variable = tcrv_pending_actual_reference
+  remove_variable = tcrv_pending_receipt
+  remove_variable = tcrv_pending_owner
+  remove_variable = tcrv_pending_lifecycle
+  remove_variable = tcrv_pending_generation
+  remove_variable = tcrv_pending_sequence
+  remove_variable = tcrv_pending_payer
+  remove_variable = tcrv_pending_source
+  remove_variable = tcrv_pending_target
+  remove_variable = tcrv_pending_epoch
+  remove_variable = tcrv_pending_before_gold
+  remove_variable = tcrv_pending_preview_gold
+  remove_variable = tcrv_pending_actual_gold
+  remove_variable = tcrv_pending_total_before
+  remove_variable = tcrv_pending_total_after
+  remove_variable = tcrv_pending_initial_total
+  remove_variable = tcrv_pending_year
+  remove_variable = tcrv_pending_month
+  remove_variable = tcrv_pending_day
+  remove_variable = tcrv_pending_wallet
+  remove_variable = tcrv_parent_accepted_generation
+  remove_variable = tcrv_parent_accepted_sequence
+
+  tcrm_invalidate_effect = yes
+  set_variable = { name = tcrv_phase value = 45 }
+  debug_log = "TCRV|RECEIPT_RETIRED|moves=[GetPlayer.MakeScope.Var('tcrv_moves').GetValue]"
+ }
+}
+
+tcrv_validate_measured_matrix_effect = {
+ save_scope_as = tcrv_owner
+ remove_variable = tcrv_matrix_measured remove_variable = tcrv_matrix_bad
+ set_variable = { name = tcrv_matrix_source_total value = 0 }
+ every_in_list = { variable = tcrm_payers
+  if = { limit = { NOT = { has_variable = tcrm_source_gold has_variable = tcrm_source_reference has_variable = tcrm_source_done has_variable = tcrm_native_slot has_variable = tcrm_matrix_complete has_variable = tcrm_observed_edges } }
+   scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+  } else = {
+   if = { limit = { var:tcrm_observed_edges != scope:tcrv_owner.var:tcrm_slot_count }
+    scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+   }
+   save_scope_as = tcrv_scan_payer
+   scope:tcrv_owner = { change_variable = { name = tcrv_matrix_source_total add = scope:tcrv_scan_payer.var:tcrm_source_gold } }
+  }
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 0 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_0 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_0 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_0 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_0 = 2 var:tcrm_edge_status_0 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_0 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 1 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_1 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_1 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_1 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_1 = 2 var:tcrm_edge_status_1 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_1 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 2 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_2 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_2 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_2 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_2 = 2 var:tcrm_edge_status_2 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_2 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 3 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_3 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_3 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_3 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_3 = 2 var:tcrm_edge_status_3 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_3 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 4 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_4 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_4 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_4 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_4 = 2 var:tcrm_edge_status_4 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_4 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 5 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_5 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_5 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_5 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_5 = 2 var:tcrm_edge_status_5 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_5 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 6 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_6 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_6 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_6 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_6 = 2 var:tcrm_edge_status_6 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_6 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 7 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_7 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_7 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_7 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_7 = 2 var:tcrm_edge_status_7 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_7 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 8 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_8 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_8 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_8 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_8 = 2 var:tcrm_edge_status_8 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_8 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 9 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_9 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_9 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_9 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_9 = 2 var:tcrm_edge_status_9 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_9 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 10 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_10 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_10 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_10 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_10 = 2 var:tcrm_edge_status_10 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_10 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 11 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_11 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_11 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_11 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_11 = 2 var:tcrm_edge_status_11 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_11 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 12 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_12 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_12 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_12 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_12 = 2 var:tcrm_edge_status_12 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_12 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 13 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_13 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_13 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_13 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_13 = 2 var:tcrm_edge_status_13 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_13 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 14 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_14 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_14 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_14 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_14 = 2 var:tcrm_edge_status_14 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_14 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 15 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_15 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_15 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_15 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_15 = 2 var:tcrm_edge_status_15 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_15 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 16 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_16 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_16 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_16 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_16 = 2 var:tcrm_edge_status_16 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_16 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 17 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_17 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_17 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_17 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_17 = 2 var:tcrm_edge_status_17 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_17 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 18 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_18 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_18 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_18 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_18 = 2 var:tcrm_edge_status_18 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_18 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 19 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_19 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_19 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_19 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_19 = 2 var:tcrm_edge_status_19 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_19 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 20 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_20 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_20 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_20 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_20 = 2 var:tcrm_edge_status_20 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_20 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 21 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_21 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_21 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_21 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_21 = 2 var:tcrm_edge_status_21 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_21 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 22 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_22 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_22 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_22 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_22 = 2 var:tcrm_edge_status_22 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_22 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 23 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_23 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_23 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_23 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_23 = 2 var:tcrm_edge_status_23 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_23 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 24 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_24 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_24 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_24 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_24 = 2 var:tcrm_edge_status_24 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_24 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 25 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_25 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_25 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_25 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_25 = 2 var:tcrm_edge_status_25 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_25 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 26 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_26 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_26 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_26 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_26 = 2 var:tcrm_edge_status_26 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_26 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 27 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_27 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_27 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_27 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_27 = 2 var:tcrm_edge_status_27 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_27 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 28 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_28 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_28 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_28 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_28 = 2 var:tcrm_edge_status_28 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_28 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 29 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_29 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_29 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_29 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_29 = 2 var:tcrm_edge_status_29 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_29 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 30 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_30 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_30 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_30 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_30 = 2 var:tcrm_edge_status_30 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_30 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+if = { limit = { scope:tcrv_owner.var:tcrm_slot_count > 31 }
+ if = { limit = { NOT = { has_variable = tcrm_edge_status_31 } }
+  scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } }
+ } else_if = { limit = { var:tcrm_edge_status_31 = 1 }
+  if = { limit = { NOT = { has_variable = tcrm_gold_31 } } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else_if = { limit = { OR = { var:tcrm_edge_status_31 = 2 var:tcrm_edge_status_31 = 3 } }
+  if = { limit = { has_variable = tcrm_gold_31 } scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+ } else = { scope:tcrv_owner = { set_variable = { name = tcrv_matrix_bad value = yes } } }
+}
+ }
+ if = { limit = { NOT = { has_variable = tcrv_matrix_bad } }
+  set_variable = { name = tcrv_matrix_measured value = yes }
+ }
+}

@@ -1,0 +1,1394 @@
+﻿# All effects before tcrr_fire_current_effect are journal/scratch only.
+# Caller uses one snapshot owner per player; no AI or multiplayer claim.
+tcrr_preflight_effect = {
+ if = { limit = {
+  tcr_enabled_trigger = yes has_variable = tcr_active_generation
+  has_variable = tcr_collector_plan_ready
+  var:tcr_collector_plan_generation = var:tcr_active_generation
+  NOT = { has_variable = tcr_failed }
+  NOT = { has_variable = tcrr_snapshot_open }
+  NOT = { has_variable = tcrr_dirty }
+ }
+  save_scope_as = tcrr_owner
+  set_variable = { name = tcrr_owner value = this }
+  set_variable = { name = tcrr_generation value = var:tcr_active_generation }
+  set_variable = { name = tcrr_snapshot_open value = yes }
+  remove_variable = tcrr_blocked
+  remove_variable = tcrr_plan_ready
+  remove_variable = tcrr_recovery_requested
+  remove_variable = tcrr_recovery_candidate
+  remove_variable = tcrr_recovery_slot
+  remove_variable = tcrr_recovery_owner
+  remove_variable = tcrr_recovery_generation
+  remove_variable = tcrr_active_job
+  remove_variable = tcrr_native_preflight_sequence
+  clear_variable_list = tcrr_slots
+  clear_variable_list = tcrr_original_collectors
+  clear_variable_list = tcrr_desired_collectors
+  clear_variable_list = tcrr_jobs
+  set_variable = { name = tcrr_slot_count value = 0 }
+  set_variable = { name = tcrr_desired_count value = 0 }
+  set_variable = { name = tcrr_planned_count value = 0 }
+  set_variable = { name = tcrr_job_count value = 0 }
+  set_variable = { name = tcrr_started_count value = 0 }
+  every_tax_slot = {
+   save_scope_as = tcrr_slot
+   scope:tcrr_owner = {
+    add_to_variable_list = { name = tcrr_slots target = scope:tcrr_slot }
+    change_variable = { name = tcrr_slot_count add = 1 }
+   }
+  }
+  every_tax_collector = {
+   save_scope_as = tcrr_original
+   set_variable = { name = tcrr_original_slot value = tax_slot }
+   set_variable = { name = tcrr_virtual_slot value = tax_slot }
+   set_variable = { name = tcrr_record_owner value = scope:tcrr_owner }
+   set_variable = { name = tcrr_record_generation value = scope:tcrr_owner.var:tcrr_generation }
+   scope:tcrr_owner = { add_to_variable_list = { name = tcrr_original_collectors target = scope:tcrr_original } }
+  }
+  every_in_list = { variable = tcap_selected_collectors
+   save_scope_as = tcrr_desired
+   remove_variable = tcrr_ordered
+   remove_variable = tcrr_retained
+   remove_variable = tcrr_displaced
+   remove_variable = tcrr_job_order
+   set_variable = { name = tcrr_record_owner value = scope:tcrr_owner }
+   set_variable = { name = tcrr_record_generation value = scope:tcrr_owner.var:tcrr_generation }
+   if = { limit = { NOT = { is_tax_collector = yes } } remove_variable = tcrr_virtual_slot }
+   if = { limit = {
+    has_variable = tcr_plan_slot
+    var:tcr_plan_generation = scope:tcrr_owner.var:tcrr_generation
+    OR = { NOT = { is_tax_collector = yes } is_tax_collector_of = scope:tcrr_owner }
+    is_alive = yes
+   }
+    set_variable = { name = tcrr_target_slot value = var:tcr_plan_slot }
+    scope:tcrr_owner = {
+     add_to_variable_list = { name = tcrr_desired_collectors target = scope:tcrr_desired }
+     change_variable = { name = tcrr_desired_count add = 1 }
+    }
+    if = { limit = { is_tax_collector_of = scope:tcrr_owner tax_slot = var:tcrr_target_slot }
+     set_variable = { name = tcrr_retained value = yes }
+     scope:tcrr_owner = { change_variable = { name = tcrr_planned_count add = 1 } }
+    }
+   } else = { scope:tcrr_owner = { set_variable = { name = tcrr_blocked value = 3 } } }
+  }
+  # Every current slot needs exactly one desired character; duplicate/missing
+  # targets and foreign slots cannot survive this full-domain validation.
+  every_in_list = { variable = tcrr_slots
+   save_scope_as = tcrr_scan_slot
+   scope:tcrr_owner = {
+    set_variable = { name = tcrr_target_count value = 0 }
+    every_in_list = { variable = tcrr_desired_collectors
+     limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+     scope:tcrr_owner = { change_variable = { name = tcrr_target_count add = 1 } }
+    }
+    if = { limit = { var:tcrr_target_count != 1 } set_variable = { name = tcrr_blocked value = 2 } }
+   }
+  }
+  if = { limit = { OR = { var:tcrr_slot_count > 32 var:tcrr_desired_count != var:tcrr_slot_count } }
+   set_variable = { name = tcrr_blocked value = 1 }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count < var:tcrr_slot_count }
+   remove_variable = tcrr_picked
+   every_in_list = { variable = tcrr_slots
+    save_scope_as = tcrr_scan_slot
+     scope:tcrr_owner = { every_in_list = { variable = tcrr_desired_collectors
+      limit = { var:tcrr_target_slot = scope:tcrr_scan_slot }
+      # Iterator limits may be evaluated before effects. Recheck the mutable
+      # first-winner/availability state inside the body at the point of use.
+      if = { limit = {
+      NOT = { scope:tcrr_owner = { has_variable = tcrr_picked } }
+      NOT = { has_variable = tcrr_retained }
+      NOT = { has_variable = tcrr_ordered }
+      NOT = { has_variable = tcrr_virtual_slot }
+      }
+     save_scope_as = tcrr_job
+     scope:tcrr_owner = {
+      every_in_list = { variable = tcrr_original_collectors
+       limit = { has_variable = tcrr_virtual_slot var:tcrr_virtual_slot = scope:tcrr_scan_slot }
+       save_scope_as = tcrr_displaced
+       scope:tcrr_job = { set_variable = { name = tcrr_displaced value = scope:tcrr_displaced } }
+       remove_variable = tcrr_virtual_slot
+      }
+      change_variable = { name = tcrr_job_count add = 1 }
+      change_variable = { name = tcrr_planned_count add = 1 }
+      add_to_variable_list = { name = tcrr_jobs target = scope:tcrr_job }
+      set_variable = { name = tcrr_picked value = yes }
+     }
+     set_variable = { name = tcrr_job_order value = scope:tcrr_owner.var:tcrr_job_count }
+     set_variable = { name = tcrr_ordered value = yes }
+     set_variable = { name = tcrr_virtual_slot value = var:tcrr_target_slot }
+      }
+    } }
+   }
+   if = { limit = { NOT = { has_variable = tcrr_picked } }
+    # Closed permutations require a separate native swap/recovery proof.
+    # Reject the whole batch, including otherwise executable unrelated jobs.
+    set_variable = { name = tcrr_blocked value = 4 }
+   }
+  }
+  if = { limit = { NOT = { has_variable = tcrr_blocked } var:tcrr_planned_count = var:tcrr_slot_count }
+   set_variable = { name = tcrr_plan_ready value = yes }
+  } else = {
+   # Discard even a computable prefix of a globally blocked plan.
+   clear_variable_list = tcrr_jobs
+   set_variable = { name = tcrr_job_count value = 0 }
+  }
+ }
+}
+
+# Future destructive leaf. There is one explicit fire of the exact journaled
+# incumbent, never every_tax_collector/fire-all. It is unreachable today.
+tcrr_fire_current_effect = {
+ if = { limit = {
+  tcrr_execution_capability_trigger = yes
+  tcrr_forward_guard_trigger = yes
+  has_variable = tcrr_active_job
+  has_variable = tcrr_command_sequence
+  has_variable = tcrr_native_preflight_sequence
+  var:tcrr_native_preflight_sequence = var:tcrr_command_sequence
+  scope:paused = yes scope:generation = var:tcrr_generation
+  scope:sequence = var:tcrr_command_sequence
+  current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+  var:tcrr_active_job = {
+   has_variable = tcrr_displaced
+   var:tcrr_record_owner = root
+   var:tcrr_record_generation = root.var:tcrr_generation
+   is_alive = yes NOT = { is_tax_collector = yes }
+   var:tcrr_displaced = { is_tax_collector_of = root tax_slot = prev.var:tcrr_target_slot }
+  }
+ }
+  tcr_clear_command_effect = yes
+  set_variable = { name = tcr_command_generation value = var:tcrr_generation }
+  set_variable = { name = tcr_expected_kind value = 2 }
+  set_variable = { name = tcr_expected_collector value = var:tcrr_active_job.var:tcrr_displaced }
+  set_variable = { name = tcr_expected_slot value = var:tcrr_active_job.var:tcrr_target_slot }
+  set_variable = { name = tcrr_dirty value = yes }
+  set_variable = { name = tcrr_phase value = 10 }
+  fire_tax_collector = var:tcr_expected_collector
+ }
+}
+
+# Hook addition after the existing journal hook, not a hook override.
+tcrr_fired_hook_effect = {
+ if = { limit = {
+  tcrr_owned_generation_trigger = yes
+  tcr_expected_collector_hook_trigger = yes
+  var:tcr_expected_kind = 2
+  var:tcrr_phase = 10
+  has_variable = tcrr_command_sequence
+ }
+  set_variable = { name = tcrr_fired_sequence_ack value = var:tcrr_command_sequence }
+  set_variable = { name = tcrr_fired_generation_ack value = var:tcrr_generation }
+  set_variable = { name = tcrr_phase value = 20 }
+ }
+}

@@ -1,0 +1,6 @@
+﻿l_spanish:
+ tcrc_event_title:0 "Se está recalculando la recaudación de impuestos"
+ tcrc_event_desc:0 "El estado de pausa anterior se restaurará tras recalcular la recaudación de impuestos."
+ tcrc_event_complete:0 "Recálculo completado"
+ tcrc_event_cancel:0 "Automatización detenida"
+ tcrc_event_failed:0 "Automatización detenida tras un fallo de verificación"

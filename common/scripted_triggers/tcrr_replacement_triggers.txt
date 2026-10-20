@@ -1,0 +1,47 @@
+﻿# DELIBERATELY CLOSED: no runtime variable can override this gate.
+# Opening requires a reviewed, native-tested exact-original recovery adapter,
+# interrupted-command settling, and the relevant economic acceptance.
+tcrr_execution_capability_trigger = { always = no }
+tcrr_owned_generation_trigger = {
+has_variable = tcrr_snapshot_open
+has_variable = tcr_active_generation
+has_variable = tcrr_generation
+var:tcrr_generation = var:tcr_active_generation
+has_variable = tcrr_owner
+var:tcrr_owner = this
+}
+tcrr_forward_guard_trigger = {
+ tcrr_owned_generation_trigger = yes
+ tcr_enabled_trigger = yes
+ has_variable = tcrr_plan_ready
+ NOT = { has_variable = tcrr_blocked }
+ NOT = { has_variable = tcr_failed }
+ NOT = { has_variable = tcrr_recovery_requested }
+}
+# This envelope intentionally omits tca_enabled. Off allows exact restoration,
+# never an ordinary optimization job. Adapter must additionally validate the
+# actual native candidate row, native slot, pause, date and current token.
+tcrr_recovery_envelope_trigger = {
+ tcrr_owned_generation_trigger = yes
+ has_variable = tcrr_recovery_requested
+ has_variable = tcrr_recovery_owner var:tcrr_recovery_owner = this
+ has_variable = tcrr_recovery_generation
+ var:tcrr_recovery_generation = var:tcrr_generation
+ has_variable = tcrr_recovery_token
+ has_variable = tcrr_recovery_candidate
+ has_variable = tcrr_recovery_slot
+ has_variable = tcrr_active_job
+ scope:recovery_token = var:tcrr_recovery_token
+ scope:generation = var:tcrr_generation
+ scope:paused = yes
+ var:tcrr_active_job = {
+  var:tcrr_record_owner = root
+  var:tcrr_record_generation = root.var:tcrr_generation
+  var:tcrr_job_order = root.var:tcrr_recovery_cursor
+  has_variable = tcrr_displaced
+  var:tcrr_displaced = root.var:tcrr_recovery_candidate
+  var:tcrr_target_slot = root.var:tcrr_recovery_slot
+ }
+ var:tcrr_recovery_candidate = { is_alive = yes }
+ current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+}

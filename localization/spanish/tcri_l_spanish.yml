@@ -1,0 +1,5 @@
+﻿l_spanish:
+ tcri_automation_label:0 "Automatizar la recaudación de impuestos"
+ tcri_automation_tooltip:0 "Recalcula la recaudación de impuestos al activarse, cuando queda vacante un puesto de recaudador o aparece un contribuyente sin asignar. El recálculo pausa el tiempo del juego y restaura el estado de pausa anterior cuando termina de forma segura."
+ tcri_automation_working:0 "Recalculando la recaudación de impuestos…"
+ tcri_automation_held:0 "Automatización fiscal en pausa: se requiere recuperación o verificación."

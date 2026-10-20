@@ -1,0 +1,46 @@
+﻿# Presentation and the existing Off action only. Owned-event pause/cleanup control is unchanged.
+window = {
+ name = tcrui_notice
+ parentanchor = top|hcenter
+ widgetanchor = top|hcenter
+ position = { 0 185 }
+ size = { 620 142 }
+ layer = top
+ movable = no
+ alwaystransparent = yes
+ visible = "[And(GetPlayer.IsValid,GetScriptedGui('tcrui_owned_presentation').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End))]"
+
+ background = { using = Background_Area_ExtraDark }
+ vbox = {
+  size = { 580 122 }
+  parentanchor = center
+  widgetanchor = center
+  spacing = 4
+  alwaystransparent = yes
+  text_single = {
+   layoutpolicy_horizontal = expanding
+   max_width = 580
+   align = center
+   using = Font_Size_Medium
+   default_format = "#high"
+   text = "tcrui_recalculating_title"
+   alwaystransparent = yes
+  }
+  text_multi = {
+   size = { 580 44 }
+   layoutpolicy_horizontal = expanding
+   max_width = 580
+   align = center
+   text = "tcrui_recalculating_description"
+   alwaystransparent = yes
+  }
+  button_standard = {
+   name = tcrui_disable_automation
+   layoutpolicy_horizontal = expanding
+   size = { 580 33 }
+   text = "tcrui_disable_automation"
+   enabled = "[And(GetPlayer.IsValid,And(GetPlayer.MakeScope.GetVariable('tca_enabled').IsSet,GetScriptedGui('tcri_toggle').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('single_player',MakeScopeBool(Not(GameIsMultiplayer))).End)))]"
+   onclick = "[GetScriptedGui('tcri_toggle').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('single_player',MakeScopeBool(Not(GameIsMultiplayer))).End)]"
+  }
+ }
+}

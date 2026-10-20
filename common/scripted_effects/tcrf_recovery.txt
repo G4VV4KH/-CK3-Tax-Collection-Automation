@@ -1,0 +1,164 @@
+﻿# Composite recovery classes have precedence over the generic vacancy journal.
+# 30 untouched source, 31 fired/vacant source, 32 exact replacement target,
+# 39 unsupported/changed/ambiguous. No timer converts39 into success.
+tcrf_recovery_classify_effect = {
+ set_variable = { name = tcrq_class value = 39 }
+ if = { limit = {
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_start_gold
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_owner
+}
+tcro_current_player_owner_trigger = yes has_variable = tcrq_pending
+has_variable = tcrf_old has_variable = tcrf_new has_variable = tcrf_slot
+has_variable = tcrf_phase has_variable = tcrf_sequence
+has_variable = tcrf_fired_count has_variable = tcrf_hired_count
+has_variable = tcrf_slot_count has_variable = tcrf_payer_count has_variable = tcrf_collector_count
+var:tcrf_owner = this var:tcrf_lifecycle = var:tcrc_lifecycle
+var:tcrf_generation = var:tcr_active_generation
+NOT = { has_variable = tcrf_failed } NOT = { has_variable = tcr_failed }
+NOT = { has_variable = tcrp_job_active }
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+gold = var:tcrc_start_gold
+
+} trigger_else = { always = no }
+
+}
+  if = { limit = { NOT = { has_variable = tcrf_pending } NOT = { has_variable = tcrf_receipt_pending }
+   tcrf_recovery_no_command_trigger = yes
+   OR = { var:tcrf_phase = 10 var:tcrf_phase = 12 var:tcrf_phase = 20 var:tcrf_phase = 71
+ AND = { var:tcrf_phase = 73 var:tcrf_fired_count = 0 var:tcrf_hired_count = 0
+  trigger_if = { limit = { has_variable = tcrf_ui_yield_lifecycle has_variable = tcrf_ui_yield_generation has_variable = tcrf_ui_yield_sequence has_variable = tcrf_parent_skip_optional_lifecycle }
+   var:tcrf_ui_yield_lifecycle = var:tcrc_lifecycle var:tcrf_ui_yield_generation = var:tcr_active_generation
+   var:tcrf_ui_yield_sequence = var:tcrf_sequence var:tcrf_parent_skip_optional_lifecycle = var:tcrc_lifecycle
+  } trigger_else = { always = no }
+ }
+}
+var:tcrf_old = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+var:tcrf_new = { is_alive = yes is_tax_collector = no }
+
+  } set_variable = { name = tcrq_class value = 30 } }
+  else_if = { limit = { has_variable = tcrf_pending has_variable = tcrf_authorized_sequence }
+   if = { limit = { var:tcrf_authorized_sequence = var:tcrf_sequence }
+    if = { limit = { var:tcrf_old = { is_tax_collector = no }
+var:tcrf_new = { is_tax_collector_of = root tax_slot = root.var:tcrf_slot }
+
+     OR = { tcrf_recovery_exact_command_trigger = yes tcrf_recovery_completed_target_trigger = yes }
+    }
+     tcrf_check_topology_effect = yes
+     if = { limit = { NOT = { has_variable = tcrf_topology_invalid } } set_variable = { name = tcrq_class value = 32 } }
+    }
+    else_if = { limit = {
+     var:tcrf_phase = 25 var:tcrf_fired_count = 1 var:tcrf_hired_count = 0
+     var:tcrf_old = { is_tax_collector = no }
+     var:tcrf_new = { is_alive = yes is_tax_collector = no }
+     var:tcrf_slot = { has_tax_collector = no }
+     tcrf_recovery_no_current_completion_trigger = yes
+     OR = { tcrf_recovery_vacant_command_trigger = yes tcrf_recovery_no_command_trigger = yes }
+    }
+     tcrf_check_vacant_topology_effect = yes
+     if = { limit = { NOT = { has_variable = tcrf_topology_invalid } } set_variable = { name = tcrq_class value = 31 } }
+    }
+   }
+  }
+ }
+}
+tcrf_recovery_resume_effect = { if = { limit = {
+trigger_if = { limit = {
+has_variable = tcr_active_generation
+has_variable = tcrc_life_day
+has_variable = tcrc_life_month
+has_variable = tcrc_life_year
+has_variable = tcrc_lifecycle
+has_variable = tcrc_start_gold
+has_variable = tcrf_generation
+has_variable = tcrf_lifecycle
+has_variable = tcrf_owner
+has_variable = tcrq_epoch
+}
+tcrq_pending_event_trigger = yes tcro_current_player_owner_trigger = yes
+has_variable = tcrq_bootstrap_ready has_variable = tcrq_event_seen
+scope:epoch = var:tcrq_epoch scope:game_paused = yes scope:event_paused = yes scope:helpers_closed = yes
+NOT = { has_variable = tcri_hold_reason }
+tcro_current_player_owner_trigger = yes has_variable = tcrq_pending
+has_variable = tcrf_old has_variable = tcrf_new has_variable = tcrf_slot
+has_variable = tcrf_phase has_variable = tcrf_sequence
+has_variable = tcrf_fired_count has_variable = tcrf_hired_count
+has_variable = tcrf_slot_count has_variable = tcrf_payer_count has_variable = tcrf_collector_count
+var:tcrf_owner = this var:tcrf_lifecycle = var:tcrc_lifecycle
+var:tcrf_generation = var:tcr_active_generation
+NOT = { has_variable = tcrf_failed } NOT = { has_variable = tcr_failed }
+NOT = { has_variable = tcrp_job_active }
+current_year = var:tcrc_life_year
+current_month = var:tcrc_life_month
+current_day = var:tcrc_life_day
+gold = var:tcrc_start_gold
+
+} trigger_else = { always = no }
+
+}
+tcrf_recovery_classify_effect = yes
+if = { limit = { OR = { var:tcrq_class = 30 var:tcrq_class = 31 var:tcrq_class = 32 } }
+ set_variable = { name = tcrf_recovery_class value = var:tcrq_class }
+ set_variable = { name = tcrf_recovery_epoch value = var:tcrq_epoch }
+ # Reauthorize only the restored native owned event. No new event, pause or manual toggle.
+ set_variable = { name = tcrc_event_observed_lifecycle value = var:tcrc_lifecycle }
+ set_variable = { name = tcrq_loaded_manual value = scope:manual }
+ set_variable = { name = tcrq_loaded_speed value = scope:speed }
+ set_variable = { name = tcrc_original_speed value = scope:speed }
+ set_variable = { name = tcrc_manager_was_open value = scope:manager_open }
+ remove_variable = tcrc_manager_owned
+ if = { limit = { scope:manager_open = no } set_variable = { name = tcrc_manager_owned value = yes } }
+ remove_variable = tcrq_pending remove_variable = tcrq_waiting remove_variable = tcrq_wait_reported
+ remove_variable = tcrq_event_cancel_ready
+ set_variable = { name = tcrc_phase value = 33 }
+ if = { limit = { var:tcrf_recovery_class = 30 }
+  # No tax mutation existed. Keep the attempted-slot bound and skip this optional job.
+  if = { limit = { var:tcrf_phase = 73 }
+   # Resume only existing no-command GUI quiescence after exact event reauth.
+   set_variable = { name = tcrf_active value = yes }
+   remove_variable = tcrc_manager_owned
+  } else = {
+   remove_variable = tcrf_active
+   set_variable = { name = tcrf_phase value = 72 }
+  }
+ } else = {
+  # Archive only this exact composite's superseded native command; keep its
+  # own pair/topology/floor and both parent ledgers. Never call generic rebaseline.
+  if = { limit = { tcrf_recovery_exact_command_trigger = yes }
+   set_variable = { name = tcrf_superseded_vacancy_sequence value = var:tcre_sequence }
+   tcre_clear_slot_marker_effect = yes
+   tcr_clear_command_effect = yes remove_variable = tcre_job_active
+   remove_variable = tcre_hired_sequence_ack remove_variable = tcre_hired_generation_ack
+   remove_variable = tcre_dispatched_sequence remove_variable = tcre_dispatched_generation
+  }
+  remove_variable = tcrf_receipt_pending
+  set_variable = { name = tcrf_active value = yes }
+  if = { limit = { var:tcrf_recovery_class = 32 }
+   # Actual target is recovery evidence, never a fabricated native fired/hired ACK.
+   set_variable = { name = tcrf_recovered_target value = var:tcrq_epoch }
+   set_variable = { name = tcrf_phase value = 30 }
+  } else = {
+   set_variable = { name = tcrf_phase value = 25 }
+   set_variable = { name = tcrf_recover_queue value = yes }
+   var:tcrf_new = { save_scope_as = tcre_desired_collector }
+   var:tcrf_slot = { save_scope_as = tcre_desired_slot }
+   tcre_queue_vacancy_effect = yes
+   remove_variable = tcrf_recover_queue
+   if = { limit = { has_variable = tcre_job_active var:tcre_phase = 10 }
+    set_variable = { name = tcrf_vacancy_sequence value = var:tcre_sequence }
+   } else = { tcrf_fail_effect = yes }
+  }
+ }
+ debug_log = "TCRF|RECOVER_ACTUAL|class=[GetPlayer.MakeScope.Var('tcrf_recovery_class').GetValue]|epoch=[GetPlayer.MakeScope.Var('tcrf_recovery_epoch').GetValue]"
+}
+
+} }

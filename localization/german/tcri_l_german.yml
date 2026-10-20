@@ -1,0 +1,5 @@
+﻿l_german:
+ tcri_automation_label:0 "Steuereinziehung automatisieren"
+ tcri_automation_tooltip:0 "Berechnet die Steuereinziehung beim Aktivieren neu sowie bei einem unbesetzten Steuereintreiberposten oder einem nicht zugewiesenen Steuerzahler. Die Neuberechnung pausiert das Spiel und stellt nach sicherem Abschluss den vorherigen Pausenzustand wieder her."
+ tcri_automation_working:0 "Die Steuereinziehung wird neu berechnet…"
+ tcri_automation_held:0 "Steuerautomatisierung pausiert: Wiederherstellung oder Überprüfung erforderlich."

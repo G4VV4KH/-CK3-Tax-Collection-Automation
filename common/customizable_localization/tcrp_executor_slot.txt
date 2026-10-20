@@ -1,0 +1,23 @@
+﻿tcrp_executor_target_slot = {
+ type = all
+ text = {
+  trigger = {
+   trigger_if = { limit = {
+   has_variable = tcrp_slot_owner
+   has_variable = tcrp_slot_generation has_variable = tcrp_slot_sequence
+   }
+   trigger_if = { limit = { exists = var:tcrp_slot_owner }
+   var:tcrp_slot_owner = {
+    trigger_if = { limit = { tcrp_command_active_trigger = yes }
+    var:tcr_expected_slot = prev
+    var:tcrp_job_generation = prev.var:tcrp_slot_generation
+    var:tcrp_sequence = prev.var:tcrp_slot_sequence
+    } trigger_else = { always = no }
+   }
+   } trigger_else = { always = no }
+   } trigger_else = { always = no }
+  }
+  localization_key = tcrp_executor_target_yes
+ }
+ text = { fallback = yes localization_key = tcrp_executor_target_no }
+}

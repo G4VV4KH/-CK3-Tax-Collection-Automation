@@ -1,0 +1,1 @@
+﻿# Deliberately no game-start/lobby callback: this source candidate uses local GUI creation.

@@ -1,0 +1,261 @@
+﻿# Sealed payer receipt, independent of transient provider/job scratch.
+tcrv_parent_receipt_economics_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrc_payer_receipt_schema has_variable = tcrc_payer_receipt_before_gold
+  has_variable = tcrc_payer_receipt_actual_gold has_variable = tcrc_payer_receipt_preview_gold
+  has_variable = tcrc_payer_receipt_total_before has_variable = tcrc_payer_receipt_total_after
+  has_variable = tcrc_payer_receipt_initial_total
+ }
+  var:tcrc_payer_receipt_actual_gold > var:tcrc_payer_receipt_before_gold
+  var:tcrc_payer_receipt_total_after >= var:tcrc_payer_receipt_total_before
+  var:tcrc_payer_receipt_total_after >= var:tcrc_payer_receipt_initial_total
+  trigger_if = { limit = { var:tcrc_payer_receipt_schema = 1 }
+   NOT = { OR = { has_variable = tcrc_payer_receipt_before_reference has_variable = tcrc_payer_receipt_actual_reference } }
+   var:tcrc_payer_receipt_actual_gold = var:tcrc_payer_receipt_preview_gold
+  } trigger_else_if = { limit = { var:tcrc_payer_receipt_schema = 2 }
+   trigger_if = { limit = { has_variable = tcrc_payer_receipt_before_reference has_variable = tcrc_payer_receipt_actual_reference }
+    var:tcrc_payer_receipt_actual_reference = var:tcrc_payer_receipt_preview_gold
+    var:tcrc_payer_receipt_preview_gold > var:tcrc_payer_receipt_before_gold
+    var:tcrc_payer_receipt_preview_gold > var:tcrc_payer_receipt_before_reference
+   } trigger_else = { always = no }
+  } trigger_else = { always = no }
+ } trigger_else = { always = no }
+}
+# SOURCE ONLY. Do not change to yes without the explicit integration gates.
+tcrv_parent_feature_enabled_trigger = { always = yes }
+tcrv_parent_ledger_identity_trigger = {
+trigger_if = { limit = { has_variable = tcrc_lifecycle has_variable = tcrv_parent_owner has_variable = tcrv_parent_lifecycle has_variable = tcrv_parent_count has_variable = tcrv_parent_accepted_count }
+
+has_variable = tcrv_parent_ledger_ready
+var:tcrv_parent_owner = this var:tcrv_parent_lifecycle = var:tcrc_lifecycle
+
+} trigger_else = { always = no }
+}
+tcrv_parent_member_trigger = {
+trigger_if = { limit = { has_variable = tcrc_payer_owner has_variable = tcrc_payer_lifecycle has_variable = tcrc_payer_expected_slot has_variable = tcrc_payer_initial_slot has_variable = tcrc_payer_origin has_variable = tcrc_payer_revision }
+
+root = { tcrv_parent_ledger_identity_trigger = yes }
+var:tcrc_payer_owner = root var:tcrc_payer_lifecycle = root.var:tcrc_lifecycle
+OR = { var:tcrc_payer_origin = 1 var:tcrc_payer_origin = 2 }
+
+} trigger_else = { always = no }
+}
+tcrv_parent_sealed_receipt_trigger = {
+ trigger_if = { limit = { has_variable = tcrc_payer_receipt_producer }
+ trigger_if = { limit = { var:tcrc_payer_receipt_producer = 38 }
+  tcrx_sealed_receipt_trigger = yes
+ } trigger_else = {
+
+trigger_if = { limit = { has_variable = tcrc_payer_receipt_generation has_variable = tcrc_payer_receipt_sequence has_variable = tcrc_payer_receipt_payer has_variable = tcrc_payer_receipt_source has_variable = tcrc_payer_receipt_target has_variable = tcrc_payer_receipt_epoch has_variable = tcrc_payer_receipt_before_gold has_variable = tcrc_payer_receipt_preview_gold has_variable = tcrc_payer_receipt_actual_gold has_variable = tcrc_payer_receipt_total_before has_variable = tcrc_payer_receipt_total_after has_variable = tcrc_payer_receipt_initial_total has_variable = tcrc_payer_receipt_year has_variable = tcrc_payer_receipt_month has_variable = tcrc_payer_receipt_day has_variable = tcrc_payer_receipt_wallet has_variable = tcrc_payer_receipt_assigned_generation has_variable = tcrc_payer_receipt_assigned_sequence has_variable = tcrc_payer_receipt_removed_generation has_variable = tcrc_payer_receipt_removed_sequence has_variable = tcrc_payer_receipt_source_collector has_variable = tcrc_payer_receipt_target_collector has_variable = tcrc_payer_receipt_source_aptitude has_variable = tcrc_payer_receipt_target_aptitude has_variable = tcrc_payer_receipt_source_obligation has_variable = tcrc_payer_receipt_target_obligation has_variable = tcrc_payer_receipt_schema has_variable = tcrc_payer_receipt_producer has_variable = tcrc_payer_revision has_variable = tcrc_payer_initial_slot has_variable = tcrc_payer_expected_slot }
+
+tcrv_parent_member_trigger = yes
+var:tcrc_payer_receipt_producer = 37
+var:tcrc_payer_revision = 1 var:tcrc_payer_receipt_payer = this
+var:tcrc_payer_receipt_source = var:tcrc_payer_initial_slot
+var:tcrc_payer_receipt_target = var:tcrc_payer_expected_slot
+var:tcrc_payer_receipt_source != var:tcrc_payer_receipt_target
+var:tcrc_payer_receipt_generation > 0 var:tcrc_payer_receipt_sequence > 0
+var:tcrc_payer_receipt_assigned_generation = var:tcrc_payer_receipt_generation
+var:tcrc_payer_receipt_removed_generation = var:tcrc_payer_receipt_generation
+var:tcrc_payer_receipt_assigned_sequence = var:tcrc_payer_receipt_sequence
+var:tcrc_payer_receipt_removed_sequence = var:tcrc_payer_receipt_sequence
+tcrv_parent_receipt_economics_trigger = yes
+
+} trigger_else = { always = no }
+
+ }
+ } trigger_else = { always = no }
+}
+tcrv_parent_mapping_actual_trigger = {
+trigger_if = { limit = { has_variable = tcrc_payer_expected_slot has_variable = tcrc_payer_revision }
+
+tcrv_parent_member_trigger = yes is_alive = yes exists = liege liege = root
+exists = assigned_tax_slot assigned_tax_slot = var:tcrc_payer_expected_slot
+save_temporary_scope_as = tcrv_parent_check_payer
+root = { any_tax_slot = { this = scope:tcrv_parent_check_payer.var:tcrc_payer_expected_slot }
+ NOT = { any_tax_slot = { NOT = { this = scope:tcrv_parent_check_payer.var:tcrc_payer_expected_slot }
+  any_tax_slot_vassal = { this = scope:tcrv_parent_check_payer } } } }
+var:tcrc_payer_expected_slot = { any_tax_slot_vassal = { this = scope:tcrv_parent_check_payer } }
+trigger_if = { limit = { var:tcrc_payer_revision = 0 }
+ var:tcrc_payer_expected_slot = var:tcrc_payer_initial_slot
+} trigger_else = { tcrv_parent_sealed_receipt_trigger = yes }
+
+} trigger_else = { always = no }
+}
+tcrv_parent_original_mapping_trigger = {
+trigger_if = { limit = { root = { tcrv_parent_ledger_identity_trigger = yes } }
+ tcrv_parent_mapping_actual_trigger = yes
+} trigger_else = { trigger_if = { limit = { has_variable = tcrc_original_payer_slot }
+is_alive = yes exists = assigned_tax_slot assigned_tax_slot = var:tcrc_original_payer_slot
+} trigger_else = { always = no } }
+}
+tcrv_parent_mandatory_original_mapping_trigger = {
+trigger_if = { limit = { root = { tcrv_parent_ledger_identity_trigger = yes } }
+ tcrv_parent_mapping_actual_trigger = yes
+} trigger_else = { trigger_if = { limit = { has_variable = tcrb_original_slot }
+is_alive = yes exists = assigned_tax_slot assigned_tax_slot = var:tcrb_original_slot
+} trigger_else = { always = no } }
+}
+tcrv_parent_mandatory_added_mapping_trigger = {
+trigger_if = { limit = { root = { tcrv_parent_ledger_identity_trigger = yes } }
+ tcrv_parent_mapping_actual_trigger = yes
+} trigger_else = { trigger_if = { limit = { has_variable = tcrb_plan_slot }
+is_alive = yes exists = assigned_tax_slot assigned_tax_slot = var:tcrb_plan_slot
+} trigger_else = { always = no } }
+}
+# Any partial receipt is outstanding; accepting only the flag is insufficient.
+tcrv_parent_quiescent_trigger = {
+NOT = { has_variable = tcrx_active }
+NOT = { has_variable = tcrv_active } NOT = { has_variable = tcrv_job_payer }
+NOT = { has_variable = tcrv_parent_job_purpose } NOT = { has_variable = tcrv_hold }
+tcrv_no_pending_trigger = yes
+}
+tcrv_parent_optional_state_trigger = {
+OR = { NOT = { tcrv_parent_quiescent_trigger = yes }
+ trigger_if = { limit = { has_variable = tcrv_parent_accepted_count has_variable = tcrc_lifecycle_active }
+  var:tcrv_parent_accepted_count > 0
+ } trigger_else = { always = no }
+}
+}
+tcrv_parent_can_enter_trigger = {
+# COMBINED_OPTIONAL_USER_UI_SKIP
+NOT = { tcrf_user_ui_deferred_trigger = yes }
+trigger_if = { limit = { has_variable = tcrc_phase has_variable = tcrc_original_speed has_variable = tcrc_lifecycle has_variable = tcr_active_generation has_variable = tcr_start_year has_variable = tcr_start_month has_variable = tcr_start_day has_variable = tcrc_start_gold }
+
+tcrv_parent_feature_enabled_trigger = yes tcrv_parent_ledger_identity_trigger = yes
+tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes tcr_enabled_trigger = yes
+has_variable = tcrc_lifecycle_active var:tcrc_phase = 35 tcrb_settled_trigger = yes
+scope:paused = yes scope:speed = var:tcrc_original_speed gold = var:tcrc_start_gold
+current_year = var:tcr_start_year current_month = var:tcr_start_month current_day = var:tcr_start_day
+NOT = { any_unassigned_taxpayers = { always = yes } }
+NOT = { has_variable = tcr_requested } NOT = { has_variable = tcri_disable_requested }
+NOT = { has_variable = tcrc_abort_requested } NOT = { has_variable = tcr_failed }
+NOT = { has_variable = tcre_job_active } NOT = { has_variable = tcrp_job_active }
+NOT = { has_variable = tcrb_active } NOT = { has_variable = tcrm_active }
+NOT = { has_variable = tcr_command_generation } tcrv_parent_quiescent_trigger = yes
+scope:helpers_closed = yes
+
+} trigger_else = { always = no }
+}
+tcrv_parent_native_acks_trigger = {
+trigger_if = { limit = { has_variable = tcrv_pending_generation has_variable = tcrv_pending_sequence has_variable = tcrp_assigned_generation_ack has_variable = tcrp_assigned_sequence_ack has_variable = tcrp_removed_generation_ack has_variable = tcrp_removed_sequence_ack }
+var:tcrp_assigned_generation_ack = var:tcrv_pending_generation
+var:tcrp_assigned_sequence_ack = var:tcrv_pending_sequence
+var:tcrp_removed_generation_ack = var:tcrv_pending_generation
+var:tcrp_removed_sequence_ack = var:tcrv_pending_sequence
+} trigger_else = { always = no }
+}
+tcrv_parent_can_commit_trigger = {
+trigger_if = { limit = { has_variable = tcrv_phase has_variable = tcrv_pending_payer has_variable = tcrv_pending_source has_variable = tcrv_pending_target has_variable = tcrv_parent_job_purpose }
+
+tcrv_parent_ledger_identity_trigger = yes tcrv_pending_matches_job_trigger = yes
+tcrv_parent_native_acks_trigger = yes var:tcrv_parent_job_purpose = 37 var:tcrv_phase = 42
+var:tcrv_pending_payer = {
+ tcrv_parent_member_trigger = yes tcrv_payer_unused_in_lifecycle_trigger = yes
+ trigger_if = { limit = { has_variable = tcrc_payer_revision has_variable = tcrc_payer_expected_slot }
+  var:tcrc_payer_revision = 0 var:tcrc_payer_expected_slot = root.var:tcrv_pending_source
+ } trigger_else = { always = no }
+}
+var:tcrv_pending_source = { has_variable = tcrv_collector has_variable = tcrv_aptitude has_variable = tcrv_obligation }
+var:tcrv_pending_target = { has_variable = tcrv_collector has_variable = tcrv_aptitude has_variable = tcrv_obligation }
+
+} trigger_else = { always = no }
+}
+tcrv_parent_settlement_input_trigger = {
+trigger_if = { limit = { has_variable = tcrc_original_speed has_variable = tcrc_lifecycle has_variable = tcr_active_generation has_variable = tcrv_generation has_variable = tcrv_lifecycle has_variable = tcrv_wallet }
+
+tcrv_identity_trigger = yes scope:paused = yes scope:speed = var:tcrc_original_speed
+scope:generation = var:tcrv_generation scope:lifecycle = var:tcrv_lifecycle
+gold = var:tcrv_wallet
+
+} trigger_else = { always = no }
+}
+tcrv_parent_provider_permission_trigger = {
+trigger_if = { limit = { has_variable = tcrv_phase }
+tcrv_parent_feature_enabled_trigger = yes
+tcrv_provider_allowed_trigger = yes NOT = { has_variable = tcrv_parent_recovery_readonly }
+
+} trigger_else = { always = no }
+}
+tcrv_parent_execution_permission_trigger = {
+trigger_if = { limit = { has_variable = tcrv_phase }
+tcrv_parent_feature_enabled_trigger = yes
+tcrv_parent_pre_native_context_trigger = yes
+tcrv_execution_allowed_trigger = yes NOT = { has_variable = tcrv_parent_recovery_readonly }
+
+} trigger_else = { always = no }
+}
+tcrv_parent_authorized_permission_trigger = {
+trigger_if = { limit = { has_variable = tcrv_parent_job_purpose has_variable = tcrv_phase has_variable = tcrc_phase has_variable = tcrp_phase has_variable = tcrp_dispatched_generation has_variable = tcrp_dispatched_sequence has_variable = tcrp_job_generation has_variable = tcrp_sequence has_variable = tcrv_expected_sequence has_variable = tcrv_generation has_variable = tcr_expected_source has_variable = tcr_expected_slot has_variable = tcr_expected_payer has_variable = tcrv_job_source has_variable = tcrv_job_target has_variable = tcrv_job_payer }
+tcrv_parent_feature_enabled_trigger = yes
+tcrv_parent_pre_native_context_trigger = yes tcrv_identity_trigger = yes
+var:tcrv_parent_job_purpose = 37 var:tcrv_phase = 31 var:tcrp_phase = 25
+OR = { var:tcrc_phase = 37 var:tcrc_phase = 80 }
+tcrp_command_active_trigger = yes tcrv_job_source_actual_trigger = yes
+var:tcr_expected_source = var:tcrv_job_source var:tcr_expected_slot = var:tcrv_job_target
+var:tcr_expected_payer = var:tcrv_job_payer
+var:tcrp_dispatched_generation = var:tcrv_generation
+var:tcrp_dispatched_sequence = var:tcrv_expected_sequence
+var:tcrp_sequence = var:tcrv_expected_sequence var:tcrp_job_generation = var:tcrv_generation
+NOT = { has_variable = tcr_requested } NOT = { has_variable = tcrv_parent_recovery_readonly }
+
+} trigger_else = { always = no }
+}
+tcrv_parent_provider_any_trigger = { OR = { tcrb_provider_allowed_trigger = yes tcrv_parent_provider_permission_trigger = yes } }
+tcrv_parent_execution_any_trigger = { OR = { tcrb_execution_allowed_trigger = yes tcrv_parent_execution_permission_trigger = yes } }
+tcrv_parent_commit_any_trigger = { OR = { tcrb_execution_allowed_trigger = yes tcrv_parent_execution_permission_trigger = yes tcrv_parent_authorized_permission_trigger = yes } }
+tcrv_parent_pending_recovery_trigger = {
+trigger_if = { limit = { has_variable = tcrv_owner has_variable = tcr_active_generation has_variable = tcrc_lifecycle has_variable = tcrv_actual_gold has_variable = tcrv_expected_sequence has_variable = tcrv_generation has_variable = tcrv_initial_total has_variable = tcrv_job_before_gold has_variable = tcrv_job_epoch has_variable = tcrv_job_payer has_variable = tcrv_job_preview_gold has_variable = tcrv_job_source has_variable = tcrv_job_target has_variable = tcrv_lifecycle has_variable = tcrv_pending_actual_gold has_variable = tcrv_pending_before_gold has_variable = tcrv_pending_day has_variable = tcrv_pending_epoch has_variable = tcrv_pending_generation has_variable = tcrv_pending_initial_total has_variable = tcrv_pending_lifecycle has_variable = tcrv_pending_month has_variable = tcrv_pending_owner has_variable = tcrv_pending_payer has_variable = tcrv_pending_preview_gold has_variable = tcrv_pending_receipt has_variable = tcrv_pending_sequence has_variable = tcrv_pending_source has_variable = tcrv_pending_target has_variable = tcrv_pending_total_after has_variable = tcrv_pending_total_before has_variable = tcrv_pending_wallet has_variable = tcrv_pending_year has_variable = tcrv_total_floor has_variable = tcrv_wallet }
+tcrv_parent_ledger_identity_trigger = yes var:tcrv_owner = this var:tcrv_generation = var:tcr_active_generation var:tcrv_lifecycle = var:tcrc_lifecycle tcrv_exact_job_completed_trigger = yes tcrv_job_target_actual_trigger = yes
+var:tcrv_pending_owner = this
+var:tcrv_pending_lifecycle = var:tcrv_lifecycle
+var:tcrv_pending_generation = var:tcrv_generation
+var:tcrv_pending_sequence = var:tcrv_expected_sequence
+var:tcrv_pending_payer = var:tcrv_job_payer
+var:tcrv_pending_source = var:tcrv_job_source
+var:tcrv_pending_target = var:tcrv_job_target
+var:tcrv_pending_epoch = var:tcrv_job_epoch
+var:tcrv_pending_before_gold = var:tcrv_job_before_gold
+var:tcrv_pending_preview_gold = var:tcrv_job_preview_gold
+var:tcrv_pending_actual_gold = var:tcrv_actual_gold
+var:tcrv_pending_total_before = var:tcrv_total_floor
+var:tcrv_pending_initial_total = var:tcrv_initial_total
+var:tcrv_pending_year = current_year
+var:tcrv_pending_month = current_month
+var:tcrv_pending_day = current_day
+var:tcrv_pending_wallet = var:tcrv_wallet
+tcrv_pending_economics_trigger = yes
+
+} trigger_else = { always = no }
+}
+tcrv_parent_pre_native_context_trigger = {
+trigger_if = { limit = { has_variable = tcrv_job_epoch has_variable = tcrm_epoch has_variable = tcrm_mode has_variable = tcrv_job_payer has_variable = tcrv_job_source has_variable = tcrv_job_target }
+
+tcrv_identity_trigger = yes
+tcrm_context_valid_trigger = yes var:tcrm_mode = 2
+var:tcrm_epoch = var:tcrv_job_epoch
+tcrv_job_source_actual_trigger = yes
+
+} trigger_else = { always = no }
+}
+tcrv_parent_mandatory_admission_trigger = {
+trigger_if = { limit = { has_variable = tcrb_generation has_variable = tcrb_lifecycle has_variable = tcr_active_generation has_variable = tcrc_lifecycle has_variable = tcrb_job_payer has_variable = tcrb_job_slot has_variable = tcrb_expected_sequence has_variable = tcrp_phase has_variable = tcrp_completed_generation has_variable = tcrp_completed_sequence has_variable = tcrp_assigned_generation_ack has_variable = tcrp_assigned_sequence_ack }
+
+tcrv_parent_ledger_identity_trigger = yes tcro_current_player_owner_trigger = yes tcrc_event_pause_trigger = yes
+var:tcrb_generation = var:tcr_active_generation var:tcrb_lifecycle = var:tcrc_lifecycle
+var:tcrp_phase = 40
+var:tcrp_completed_generation = var:tcrb_generation var:tcrp_completed_sequence = var:tcrb_expected_sequence
+var:tcrp_assigned_generation_ack = var:tcrb_generation var:tcrp_assigned_sequence_ack = var:tcrb_expected_sequence
+NOT = { has_variable = tcrp_job_active } NOT = { has_variable = tcr_command_generation }
+var:tcrb_job_payer = {
+ trigger_if = { limit = { has_variable = tcrc_payer_admission_owner has_variable = tcrc_payer_admission_lifecycle has_variable = tcrc_payer_admission_generation }
+  var:tcrc_payer_admission_owner = root
+  var:tcrc_payer_admission_lifecycle = root.var:tcrc_lifecycle
+  var:tcrc_payer_admission_generation = root.var:tcr_active_generation
+  is_alive = yes exists = liege liege = root
+  exists = assigned_tax_slot assigned_tax_slot = root.var:tcrb_job_slot
+ } trigger_else = { always = no }
+}
+
+} trigger_else = { always = no }
+}

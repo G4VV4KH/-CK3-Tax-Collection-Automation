@@ -1,0 +1,651 @@
+﻿
+# Fresh full-matrix-only, one same-target command, exact tcrs rollback lease.
+# x journal survives rejection; no normal executor ACK is synthesized.
+tcrx_prepare_effect = {
+ if = { limit = {
+ trigger_if = { limit = {
+  has_variable = tcrs_active has_variable = tcrs_pending
+  has_variable = tcrs_phase has_variable = tcrs_native_floor
+  has_variable = tcrs_original_payer_count has_variable = tcrs_sequence
+  has_variable = tcrv_job_target has_variable = tcrv_job_payer
+ }
+  tcrx_dispatch_enabled_trigger = yes
+  tcrs_lease_trigger = yes has_variable = tcrs_pending var:tcrs_phase = 40
+  has_variable = tcrs_native_floor
+  NOT = { has_variable = tcrs_rollback_requested }
+  tcrm_context_valid_trigger = yes has_variable = tcrm_snapshot_ready
+  var:tcrm_mode = 2 var:tcrv_moves = 0
+  NOT = { has_variable = tcrv_recheck_payer }
+  trigger_if = { limit = { has_variable = tcrx_lifecycle }
+   var:tcrx_lifecycle != var:tcrv_lifecycle
+  } trigger_else = { always = yes }
+  has_variable = tcrv_job_target has_variable = tcrv_job_payer
+  NOT = { any_unassigned_taxpayers = { always = yes } }
+  var:tcrv_parent_accepted_count = 0
+  var:tcrv_parent_count = var:tcrs_original_payer_count
+  NOT = { any_in_list = { variable = tcrv_parent_members
+   OR = { var:tcrc_payer_origin != 1 NOT = { tcrs_original_payer_trigger = yes }
+    assigned_tax_slot != var:tcrs_payer_original_slot }
+  } }
+ } trigger_else = { always = no }
+ }
+  save_scope_as = tcrx_owner
+  set_variable = { name = tcrx_target value = var:tcrv_job_target }
+  set_variable = { name = tcrx_capacity value = var:tcrv_job_target.available_taxpayer_slots }
+  set_variable = { name = tcrx_count value = 0 }
+  clear_variable_list = tcrx_payers
+  every_in_list = { variable = tcrm_payers
+   remove_variable = tcrx_candidate_gain remove_variable = tcrx_candidate_price
+   remove_variable = tcrx_other_best
+   if = { limit = { tcrs_original_payer_trigger = yes
+    tcrv_payer_unused_in_lifecycle_trigger = yes
+    var:tcrm_native_slot = assigned_tax_slot
+    assigned_tax_slot != scope:tcrx_owner.var:tcrx_target
+    can_assign_to_tax_slot = scope:tcrx_owner.var:tcrx_target
+   }
+    set_variable = { name = tcrx_other_best value = 0 }
+
+    if = { limit = { has_variable = tcrm_edge_status_0 has_variable = tcrm_gold_0
+     scope:tcrx_owner = { has_variable = tcrm_slot_0 }
+    }
+    if = { limit = { var:tcrm_edge_status_0 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_0 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_0 }
+     }
+     if = { limit = { var:tcrm_gold_0 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_0 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_1 has_variable = tcrm_gold_1
+     scope:tcrx_owner = { has_variable = tcrm_slot_1 }
+    }
+    if = { limit = { var:tcrm_edge_status_1 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_1 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_1 }
+     }
+     if = { limit = { var:tcrm_gold_1 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_1 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_2 has_variable = tcrm_gold_2
+     scope:tcrx_owner = { has_variable = tcrm_slot_2 }
+    }
+    if = { limit = { var:tcrm_edge_status_2 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_2 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_2 }
+     }
+     if = { limit = { var:tcrm_gold_2 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_2 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_3 has_variable = tcrm_gold_3
+     scope:tcrx_owner = { has_variable = tcrm_slot_3 }
+    }
+    if = { limit = { var:tcrm_edge_status_3 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_3 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_3 }
+     }
+     if = { limit = { var:tcrm_gold_3 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_3 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_4 has_variable = tcrm_gold_4
+     scope:tcrx_owner = { has_variable = tcrm_slot_4 }
+    }
+    if = { limit = { var:tcrm_edge_status_4 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_4 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_4 }
+     }
+     if = { limit = { var:tcrm_gold_4 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_4 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_5 has_variable = tcrm_gold_5
+     scope:tcrx_owner = { has_variable = tcrm_slot_5 }
+    }
+    if = { limit = { var:tcrm_edge_status_5 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_5 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_5 }
+     }
+     if = { limit = { var:tcrm_gold_5 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_5 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_6 has_variable = tcrm_gold_6
+     scope:tcrx_owner = { has_variable = tcrm_slot_6 }
+    }
+    if = { limit = { var:tcrm_edge_status_6 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_6 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_6 }
+     }
+     if = { limit = { var:tcrm_gold_6 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_6 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_7 has_variable = tcrm_gold_7
+     scope:tcrx_owner = { has_variable = tcrm_slot_7 }
+    }
+    if = { limit = { var:tcrm_edge_status_7 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_7 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_7 }
+     }
+     if = { limit = { var:tcrm_gold_7 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_7 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_8 has_variable = tcrm_gold_8
+     scope:tcrx_owner = { has_variable = tcrm_slot_8 }
+    }
+    if = { limit = { var:tcrm_edge_status_8 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_8 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_8 }
+     }
+     if = { limit = { var:tcrm_gold_8 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_8 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_9 has_variable = tcrm_gold_9
+     scope:tcrx_owner = { has_variable = tcrm_slot_9 }
+    }
+    if = { limit = { var:tcrm_edge_status_9 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_9 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_9 }
+     }
+     if = { limit = { var:tcrm_gold_9 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_9 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_10 has_variable = tcrm_gold_10
+     scope:tcrx_owner = { has_variable = tcrm_slot_10 }
+    }
+    if = { limit = { var:tcrm_edge_status_10 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_10 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_10 }
+     }
+     if = { limit = { var:tcrm_gold_10 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_10 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_11 has_variable = tcrm_gold_11
+     scope:tcrx_owner = { has_variable = tcrm_slot_11 }
+    }
+    if = { limit = { var:tcrm_edge_status_11 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_11 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_11 }
+     }
+     if = { limit = { var:tcrm_gold_11 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_11 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_12 has_variable = tcrm_gold_12
+     scope:tcrx_owner = { has_variable = tcrm_slot_12 }
+    }
+    if = { limit = { var:tcrm_edge_status_12 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_12 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_12 }
+     }
+     if = { limit = { var:tcrm_gold_12 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_12 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_13 has_variable = tcrm_gold_13
+     scope:tcrx_owner = { has_variable = tcrm_slot_13 }
+    }
+    if = { limit = { var:tcrm_edge_status_13 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_13 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_13 }
+     }
+     if = { limit = { var:tcrm_gold_13 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_13 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_14 has_variable = tcrm_gold_14
+     scope:tcrx_owner = { has_variable = tcrm_slot_14 }
+    }
+    if = { limit = { var:tcrm_edge_status_14 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_14 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_14 }
+     }
+     if = { limit = { var:tcrm_gold_14 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_14 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_15 has_variable = tcrm_gold_15
+     scope:tcrx_owner = { has_variable = tcrm_slot_15 }
+    }
+    if = { limit = { var:tcrm_edge_status_15 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_15 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_15 }
+     }
+     if = { limit = { var:tcrm_gold_15 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_15 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_16 has_variable = tcrm_gold_16
+     scope:tcrx_owner = { has_variable = tcrm_slot_16 }
+    }
+    if = { limit = { var:tcrm_edge_status_16 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_16 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_16 }
+     }
+     if = { limit = { var:tcrm_gold_16 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_16 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_17 has_variable = tcrm_gold_17
+     scope:tcrx_owner = { has_variable = tcrm_slot_17 }
+    }
+    if = { limit = { var:tcrm_edge_status_17 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_17 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_17 }
+     }
+     if = { limit = { var:tcrm_gold_17 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_17 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_18 has_variable = tcrm_gold_18
+     scope:tcrx_owner = { has_variable = tcrm_slot_18 }
+    }
+    if = { limit = { var:tcrm_edge_status_18 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_18 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_18 }
+     }
+     if = { limit = { var:tcrm_gold_18 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_18 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_19 has_variable = tcrm_gold_19
+     scope:tcrx_owner = { has_variable = tcrm_slot_19 }
+    }
+    if = { limit = { var:tcrm_edge_status_19 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_19 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_19 }
+     }
+     if = { limit = { var:tcrm_gold_19 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_19 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_20 has_variable = tcrm_gold_20
+     scope:tcrx_owner = { has_variable = tcrm_slot_20 }
+    }
+    if = { limit = { var:tcrm_edge_status_20 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_20 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_20 }
+     }
+     if = { limit = { var:tcrm_gold_20 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_20 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_21 has_variable = tcrm_gold_21
+     scope:tcrx_owner = { has_variable = tcrm_slot_21 }
+    }
+    if = { limit = { var:tcrm_edge_status_21 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_21 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_21 }
+     }
+     if = { limit = { var:tcrm_gold_21 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_21 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_22 has_variable = tcrm_gold_22
+     scope:tcrx_owner = { has_variable = tcrm_slot_22 }
+    }
+    if = { limit = { var:tcrm_edge_status_22 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_22 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_22 }
+     }
+     if = { limit = { var:tcrm_gold_22 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_22 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_23 has_variable = tcrm_gold_23
+     scope:tcrx_owner = { has_variable = tcrm_slot_23 }
+    }
+    if = { limit = { var:tcrm_edge_status_23 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_23 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_23 }
+     }
+     if = { limit = { var:tcrm_gold_23 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_23 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_24 has_variable = tcrm_gold_24
+     scope:tcrx_owner = { has_variable = tcrm_slot_24 }
+    }
+    if = { limit = { var:tcrm_edge_status_24 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_24 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_24 }
+     }
+     if = { limit = { var:tcrm_gold_24 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_24 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_25 has_variable = tcrm_gold_25
+     scope:tcrx_owner = { has_variable = tcrm_slot_25 }
+    }
+    if = { limit = { var:tcrm_edge_status_25 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_25 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_25 }
+     }
+     if = { limit = { var:tcrm_gold_25 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_25 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_26 has_variable = tcrm_gold_26
+     scope:tcrx_owner = { has_variable = tcrm_slot_26 }
+    }
+    if = { limit = { var:tcrm_edge_status_26 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_26 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_26 }
+     }
+     if = { limit = { var:tcrm_gold_26 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_26 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_27 has_variable = tcrm_gold_27
+     scope:tcrx_owner = { has_variable = tcrm_slot_27 }
+    }
+    if = { limit = { var:tcrm_edge_status_27 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_27 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_27 }
+     }
+     if = { limit = { var:tcrm_gold_27 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_27 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_28 has_variable = tcrm_gold_28
+     scope:tcrx_owner = { has_variable = tcrm_slot_28 }
+    }
+    if = { limit = { var:tcrm_edge_status_28 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_28 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_28 }
+     }
+     if = { limit = { var:tcrm_gold_28 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_28 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_29 has_variable = tcrm_gold_29
+     scope:tcrx_owner = { has_variable = tcrm_slot_29 }
+    }
+    if = { limit = { var:tcrm_edge_status_29 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_29 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_29 }
+     }
+     if = { limit = { var:tcrm_gold_29 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_29 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_30 has_variable = tcrm_gold_30
+     scope:tcrx_owner = { has_variable = tcrm_slot_30 }
+    }
+    if = { limit = { var:tcrm_edge_status_30 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_30 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_30 }
+     }
+     if = { limit = { var:tcrm_gold_30 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_30 }
+     }
+    }
+    }
+
+    if = { limit = { has_variable = tcrm_edge_status_31 has_variable = tcrm_gold_31
+     scope:tcrx_owner = { has_variable = tcrm_slot_31 }
+    }
+    if = { limit = { var:tcrm_edge_status_31 = 1 }
+     if = { limit = { scope:tcrx_owner.var:tcrm_slot_31 = scope:tcrx_owner.var:tcrx_target }
+      set_variable = { name = tcrx_candidate_price value = var:tcrm_gold_31 }
+     }
+     if = { limit = { var:tcrm_gold_31 > var:tcrx_other_best }
+      set_variable = { name = tcrx_other_best value = var:tcrm_gold_31 }
+     }
+    }
+    }
+    if = { limit = { has_variable = tcrx_candidate_price }
+    if = { limit = {
+     var:tcrx_candidate_price > var:tcrm_source_gold
+     var:tcrx_candidate_price > var:tcrm_source_reference
+     var:tcrx_candidate_price >= var:tcrx_other_best
+    }
+     set_variable = { name = tcrx_candidate_gain value = var:tcrx_candidate_price }
+     if = { limit = { var:tcrm_source_reference > var:tcrm_source_gold }
+      change_variable = { name = tcrx_candidate_gain subtract = var:tcrm_source_reference }
+     } else = { change_variable = { name = tcrx_candidate_gain subtract = var:tcrm_source_gold } }
+    }
+   }
+  }
+  }
+  while = { limit = { var:tcrx_count < var:tcrx_capacity var:tcrx_count < 12
+   any_in_list = { variable = tcrm_payers has_variable = tcrx_candidate_gain }
+  }
+   remove_variable = tcrx_next
+   every_in_list = { variable = tcrm_payers
+    if = { limit = { has_variable = tcrx_candidate_gain }
+     save_scope_as = tcrx_candidate
+     scope:tcrx_owner = {
+      if = { limit = { NOT = { has_variable = tcrx_next } }
+       set_variable = { name = tcrx_next value = scope:tcrx_candidate }
+      } else_if = { limit = {
+       scope:tcrx_candidate.var:tcrx_candidate_gain > var:tcrx_next.var:tcrx_candidate_gain
+      } set_variable = { name = tcrx_next value = scope:tcrx_candidate } }
+     }
+    }
+   }
+   if = { limit = { has_variable = tcrx_next }
+    change_variable = { name = tcrx_count add = 1 }
+    add_to_variable_list = { name = tcrx_payers target = var:tcrx_next }
+    var:tcrx_next = {
+     set_variable = { name = tcrx_member_owner value = scope:tcrx_owner }
+     set_variable = { name = tcrx_member_lifecycle value = scope:tcrx_owner.var:tcrv_lifecycle }
+     set_variable = { name = tcrx_member_generation value = scope:tcrx_owner.var:tcrv_generation }
+     set_variable = { name = tcrx_member_component value = scope:tcrx_owner.var:tcrs_sequence }
+     set_variable = { name = tcrx_member_ordinal value = scope:tcrx_owner.var:tcrx_count }
+     set_variable = { name = tcrx_source value = assigned_tax_slot }
+     set_variable = { name = tcrx_target value = scope:tcrx_owner.var:tcrx_target }
+     set_variable = { name = tcrx_before_gold value = var:tcrm_source_gold }
+     set_variable = { name = tcrx_before_reference value = var:tcrm_source_reference }
+     set_variable = { name = tcrx_preview value = var:tcrx_candidate_price }
+     remove_variable = tcrx_candidate_gain
+     remove_variable = tcrx_selected remove_variable = tcrx_assigned_ack
+     remove_variable = tcrx_removed_ack remove_variable = tcrx_actual_gold
+     remove_variable = tcrx_actual_reference
+    }
+   }
+  }
+  if = { limit = { var:tcrx_count >= 2 }
+   set_variable = { name = tcrx_owner value = this }
+   set_variable = { name = tcrx_lifecycle value = var:tcrv_lifecycle }
+   set_variable = { name = tcrx_generation value = var:tcrv_generation }
+   set_variable = { name = tcrx_component value = var:tcrs_sequence }
+   set_variable = { name = tcrx_epoch value = var:tcrm_epoch }
+   set_variable = { name = tcrx_total_before value = var:tcrv_total_floor }
+   set_variable = { name = tcrx_phase value = 10 }
+   set_variable = { name = tcrx_active value = yes }
+   var:tcrx_target = { set_variable = { name = tcrx_slot_owner value = root } }
+   set_variable = { name = tcrx_selected_count value = 0 }
+   set_variable = { name = tcrx_audit_count value = 0 }
+   set_variable = { name = tcrx_actual_count value = 0 }
+   set_variable = { name = tcrx_watchdog_ticks value = 0 }
+   remove_variable = tcrx_dispatched remove_variable = tcrx_error
+   remove_variable = tcrx_cancel remove_variable = tcrx_accepted
+   remove_variable = tcrx_trace_driver_seen remove_variable = tcrx_trace_manager_seen
+   set_variable = { name = tcrv_phase value = 60 }
+   debug_log = "TCRX|PREPARED|count=[GetPlayer.MakeScope.Var('tcrx_count').GetValue]"
+  } else = { clear_variable_list = tcrx_payers }
+ }
+}
+
+tcrx_assigned_hook_effect = {
+ if = { limit = { tcrx_expected_hook_trigger = yes scope:tax_slot = var:tcrx_target }
+  save_scope_as = tcrx_hook_owner
+  scope:vassal = { set_variable = { name = tcrx_assigned_ack value = scope:tcrx_hook_owner.var:tcrx_component } }
+ }
+}
+tcrx_removed_hook_effect = {
+ if = { limit = { tcrx_expected_hook_trigger = yes scope:tax_slot = scope:vassal.var:tcrx_source }
+  save_scope_as = tcrx_hook_owner
+  scope:vassal = { set_variable = { name = tcrx_removed_ack value = scope:tcrx_hook_owner.var:tcrx_component } }
+ }
+}
+
+# Full exact membership is checked independently of the old singleton ledgers.
+tcrx_check_map_effect = {
+ save_scope_as = tcrx_owner
+ remove_variable = tcrx_map_bad
+ tcrs_check_payers_effect = yes
+ tcrs_check_collectors_effect = yes
+ if = { limit = { OR = { has_variable = tcrs_payer_error has_variable = tcrs_topology_bad } }
+  set_variable = { name = tcrx_map_bad value = yes }
+ }
+ every_in_list = { variable = tcrv_slots
+  if = { limit = { OR = { has_tax_collector = no
+   tax_collector != var:tcrv_collector tax_collector.tax_collector_aptitude_score != var:tcrv_aptitude
+   NOT = { OR = { AND = { var:tcrv_obligation = 1 is_active_obligation = default_tax_collector } AND = { var:tcrv_obligation = 2 is_active_obligation = strict_taxation_tax_collector } AND = { var:tcrv_obligation = 3 is_active_obligation = iqta_special_rights_tax_collector } AND = { var:tcrv_obligation = 4 is_active_obligation = ghazi_special_rights_tax_collector } AND = { var:tcrv_obligation = 5 is_active_obligation = muqata_special_rights_tax_collector } AND = { var:tcrv_obligation = 6 is_active_obligation = jizya_special_rights_tax_collector } AND = { var:tcrv_obligation = 7 is_active_obligation = deqhan_special_rights_tax_collector } AND = { var:tcrv_obligation = 8 is_active_obligation = maguh_special_rights_tax_collector } } }
+  } } scope:tcrx_owner = { set_variable = { name = tcrx_map_bad value = yes } } }
+ }
+ every_in_list = { variable = tcrs_original_payers
+  if = { limit = { tcrx_member_trigger = yes }
+   if = { limit = { NOT = { OR = {
+    assigned_tax_slot = var:tcrx_source assigned_tax_slot = var:tcrx_target
+   } } } scope:tcrx_owner = { set_variable = { name = tcrx_map_bad value = yes } } }
+  } else_if = { limit = { assigned_tax_slot != var:tcrs_payer_original_slot }
+   scope:tcrx_owner = { set_variable = { name = tcrx_map_bad value = yes } }
+  }
+ }
+}
+
+tcrx_finish_rejected_effect = {
+ # A valid source/target mechanical map can always be returned to the snapshot.
+ # Unknown topology stays paused and retains the journal for diagnosis.
+ tcrx_check_map_effect = yes
+ if = { limit = { NOT = { has_variable = tcrx_map_bad } }
+  every_in_list = { variable = tcrx_payers
+   if = { limit = { assigned_tax_slot = var:tcrx_target }
+    set_variable = { name = tcrx_mechanical_outcome value = yes }
+   }
+  }
+  remove_variable = tcrx_active
+  set_variable = { name = tcrx_phase value = 90 }
+  remove_variable = tcrv_active remove_variable = tcrv_job_payer
+  remove_variable = tcrv_job_source remove_variable = tcrv_job_target
+  remove_variable = tcrv_parent_job_purpose
+  set_variable = { name = tcrv_phase value = 70 }
+  set_variable = { name = tcrv_settled value = yes }
+  tcrm_invalidate_effect = yes
+  tcrv_clear_advisory_effect = yes
+  tcrs_request_rollback_effect = yes
+  set_variable = { name = tcrc_phase value = 34 }
+  debug_log = "TCRX|REJECT_ROLLBACK"
+ }
+}
+
+tcrx_accept_effect = {
+ save_scope_as = tcrx_owner
+ if = { limit = { NOT = { has_variable = tcrp_sequence } }
+  set_variable = { name = tcrp_sequence value = 0 }
+ }
+ # Reserve monotonic receipt ordering before later singleton dispatches.
+ # No tcrp dispatched/completed/ACK variable is written by this reservation.
+ set_variable = { name = tcrx_order_base value = var:tcrp_sequence }
+ change_variable = { name = tcrp_sequence add = var:tcrx_count }
+ every_in_list = { variable = tcrx_payers
+  set_variable = { name = tcrc_payer_receipt_producer value = 38 }
+  set_variable = { name = tcrc_payer_receipt_schema value = 3 }
+  set_variable = { name = tcrx_seal_owner value = scope:tcrx_owner }
+  set_variable = { name = tcrx_seal_lifecycle value = var:tcrx_member_lifecycle }
+  set_variable = { name = tcrx_seal_generation value = var:tcrx_member_generation }
+  set_variable = { name = tcrx_seal_component value = var:tcrx_member_component }
+  set_variable = { name = tcrx_seal_source value = var:tcrx_source }
+  set_variable = { name = tcrx_seal_target value = var:tcrx_target }
+  set_variable = { name = tcrx_seal_before_gold value = var:tcrx_before_gold }
+  set_variable = { name = tcrx_seal_before_reference value = var:tcrx_before_reference }
+  set_variable = { name = tcrx_seal_preview value = var:tcrx_preview }
+  set_variable = { name = tcrx_seal_actual_gold value = var:tcrx_actual_gold }
+  set_variable = { name = tcrx_seal_actual_reference value = var:tcrx_actual_reference }
+  set_variable = { name = tcrx_seal_assigned_ack value = var:tcrx_assigned_ack }
+  set_variable = { name = tcrx_seal_removed_ack value = var:tcrx_removed_ack }
+  set_variable = { name = tcrx_seal_total_before value = scope:tcrx_owner.var:tcrx_total_before }
+  set_variable = { name = tcrx_seal_total_after value = scope:tcrx_owner.var:tcrx_total_after }
+  set_variable = { name = tcrc_payer_receipt_source value = var:tcrx_source }
+  set_variable = { name = tcrc_payer_receipt_target value = var:tcrx_target }
+  # Ordinal is receipt order, not an invented native dispatch sequence.
+  set_variable = { name = tcrc_payer_receipt_sequence value = scope:tcrx_owner.var:tcrx_order_base }
+  change_variable = { name = tcrc_payer_receipt_sequence add = var:tcrx_member_ordinal }
+  set_variable = { name = tcrc_payer_expected_slot value = var:tcrx_target }
+  set_variable = { name = tcrc_payer_revision value = 1 }
+  set_variable = { name = tcrv_expected_slot value = var:tcrx_target }
+  set_variable = { name = tcrv_move_owner value = scope:tcrx_owner }
+  set_variable = { name = tcrv_move_lifecycle value = scope:tcrx_owner.var:tcrx_lifecycle }
+  scope:tcrx_owner = { change_variable = { name = tcrv_parent_accepted_count add = 1 } }
+ }
+ set_variable = { name = tcrx_accepted value = yes }
+ set_variable = { name = tcrv_moves value = var:tcrx_count }
+ set_variable = { name = tcrv_accepted_total value = var:tcrx_total_after }
+ set_variable = { name = tcrv_outcome value = 2 }
+ remove_variable = tcrv_job_payer remove_variable = tcrv_job_source
+ remove_variable = tcrv_job_target remove_variable = tcrv_expected_sequence
+ tcrv_clear_reference_job_effect = yes
+ tcrv_clear_advisory_effect = yes
+ tcrm_invalidate_effect = yes
+ set_variable = { name = tcrx_phase value = 80 }
+ debug_log = "TCRX|ACCEPTED|count=[GetPlayer.MakeScope.Var('tcrx_count').GetValue]"
+}

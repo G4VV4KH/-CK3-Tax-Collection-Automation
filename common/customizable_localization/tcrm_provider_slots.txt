@@ -1,0 +1,22 @@
+﻿tcrm_active_slot = { type = all
+ text = { trigger = {
+  has_variable = tcrm_slot_owner exists = var:tcrm_slot_owner has_variable = tcrm_slot_epoch
+  var:tcrm_slot_owner = {
+   tcrm_provider_active_trigger = yes
+   var:tcrm_epoch = prev.var:tcrm_slot_epoch
+   
+  }
+ } localization_key = tcrm_numeric_yes }
+ text = { fallback = yes localization_key = tcrm_numeric_no }
+}
+tcrm_current_slot = { type = all
+ text = { trigger = {
+  has_variable = tcrm_slot_owner exists = var:tcrm_slot_owner has_variable = tcrm_slot_epoch
+  var:tcrm_slot_owner = {
+   tcrm_provider_active_trigger = yes
+   var:tcrm_epoch = prev.var:tcrm_slot_epoch
+   has_variable = tcrm_current_slot var:tcrm_current_slot = prev
+  }
+ } localization_key = tcrm_numeric_yes }
+ text = { fallback = yes localization_key = tcrm_numeric_no }
+}

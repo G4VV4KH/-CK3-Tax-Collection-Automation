@@ -1,0 +1,33 @@
+﻿tcri_toggle = { scope = character is_valid = {
+tcri_available_trigger = yes scope:single_player = yes
+OR = { has_variable = tca_enabled AND = {
+ NOT = { has_variable = tcrc_lifecycle_active }
+ NOT = { has_variable = tcr_active_generation }
+ NOT = { has_variable = tcri_disable_requested }
+ NOT = { has_variable = tcri_hold_reason }
+ NOT = { has_variable = tcr_failed }
+} }
+
+} effect = { if = { limit = {
+tcri_available_trigger = yes scope:single_player = yes
+OR = { has_variable = tca_enabled AND = {
+ NOT = { has_variable = tcrc_lifecycle_active }
+ NOT = { has_variable = tcr_active_generation }
+ NOT = { has_variable = tcri_disable_requested }
+ NOT = { has_variable = tcri_hold_reason }
+ NOT = { has_variable = tcr_failed }
+} }
+
+}
+if = { limit = { has_variable = tca_enabled }
+ tcri_disable_effect = yes
+} else = { tcri_enable_effect = yes }
+} } }
+
+tcri_observe = { scope = character is_valid = {
+tcri_idle_trigger = yes tcri_edge_changed_trigger = yes scope:single_player = yes
+} effect = { if = { limit = {
+tcri_idle_trigger = yes tcri_edge_changed_trigger = yes scope:single_player = yes
+}
+tcri_observe_edge_effect = yes
+} } }

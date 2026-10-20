@@ -1,0 +1,99 @@
+﻿# Called by coordinator after its lifecycle is set, before any pause.
+tcro_claim_effect = {
+ if = { limit = { tcro_can_claim_trigger = yes has_variable = tcrc_lifecycle has_variable = tcrc_lifecycle_active }
+  save_scope_as = tcro_claim_owner
+  set_global_variable = { name = tcr_transaction_owner value = scope:tcro_claim_owner }
+  set_global_variable = { name = tcr_transaction_lifecycle value = var:tcrc_lifecycle }
+ }
+}
+# Call after a completion/cancellation receipt and before lifecycle fields are
+# removed. This never resumes: the caller has already observed pause restoration.
+tcro_release_effect = {
+ if = { limit = {
+  tcro_current_player_owner_trigger = yes
+  NOT = { has_variable = tcre_job_active }
+  NOT = { has_variable = tcrp_job_active }
+  NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+  NOT = { has_variable = tcr_active_generation }
+  tcro_finished_receipt_trigger = yes
+ }
+  remove_global_variable = tcr_transaction_owner
+  remove_global_variable = tcr_transaction_lifecycle
+ }
+}
+# Bookkeeping only. Do not set tcr_failed: exact in-flight ACKs may still arrive.
+# The old owner remains globally reachable even after becoming AI or dying.
+tcro_request_hold_effect = {
+ if = { limit = { tcro_owned_trigger = yes }
+  if = { limit = { NOT = { has_variable = tcro_handoff_pending } }
+   set_variable = { name = tcro_handoff_pending value = yes }
+   set_variable = { name = tcro_hold_reason value = 1 }
+   set_variable = { name = tcro_settlement_kind value = 0 }
+  }
+  if = { limit = { NOT = { has_variable = tcri_hold_reason } }
+   set_variable = { name = tcri_hold_reason value = 3 }
+  }
+ }
+}
+tcro_classify_settlement_effect = {
+ # Reads the exact old command and relation; does not clear or reinterpret it.
+ if = { limit = { tcro_owned_trigger = yes has_variable = tcro_handoff_pending }
+  if = { limit = { tcro_exact_hire_settled_trigger = yes }
+   set_variable = { name = tcro_settlement_kind value = 3 }
+   set_variable = { name = tcro_settled_generation value = var:tcr_active_generation }
+   set_variable = { name = tcro_settled_sequence value = var:tcre_sequence }
+  } else_if = { limit = {
+   NOT = { has_variable = tcre_job_active }
+   NOT = { has_variable = tcrp_job_active }
+   NOT = { has_variable = tcrb_active } tcrv_parent_quiescent_trigger = yes
+   NOT = { has_variable = tcr_active_generation }
+  }
+   set_variable = { name = tcro_settlement_kind value = 1 }
+  } else_if = { limit = { tcro_undispatched_vacancy_trigger = yes }
+   set_variable = { name = tcro_settlement_kind value = 2 }
+  } else = { set_variable = { name = tcro_settlement_kind value = 4 } }
+ }
+}
+tcro_death_effect = {
+ # Vanilla on_death runs just before death and exposes the actual player_heir.
+ if = { limit = { is_ai = no has_variable = tca_enabled exists = player_heir }
+  set_variable = { name = tcro_declared_heir value = player_heir }
+  set_variable = { name = tcro_inherit_opt_in value = yes }
+ }
+ if = { limit = { tcro_owned_trigger = yes }
+  tcro_request_hold_effect = yes
+  set_variable = { name = tcro_hold_reason value = 2 }
+ }
+}
+tcro_player_changed_effect = {
+ save_scope_as = tcro_new_player
+ if = { limit = { exists = scope:previous_player_character }
+  scope:previous_player_character = {
+   # Death alone is insufficient: copy only to the captured exact player heir.
+   if = { limit = { is_alive = no has_variable = tcro_inherit_opt_in exists = var:tcro_declared_heir }
+    if = { limit = { var:tcro_declared_heir = scope:tcro_new_player }
+     scope:tcro_new_player = {
+      set_variable = { name = tca_enabled value = yes }
+      set_variable = { name = tcro_inherited_opt_in value = yes }
+     }
+    }
+   }
+  }
+ }
+ if = { limit = { exists = global_var:tcr_transaction_owner }
+  global_var:tcr_transaction_owner = {
+   if = { limit = { NOT = { this = scope:tcro_new_player } }
+    tcro_request_hold_effect = yes
+    set_variable = { name = tcro_observed_new_player value = scope:tcro_new_player }
+   }
+  }
+ }
+ # An idle successor may start normally. An old transaction blocks admission,
+ # even though the successor's preference has already been preserved.
+ if = { limit = { NOT = { exists = global_var:tcr_transaction_owner } }
+  tcr_request_effect = yes
+ }
+}
+tcro_reload_effect = {
+# Centralized tcrq_load_effect is the only load entry.
+}

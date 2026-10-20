@@ -1,0 +1,105 @@
+﻿# A request is one coalesced dirty bit. Self-generated callbacks acknowledge
+# the current native command; they cannot create a nested executor.
+tcr_request_effect = {
+if = { limit = { has_variable = tcrq_pending }
+ tcrq_classify_effect = yes
+ if = { limit = { has_variable = tca_enabled NOT = { has_variable = tcri_disable_requested } }
+  set_variable = { name = tcr_requested value = yes }
+ } else = { remove_variable = tcr_requested }
+} else = {
+
+ if = { limit = { tcr_enabled_trigger = yes }
+  set_variable = { name = tcr_requested value = yes }
+  # Acquire the native event pause in the originating script chain. Deferring
+  # this to a GUI refresh loses simulation days at speed 5. Subsequent requests
+  # only dirty the current lifecycle and are reconciled under its existing event.
+  if = { limit = { NOT = { has_variable = tcrc_lifecycle_active } }
+   tcrc_admit_event_effect = yes
+  }
+ }
+
+}
+}
+tcr_begin_generation_effect = {
+ # Caller must have acquired/observed the native pause before entering.
+ if = { limit = {
+  tcr_enabled_trigger = yes has_variable = tcr_requested
+  NOT = { has_variable = tcr_active_generation }
+ }
+  if = { limit = { has_variable = tcr_generation }
+   change_variable = { name = tcr_generation add = 1 }
+  } else = { set_variable = { name = tcr_generation value = 1 } }
+  set_variable = { name = tcr_active_generation value = var:tcr_generation }
+  tcr_clear_command_effect = yes
+  remove_variable = tcr_requested
+  remove_variable = tcr_failed
+  set_variable = { name = tcr_phase value = 1 }
+  set_variable = { name = tcr_start_year value = current_year }
+  set_variable = { name = tcr_start_month value = current_month }
+  set_variable = { name = tcr_start_day value = current_day }
+ }
+}
+tcr_clear_command_effect = {
+remove_variable = tcrq_command_schema
+remove_variable = tcrq_source_kind
+ remove_variable = tcr_command_generation
+ remove_variable = tcr_expected_kind
+ remove_variable = tcr_verified_generation
+ remove_variable = tcr_expected_collector
+ remove_variable = tcr_expected_slot
+ remove_variable = tcr_expected_payer
+ remove_variable = tcr_expected_source
+ remove_variable = tcr_hired_ack
+ remove_variable = tcr_fired_ack
+ remove_variable = tcr_assigned_ack
+ remove_variable = tcr_removed_ack
+}
+tcr_hired_hook_effect = {
+ if = { limit = { tcr_expected_collector_hook_trigger = yes }
+  if = { limit = { var:tcr_expected_kind = 1 }
+   set_variable = { name = tcr_hired_ack value = var:tcr_active_generation }
+  } else = { tcr_request_effect = yes }
+ } else = { tcr_request_effect = yes }
+}
+tcr_fired_hook_effect = {
+ if = { limit = { tcr_expected_collector_hook_trigger = yes }
+  if = { limit = { var:tcr_expected_kind = 2 }
+   set_variable = { name = tcr_fired_ack value = var:tcr_active_generation }
+  } else = { tcr_request_effect = yes }
+ } else = { tcr_request_effect = yes }
+}
+tcr_assigned_hook_effect = {
+ if = { limit = { tcr_expected_payer_hook_trigger = yes }
+  if = { limit = { var:tcr_expected_slot = scope:tax_slot }
+   set_variable = { name = tcr_assigned_ack value = var:tcr_active_generation }
+  } else = { tcr_request_effect = yes }
+ } else = { tcr_request_effect = yes }
+}
+tcr_removed_hook_effect = {
+ if = { limit = { tcr_expected_payer_hook_trigger = yes has_variable = tcr_expected_source }
+  if = { limit = { var:tcr_expected_source = scope:tax_slot }
+   set_variable = { name = tcr_removed_ack value = var:tcr_active_generation }
+  } else = { tcr_request_effect = yes }
+ } else = { tcr_request_effect = yes }
+}
+# Completion is reachable only through a verifier, never a month timer or ACK.
+# Do not clear tcr_requested here: an unexpected external change during apply
+# must survive into the next generation.
+tcr_complete_generation_effect = {
+ if = { limit = {
+  has_variable = tcr_active_generation
+  has_variable = tcr_verified_generation
+  var:tcr_verified_generation = var:tcr_active_generation
+  NOT = { has_variable = tcr_failed }
+ }
+  set_variable = { name = tcr_completed_generation value = var:tcr_active_generation }
+  tcr_clear_command_effect = yes
+  remove_variable = tcr_active_generation
+  remove_variable = tcr_phase
+ }
+}
+tcr_fail_generation_effect = {
+ set_variable = { name = tcr_failed value = yes }
+ # Retain the recovery journal and owned pause after a partial apply.
+ # No month-based unblocking and no automatic unpause after failure.
+}

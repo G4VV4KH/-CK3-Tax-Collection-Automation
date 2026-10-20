@@ -1,0 +1,4 @@
+﻿l_japanese:
+ tcrui_recalculating_title:0 "徴税を再計算しています…"
+ tcrui_recalculating_description:0 "再計算が終わると、以前の一時停止状態に戻ります。"
+ tcrui_disable_automation:0 "自動化を無効にする"

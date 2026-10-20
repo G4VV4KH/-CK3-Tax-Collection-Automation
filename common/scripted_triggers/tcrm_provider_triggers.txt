@@ -1,0 +1,253 @@
+﻿# Advisory identity is useful only inside the current ordinary transaction.
+# Recovery/disable/abort can retain data physically but cannot admit a recheck.
+tcrv_advisory_identity_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrv_advisory_owner has_variable = tcrv_advisory_generation
+  has_variable = tcrv_advisory_lifecycle has_variable = tcrv_generation
+  has_variable = tcrv_lifecycle has_variable = tcr_active_generation
+  has_variable = tcrc_lifecycle
+ }
+  tcrv_ordinary_trigger = yes
+  var:tcrv_advisory_owner = this
+  var:tcrv_advisory_generation = var:tcrv_generation
+  var:tcrv_advisory_lifecycle = var:tcrv_lifecycle
+  var:tcrv_generation = var:tcr_active_generation
+  var:tcrv_lifecycle = var:tcrc_lifecycle
+  NOT = { has_variable = tcrv_parent_recovery_readonly }
+ } trigger_else = { always = no }
+}
+tcrv_recheck_identity_trigger = {
+ trigger_if = { limit = { has_variable = tcrv_recheck_payer }
+  tcrv_advisory_identity_trigger = yes
+  is_target_in_variable_list = { name = tcrv_advisory_payers target = var:tcrv_recheck_payer }
+  var:tcrv_recheck_payer = {
+   has_variable = tcrv_advisory_rank var:tcrv_advisory_rank > 0
+   is_alive = yes exists = liege liege = root exists = assigned_tax_slot
+   tcrv_payer_unused_in_lifecycle_trigger = yes
+  }
+ } trigger_else = { always = no }
+}
+
+
+# Character scope; root is the optional transaction owner.
+# FULL covers every not-exactly-used taxpayer. RECHECK covers exactly the
+# selected advisory identity and rereads all its native monetary columns.
+# Partial old move metadata stays covered by FULL, but cannot authorize a move.
+tcrm_optional_measurement_required_trigger = {
+ trigger_if = { limit = { root = { has_variable = tcrv_recheck_payer } }
+  root = { tcrv_recheck_identity_trigger = yes }
+  this = root.var:tcrv_recheck_payer
+  tcrv_payer_unused_in_lifecycle_trigger = yes
+ } trigger_else_if = { limit = { root = { has_variable = tcrv_lifecycle } }
+  trigger_if = { limit = { has_variable = tcrv_move_owner has_variable = tcrv_move_lifecycle }
+   NOT = { AND = { var:tcrv_move_owner = root var:tcrv_move_lifecycle = root.var:tcrv_lifecycle } }
+  } trigger_else = { always = yes }
+ } trigger_else = { always = no }
+}
+
+# Ruler scope. FULL has exact remaining-payer coverage; RECHECK has exact
+# singleton coverage. Neither accepts cached monetary rows or a zero-row
+# singleton. All-slot and all-fixed-member context checks remain unchanged.
+tcrm_optional_measurement_coverage_trigger = {
+ trigger_if = { limit = { has_variable = tcrv_lifecycle has_variable = tcrm_payer_count }
+  trigger_if = { limit = { has_variable = tcrv_recheck_payer }
+   tcrv_recheck_identity_trigger = yes
+   var:tcrm_payer_count = 1
+   is_target_in_variable_list = { name = tcrm_payers target = var:tcrv_recheck_payer }
+   is_target_in_variable_list = { name = tcrm_fixed_payers target = var:tcrv_recheck_payer }
+  }
+  NOT = { any_in_list = { variable = tcrm_fixed_payers
+   trigger_if = { limit = { tcrm_optional_measurement_required_trigger = yes }
+    root = { NOT = { is_target_in_variable_list = { name = tcrm_payers target = prev } } }
+   } trigger_else = {
+    root = { is_target_in_variable_list = { name = tcrm_payers target = prev } }
+   }
+  } }
+  NOT = { any_in_list = { variable = tcrm_payers
+   OR = {
+    NOT = { tcrm_optional_measurement_required_trigger = yes }
+    root = { NOT = { is_target_in_variable_list = { name = tcrm_fixed_payers target = prev } } }
+   }
+  } }
+ } trigger_else = { always = no }
+}
+
+tcrm_provider_active_trigger = { trigger_if = { limit = { has_variable = tcrm_active has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence has_variable = tcr_active_generation }
+
+tcr_enabled_trigger = yes
+tcrv_parent_provider_any_trigger = yes
+has_variable = tcrm_active has_variable = tcrm_owner var:tcrm_owner = this
+has_variable = tcrm_generation has_variable = tcrm_epoch has_variable = tcrm_sequence
+has_variable = tcr_active_generation var:tcrm_generation = var:tcr_active_generation
+NOT = { has_variable = tcr_failed } NOT = { has_variable = tcrm_invalidated }
+NOT = { has_variable = tcr_command_generation }
+
+} trigger_else = { always = no } }
+tcrm_context_valid_trigger = { trigger_if = { limit = { has_variable = tcrm_owner has_variable = tcrm_generation has_variable = tcr_active_generation has_variable = tcrm_epoch has_variable = tcrm_year has_variable = tcrm_month has_variable = tcrm_day has_variable = tcrm_all_slot_count has_variable = tcrm_mode }
+
+ has_variable = tcrm_owner var:tcrm_owner = this
+ has_variable = tcrm_generation var:tcrm_generation = var:tcr_active_generation
+ NOT = { has_variable = tcrm_invalidated } NOT = { has_variable = tcrm_incomplete }
+ current_year = var:tcrm_year current_month = var:tcrm_month current_day = var:tcrm_day
+ any_tax_slot = { count = var:tcrm_all_slot_count always = yes }
+ NOT = { any_tax_slot = {
+  OR = { NOT = { has_variable = tcrm_slot_owner } var:tcrm_slot_owner != root
+   NOT = { has_variable = tcrm_slot_epoch } var:tcrm_slot_epoch != root.var:tcrm_epoch }
+ } }
+ NOT = { any_in_list = { variable = tcrm_all_slots
+  OR = {
+   available_taxpayer_slots != var:tcrm_snapshot_available
+   NOT = { OR = {
+AND = { var:tcrm_obligation = 1 is_active_obligation = default_tax_collector }
+AND = { var:tcrm_obligation = 2 is_active_obligation = strict_taxation_tax_collector }
+AND = { var:tcrm_obligation = 3 is_active_obligation = iqta_special_rights_tax_collector }
+AND = { var:tcrm_obligation = 4 is_active_obligation = ghazi_special_rights_tax_collector }
+AND = { var:tcrm_obligation = 5 is_active_obligation = muqata_special_rights_tax_collector }
+AND = { var:tcrm_obligation = 6 is_active_obligation = jizya_special_rights_tax_collector }
+AND = { var:tcrm_obligation = 7 is_active_obligation = deqhan_special_rights_tax_collector }
+AND = { var:tcrm_obligation = 8 is_active_obligation = maguh_special_rights_tax_collector }
+} }
+   AND = { has_variable = tcrm_snapshot_collector
+    OR = { NOT = { has_tax_collector = yes } tax_collector != var:tcrm_snapshot_collector
+     tax_collector.tax_collector_aptitude_score != var:tcrm_snapshot_aptitude }
+   }
+   AND = { NOT = { has_variable = tcrm_snapshot_collector } has_tax_collector = yes }
+  }
+ } }
+ NOT = { any_in_list = { variable = tcrm_fixed_payers
+  OR = { is_alive = no NOT = { exists = assigned_tax_slot } assigned_tax_slot != var:tcrm_fixed_original }
+ } }
+ NOT = { any_in_list = { variable = tcrm_payers
+  OR = { is_alive = no NOT = { exists = liege } liege != root
+   AND = { has_variable = tcrm_native_slot OR = { NOT = { exists = assigned_tax_slot } assigned_tax_slot != var:tcrm_native_slot } }
+   AND = { NOT = { has_variable = tcrm_native_slot } exists = assigned_tax_slot }
+  }
+ } }
+ trigger_if = { limit = { var:tcrm_mode = 1 }
+  NOT = { any_unassigned_taxpayers = { OR = {
+   NOT = { has_variable = tcrm_payer_owner } var:tcrm_payer_owner != root
+   NOT = { has_variable = tcrm_payer_epoch } var:tcrm_payer_epoch != root.var:tcrm_epoch
+  } } }
+ }
+ trigger_else = {
+  NOT = { any_unassigned_taxpayers = { always = yes } }
+  tcrm_optional_measurement_coverage_trigger = yes
+ }
+
+} trigger_else = { always = no } }
+
+tcrm_unmatched_snapshot_still_current_trigger = { trigger_if = { limit = { has_variable = tcrm_remaining_ready has_variable = tcrm_remaining_owner has_variable = tcrm_remaining_epoch has_variable = tcrm_remaining_count has_variable = tcrm_remaining_slot_count }
+
+ tcr_enabled_trigger = yes
+ has_variable = tcrm_remaining_ready
+ has_variable = tcrm_remaining_owner var:tcrm_remaining_owner = this
+ has_variable = tcrm_remaining_epoch
+ NOT = { has_variable = tcr_failed }
+ NOT = { has_variable = tcrm_active }
+ NOT = { has_variable = tcr_command_generation }
+ any_unassigned_taxpayers = { count = var:tcrm_remaining_count always = yes }
+ NOT = { any_unassigned_taxpayers = { OR = {
+  NOT = { has_variable = tcrm_remaining_payer_owner } var:tcrm_remaining_payer_owner != root
+  NOT = { has_variable = tcrm_remaining_payer_epoch } var:tcrm_remaining_payer_epoch != root.var:tcrm_remaining_epoch
+ } } }
+ any_tax_slot = { count = var:tcrm_remaining_slot_count always = yes }
+ NOT = { any_tax_slot = { OR = {
+  NOT = { has_variable = tcrm_remaining_slot_owner } var:tcrm_remaining_slot_owner != root
+  NOT = { has_variable = tcrm_remaining_slot_epoch } var:tcrm_remaining_slot_epoch != root.var:tcrm_remaining_epoch
+  available_taxpayer_slots != var:tcrm_remaining_available
+  NOT = { OR = {
+AND = { var:tcrm_remaining_obligation = 1 is_active_obligation = default_tax_collector }
+AND = { var:tcrm_remaining_obligation = 2 is_active_obligation = strict_taxation_tax_collector }
+AND = { var:tcrm_remaining_obligation = 3 is_active_obligation = iqta_special_rights_tax_collector }
+AND = { var:tcrm_remaining_obligation = 4 is_active_obligation = ghazi_special_rights_tax_collector }
+AND = { var:tcrm_remaining_obligation = 5 is_active_obligation = muqata_special_rights_tax_collector }
+AND = { var:tcrm_remaining_obligation = 6 is_active_obligation = jizya_special_rights_tax_collector }
+AND = { var:tcrm_remaining_obligation = 7 is_active_obligation = deqhan_special_rights_tax_collector }
+AND = { var:tcrm_remaining_obligation = 8 is_active_obligation = maguh_special_rights_tax_collector }
+} }
+  AND = { has_variable = tcrm_remaining_collector OR = {
+   has_tax_collector = no tax_collector != var:tcrm_remaining_collector
+   tax_collector.tax_collector_aptitude_score != var:tcrm_remaining_aptitude
+  } }
+  AND = { NOT = { has_variable = tcrm_remaining_collector } has_tax_collector = yes }
+  NOT = { any_tax_slot_vassal = { count = var:tcrm_remaining_member_count always = yes } }
+  any_tax_slot_vassal = { OR = {
+   NOT = { has_variable = tcrm_remaining_member_owner } var:tcrm_remaining_member_owner != root
+   NOT = { has_variable = tcrm_remaining_member_epoch } var:tcrm_remaining_member_epoch != root.var:tcrm_remaining_epoch
+   NOT = { has_variable = tcrm_remaining_member_source } assigned_tax_slot != var:tcrm_remaining_member_source
+  } }
+ } } }
+
+} trigger_else = { always = no } }
+
+tcrm_capacity_edge_unavailable_trigger = {
+trigger_if = { limit = { has_variable = tcrm_mode has_variable = tcrm_current_slot has_variable = tcrm_current_payer }
+
+OR = {
+ AND = { var:tcrm_mode = 1 var:tcrm_current_slot = { has_variable = tcrm_capacity var:tcrm_capacity = 0 } }
+ AND = { var:tcrm_mode = 2
+  var:tcrm_current_payer = {
+   trigger_if = { limit = { has_variable = tcrm_native_slot }
+    var:tcrm_native_slot != root.var:tcrm_current_slot
+   } trigger_else = { always = no }
+  }
+  var:tcrm_current_slot = {
+   trigger_if = { limit = { has_variable = tcrm_metadata_free }
+    var:tcrm_metadata_free = 0 available_taxpayer_slots = 0
+   } trigger_else = { always = no }
+  }
+ }
+}
+
+} trigger_else = { always = no }
+}
+tcrm_script_source_edge_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+ }
+  var:tcrm_current_payer = {
+   has_variable = tcrm_native_slot
+   var:tcrm_native_slot = root.var:tcrm_current_slot
+   has_variable = tcrm_source_done has_variable = tcrm_source_gold
+  }
+ } trigger_else = { always = no }
+}
+
+# Only entered synchronously from an already-authorized provider callback.
+# scope:sequence belongs to the callback's entry cursor, so it must not be
+# compared again after advancing the cursor. The original GUI entry gates keep
+# that equality; this local continuation tracks its own expected sequence.
+tcrm_script_drain_live_trigger = {
+ trigger_if = { limit = {
+  has_variable = tcrm_active has_variable = tcrm_owner
+  has_variable = tcrm_generation has_variable = tcrm_epoch
+  has_variable = tcrm_sequence has_variable = tcr_active_generation
+  has_variable = tcrm_phase has_variable = tcrm_year
+  has_variable = tcrm_month has_variable = tcrm_day
+  has_variable = tcrm_current_payer has_variable = tcrm_current_slot
+  has_variable = tcrm_column has_variable = tcrm_slot_count
+  has_variable = tcrc_original_speed
+ }
+  var:tcrm_phase = 30
+  NOT = { has_variable = tcrq_pending }
+  tcr_enabled_trigger = yes
+  tcrv_parent_provider_any_trigger = yes
+  var:tcrm_owner = this
+  var:tcrm_generation = var:tcr_active_generation
+  NOT = { has_variable = tcr_failed }
+  NOT = { has_variable = tcrm_invalidated }
+  NOT = { has_variable = tcr_command_generation }
+  tcrm_context_valid_trigger = yes
+  scope:paused = yes scope:speed = var:tcrc_original_speed
+  scope:generation = var:tcrm_generation scope:epoch = var:tcrm_epoch
+  current_year = var:tcrm_year current_month = var:tcrm_month
+  current_day = var:tcrm_day
+  var:tcrm_slot_count > 0 var:tcrm_slot_count <= 32
+  var:tcrm_column >= 0 var:tcrm_column < var:tcrm_slot_count
+  var:tcrm_current_payer = {
+   has_variable = tcrm_observed_edges
+   var:tcrm_observed_edges = root.var:tcrm_column
+  }
+ } trigger_else = { always = no }
+}
+

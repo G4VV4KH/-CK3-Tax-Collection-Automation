@@ -1,0 +1,4 @@
+﻿on_death = { on_actions = { tcro_death } }
+tcro_death = { effect = { tcro_death_effect = yes } }
+on_player_character_change = { on_actions = { tcro_player_changed } }
+tcro_player_changed = { effect = { tcro_player_changed_effect = yes } }

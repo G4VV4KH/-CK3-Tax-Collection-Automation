@@ -1,0 +1,14 @@
+window = {
+ name = tcrs_collector_driver size = { 1 1 } alwaystransparent = yes
+ visible = "[GetPlayer.IsValid]"
+ widget = { size = { 1 1 } alwaystransparent = yes
+  state = { name = tcrs_step_idle alpha = 1 }
+  state = { name = tcrs_step_check alpha = 1 duration = 0
+   trigger_when = "[And(GetPlayer.IsValid,GetScriptedGui('tcrs_collector_step').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('paused',MakeScopeBool(And(IsGamePaused,IsPausedByEvent))).AddScope('speed',MakeScopeValue(IntToFixedPoint(GetCurrentGameSpeed))).End))]"
+   on_finish = "[PdxGuiWidget.TriggerAnimation(Select_CString(And(GetPlayer.IsValid,GetScriptedGui('tcrs_collector_step').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('paused',MakeScopeBool(And(IsGamePaused,IsPausedByEvent))).AddScope('speed',MakeScopeValue(IntToFixedPoint(GetCurrentGameSpeed))).End)),'tcrs_step_do','tcrs_step_idle'))]"
+  }
+  state = { name = tcrs_step_do alpha = 1 duration = 0
+   on_start = "[GetScriptedGui('tcrs_collector_step').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('paused',MakeScopeBool(And(IsGamePaused,IsPausedByEvent))).AddScope('speed',MakeScopeValue(IntToFixedPoint(GetCurrentGameSpeed))).End)]"
+  }
+ }
+}

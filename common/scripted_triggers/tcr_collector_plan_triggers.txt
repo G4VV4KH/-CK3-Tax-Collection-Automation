@@ -1,0 +1,19 @@
+﻿# Prototype, not production. Current scope=candidate; scope:tcrcp_owner=liege.
+tcrcp_candidate_eligible_trigger = {
+ is_alive = yes
+ liege = scope:tcrcp_owner
+ scope:tcrcp_owner != this
+ is_imprisoned = no
+ is_adult = yes
+ is_incapable = no
+ NOT = { has_character_modifier = fp3_incapable_tax_collector_modifier }
+ OR = { is_tax_collector = no is_tax_collector_of = scope:tcrcp_owner }
+ trigger_if = {
+  limit = { scope:tcrcp_owner.rite = { rite_has_doctrine = doctrine_gender_male_dominated } }
+  is_male = yes
+ }
+ trigger_if = {
+  limit = { scope:tcrcp_owner.rite = { rite_has_doctrine = doctrine_gender_female_dominated } }
+  is_female = yes
+ }
+}
