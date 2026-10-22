@@ -2,7 +2,7 @@
 
 ## At a glance
 
-- 🟢 **Version 0.3.0** · Targets CK3 **1.20.1.1**.
+- 🟢 **Version 0.3.0** · Targets CK3 **1.20.1.2**.
 - 🟢 Standalone automation for player-controlled clan tax jurisdictions.
 - 🟢 Appoints collectors and allocates taxpayers with gold income as the priority.
 - 🟢 **Languages:** English, French, German, Japanese, Korean, Polish, Russian, Simplified Chinese and Spanish.
