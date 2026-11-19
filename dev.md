@@ -1,5 +1,11 @@
 # Tax Collection Automation — developer guide
 
+## 0.3.1 for CK3 1.21.0.3
+
+Updated for Crusader Kings III 1.21 Florin. Clan tax decrees now use the Florin values for men-at-arms maintenance, control, prosperity and popular opinion. Automation continues to observe the native decree commit.
+
+## Earlier development notes
+
 Public release 0.3.0 targets CK3 1.20.1.1 and exports the gameplay implementation of 0.3.0-dev.8. README is the player-facing description.
 
 ## Goal and policy
